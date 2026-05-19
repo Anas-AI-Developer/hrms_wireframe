@@ -56,7 +56,6 @@ export default function App() {
         <Route element={<RequireAuth />}>
           <Route element={<AppLayout />}>
             <Route path="access-denied" element={<HomeRedirect />} />
-            <Route path="access-denied" element={<AccessDeniedPage />} />
             <Route path="profile" element={<UserProfilePage />} />
             <Route index element={<HomeRedirect />} />
             <Route

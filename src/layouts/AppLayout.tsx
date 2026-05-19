@@ -1,5 +1,5 @@
 import { Fragment } from 'react'
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { NavLink, Outlet } from 'react-router-dom'
 import { RouteScopeGuard } from '../auth/RouteScopeGuard'
 import { useAuth } from '../auth/AuthContext'
 import {
