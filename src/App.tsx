@@ -1,6 +1,8 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { useAuth } from './auth/AuthContext'
 import { RequireAuth } from './auth/RequireAuth'
 import { RequirePermission } from './auth/RequirePermission'
+import { homePathForRole } from './portals/homePath'
 import { AppLayout } from './layouts/AppLayout'
 import { AccessDeniedPage } from './pages/AccessDeniedPage'
 import { DashboardPage } from './pages/DashboardPage'
@@ -14,6 +16,21 @@ import { MasterDataCatalogPage } from './pages/MasterDataCatalogPage'
 import { OrganogramPage } from './pages/OrganogramPage'
 import { RoadmapPage } from './pages/RoadmapPage'
 import { SprintModulesPage } from './pages/SprintModulesPage'
+import { AdminSettingsPage } from './pages/AdminSettingsPage'
+import { RbacMatrixPage } from './pages/RbacMatrixPage'
+import { EssDashboardPage } from './pages/EssDashboardPage'
+import { AttendanceListPage } from './pages/AttendanceListPage'
+import { LeaveListPage } from './pages/LeaveListPage'
+import { JobPostingsListPage } from './pages/JobPostingsListPage'
+import { HiringPipelinePage } from './pages/HiringPipelinePage'
+import { ScheduleInterviewPage } from './pages/ScheduleInterviewPage'
+import { OnboardingListPage } from './pages/OnboardingListPage'
+
+function HomeRedirect() {
+  const { user } = useAuth()
+  if (!user) return <Navigate to="/login" replace />
+  return <Navigate to={homePathForRole(user.role)} replace />
+}
 
 export default function App() {
   return (
@@ -23,7 +40,7 @@ export default function App() {
         <Route element={<RequireAuth />}>
           <Route element={<AppLayout />}>
             <Route path="access-denied" element={<AccessDeniedPage />} />
-            <Route index element={<Navigate to="/dashboard" replace />} />
+            <Route index element={<HomeRedirect />} />
             <Route
               path="dashboard"
               element={
@@ -81,6 +98,54 @@ export default function App() {
               }
             />
             <Route
+              path="attendance"
+              element={
+                <RequirePermission permission="page:attendance">
+                  <AttendanceListPage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="leave"
+              element={
+                <RequirePermission permission="page:leave">
+                  <LeaveListPage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="jobs"
+              element={
+                <RequirePermission permission="page:recruitment">
+                  <JobPostingsListPage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="hiring-pipeline"
+              element={
+                <RequirePermission permission="page:recruitment">
+                  <HiringPipelinePage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="schedule-interview"
+              element={
+                <RequirePermission permission="page:recruitment">
+                  <ScheduleInterviewPage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="onboarding"
+              element={
+                <RequirePermission permission="page:onboarding">
+                  <OnboardingListPage />
+                </RequirePermission>
+              }
+            />
+            <Route
               path="roadmap"
               element={
                 <RequirePermission permission="page:roadmap">
@@ -109,6 +174,30 @@ export default function App() {
               element={
                 <RequirePermission permission="page:master_data">
                   <MasterDataCatalogPage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="ess"
+              element={
+                <RequirePermission permission="page:dashboard">
+                  <EssDashboardPage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="admin/settings"
+              element={
+                <RequirePermission permission="page:admin_settings">
+                  <AdminSettingsPage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="admin/rbac"
+              element={
+                <RequirePermission permission="page:rbac">
+                  <RbacMatrixPage />
                 </RequirePermission>
               }
             />

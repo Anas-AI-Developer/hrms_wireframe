@@ -11,8 +11,16 @@ const PAGE_READ: Permission[] = [
   'page:master_data',
 ]
 
+const HR_MODULES: Permission[] = [
+  'page:attendance',
+  'page:leave',
+  'page:recruitment',
+  'page:onboarding',
+]
+
 const HR_MANAGEMENT: Permission[] = [
   ...PAGE_READ,
+  ...HR_MODULES,
   'page:employees:write',
   'page:departments:write',
   'page:designations:write',
@@ -43,6 +51,10 @@ export const ALL_PERMISSIONS: Permission[] = [
   'page:modules',
   'page:organogram',
   'page:master_data',
+  'page:attendance',
+  'page:leave',
+  'page:recruitment',
+  'page:onboarding',
   'employee.view_all',
   'employee.view_team',
   'employee.view_self',

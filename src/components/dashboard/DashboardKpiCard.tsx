@@ -1,0 +1,49 @@
+import type { ReactNode } from 'react'
+import { Link } from 'react-router-dom'
+
+type Tone = 'primary' | 'success' | 'warning' | 'info' | 'secondary'
+
+type Props = {
+  label: string
+  value: string | number
+  subtext?: string
+  footnote?: ReactNode
+  icon: ReactNode
+  tone?: Tone
+  to?: string
+  linkLabel?: string
+}
+
+export function DashboardKpiCard({
+  label,
+  value,
+  subtext,
+  footnote,
+  icon,
+  tone = 'primary',
+  to,
+  linkLabel,
+}: Props) {
+  return (
+    <article className={`hrms-kpi-card hrms-kpi-card--${tone}`}>
+      <div className="hrms-kpi-card__body">
+        <div className="hrms-kpi-card__top">
+          <div className="hrms-kpi-card__meta">
+            <span className="hrms-kpi-card__label">{label}</span>
+            <p className="hrms-kpi-card__value">{value}</p>
+            {subtext ? <p className="hrms-kpi-card__sub">{subtext}</p> : null}
+          </div>
+          <span className={`hrms-kpi-card__avatar hrms-kpi-card__avatar--${tone}`} aria-hidden>
+            {icon}
+          </span>
+        </div>
+        {footnote ? <div className="hrms-kpi-card__foot">{footnote}</div> : null}
+        {to && linkLabel ? (
+          <Link to={to} className="hrms-kpi-card__link">
+            {linkLabel} <i className="ri-arrow-right-s-line" aria-hidden />
+          </Link>
+        ) : null}
+      </div>
+    </article>
+  )
+}

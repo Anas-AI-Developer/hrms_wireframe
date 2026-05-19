@@ -2,14 +2,15 @@ import type { FormEvent } from 'react'
 import { useState } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
-import { MOCK_USERS, roleLabelForUser } from '../auth/mockUsers'
+import { findMockUser, MOCK_USERS, roleLabelForUser } from '../auth/mockUsers'
+import { homePathForRole } from '../portals/homePath'
 import './LoginPage.css'
 
 export function LoginPage() {
   const { user, login } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const from = (location.state as { from?: string } | null)?.from ?? '/dashboard'
+  const fromState = (location.state as { from?: string } | null)?.from
 
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -18,7 +19,9 @@ export function LoginPage() {
   const [showRoleCreds, setShowRoleCreds] = useState(false)
 
   if (user) {
-    return <Navigate to={from === '/login' ? '/dashboard' : from} replace />
+    const home = homePathForRole(user.role)
+    const target = fromState && fromState !== '/login' ? fromState : home
+    return <Navigate to={target} replace />
   }
 
   function onSubmit(e: FormEvent) {
@@ -29,7 +32,10 @@ export function LoginPage() {
       setError(result.message)
       return
     }
-    navigate(from, { replace: true })
+    const row = findMockUser(username, password)
+    const home = row ? homePathForRole(row.role) : '/dashboard'
+    const target = fromState && fromState !== '/login' ? fromState : home
+    navigate(target, { replace: true })
   }
 
   return (
@@ -38,7 +44,12 @@ export function LoginPage() {
         <aside className="nvqf-panel-brand" aria-label="Welcome">
           <div className="nvqf-panel-brand-inner">
             <div className="nvqf-brand-logo" aria-hidden>
-              <span className="nvqf-brand-logo-text">HRMS</span>
+              <img
+                src="/images/navttclogo.png"
+                alt="NAVTTC"
+                width={115}
+                className="nvqf-brand-logo-img"
+              />
             </div>
 
             <h2 className="nvqf-brand-welcome-title">Welcome to HRMS Wireframe</h2>
@@ -162,3 +173,5 @@ export function LoginPage() {
     </div>
   )
 }
+
+

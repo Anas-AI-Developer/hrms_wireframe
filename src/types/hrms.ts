@@ -1,5 +1,7 @@
 export type EmployeeStatus = 'active' | 'on_leave' | 'inactive'
 
+export type RecordStatus = 'active' | 'inactive'
+
 export type EmploymentType = 'permanent' | 'contract' | 'deputation' | 'intern' | 'other'
 
 export type Department = {
@@ -7,6 +9,8 @@ export type Department = {
   name: string
   code: string
   headName: string
+  status: RecordStatus
+  createdAt: string
 }
 
 /** Sub-unit within a centre (MasterList `section_field`). */
@@ -21,6 +25,8 @@ export type Designation = {
   title: string
   grade: string
   departmentId: string
+  status: RecordStatus
+  createdAt: string
 }
 
 export type EmployeeHistoryEvent = {

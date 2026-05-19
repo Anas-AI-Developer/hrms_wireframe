@@ -41,13 +41,14 @@ Open `/login` (unauthenticated users are redirected there). UI colours and login
 - **Demo accounts** live in `src/auth/mockUsers.ts` (built from `src/auth/clientRoles.ts`). Password for every account: **`11223344`**.
 - **Role → permissions** map: `src/auth/rolePermissions.ts` (wireframe defaults; adjust with client).
 
-| Role | Example username | Wireframe access (summary) |
-|------|------------------|----------------------------|
-| Executive Director | `executive.director` | Full |
-| Director General | `director.general` | Full |
-| Director / Deputy Director / Assistant Director | `director`, `deputy.director`, `assistant.director` | HR modules + write |
-| AAO (Accounts) / AAO (Finance) | `aao.accounts`, `aao.finance` | Dashboard, HR lists (read), planning & master data |
-| Employee (per designation) | `emp.driver`, `emp.deo`, … | Dashboard only (ESS screens TBD) |
+| Role | Example username | Portal (after login) |
+|------|------------------|----------------------|
+| Executive Director | `executive.director` | **Executive leadership** — full access + admin |
+| Director General | `director.general` | **Executive leadership** — full access + admin |
+| Director / Deputy Director / Assistant Director | `director`, `deputy.director`, `assistant.director` | **Directorate HR** — HR modules + write |
+| AAO (Accounts) | `aao.accounts` | **Accounts** — registers, master data, read-only HR |
+| AAO (Finance) | `aao.finance` | **Finance** — same scope, finance-labelled portal |
+| Employee (per designation) | `emp.driver`, `emp.deo`, … | **Employee self-service** (`/ess`) |
 
 Employee designations (18 demo logins): Private Secretary, APS, Librarian / Building Care Taker, MTO, Cashier, Assistant, Stenotypist, DEO, Receptionist, Hardware Technician, General Maintenance Worker, Dispatch Rider, Driver, DMO, Electrician, Naib Qasid, Chowkidar, Sanitary Workers — usernames `emp.<slug>` (see login table).
 
@@ -65,7 +66,10 @@ On the login screen, click **Show role cred** (below the Login button) for the f
 |------|--------|
 | `/login` | Sign-in + credential reference |
 | `/access-denied` | Missing permission |
-| `/dashboard` | Summary cards + recent employees (if allowed) |
+| `/dashboard` | Role portal (KPI cards + HR home links like reference `hrms-home`) |
+| `/ess` | Employee self-service portal |
+| `/admin/settings` | Admin settings (ED / DG) |
+| `/admin/rbac` | Roles & permissions matrix (ED / DG) |
 | `/employees` | Roster (client sample) |
 | `/employees/new` | Create form (alert only) |
 | `/employees/:id` | Detail (`m-<S.#>`) |

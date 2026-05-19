@@ -53,6 +53,8 @@ export const departments: Department[] = centreNames.map((name, i) => ({
   name,
   code: centreCode(name, i),
   headName: '—',
+  status: 'active' as const,
+  createdAt: new Date(Date.UTC(2026, 4, 1 + (i % 20), 9 + (i % 8), (i * 7) % 60)).toISOString(),
 }))
 
 const deptIdByCentre = new Map(departments.map((d) => [d.name, d.id]))
@@ -86,7 +88,14 @@ for (const r of rawList) {
   if (desigKeyToId.has(key)) continue
   const id = `g${desigKeyToId.size + 1}`
   desigKeyToId.set(key, id)
-  designations.push({ id, title, grade, departmentId: deptId })
+  designations.push({
+    id,
+    title,
+    grade,
+    departmentId: deptId,
+    status: 'active',
+    createdAt: new Date(Date.UTC(2026, 3, 1 + (desigKeyToId.size % 25), 10, 0)).toISOString(),
+  })
 }
 
 const employeesDraft: Employee[] = rawList.map((r) => {
