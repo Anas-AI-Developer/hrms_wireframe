@@ -21,6 +21,7 @@ type Props = {
   pageSize: number
   onPageSizeChange: (n: number) => void
   onPageChange: (p: number) => void
+  toolbarExtra?: ReactNode
 }
 
 export function DataListPanel({
@@ -42,6 +43,7 @@ export function DataListPanel({
   pageSize,
   onPageSizeChange,
   onPageChange,
+  toolbarExtra,
 }: Props) {
   return (
     <article className="hrms-ref-panel">
@@ -68,6 +70,7 @@ export function DataListPanel({
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder={searchPlaceholder}
           />
+          {toolbarExtra}
           {hasActiveFilters && onResetFilters ? (
             <button type="button" className="hrms-ref-btn-secondary" onClick={onResetFilters}>
               <i className="ri-refresh-line" aria-hidden /> Reset filters
