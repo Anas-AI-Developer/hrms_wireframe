@@ -145,10 +145,6 @@ function DeptRow({ dept, canWrite }: { dept: Department; canWrite: boolean }) {
                   },
                 ]
               : [{ label: 'View', onClick: () => {} }]),
-            {
-              label: 'View employees',
-              href: `/employees?dept=${dept.id}`,
-            },
           ]}
         />
       </td>

@@ -37,7 +37,6 @@ export function DashboardPage() {
 
   const portal = portalForUser(user.role)
   const canEmployees = can('page:employees')
-  const canDepartments = can('page:departments')
   const canPayroll = can('payroll.view')
   const scoped = visibleEmployees()
   const active = scoped.filter((e) => e.status === 'active').length
@@ -71,6 +70,7 @@ export function DashboardPage() {
       <div className="hrms-dash-stack">
         <section className="hrms-kpi-grid" aria-label="Key metrics">
           <DashboardKpiCard
+            static
             label="Workforce (your scope)"
             value={scoped.length}
             subtext={`${departments.length} centres in sample data`}
@@ -79,13 +79,12 @@ export function DashboardPage() {
             footnote={
               <span>
                 <span className="hrms-trend-up">{fillRate}% active</span>
-                <span className="hrms-trend-muted"> Â· wireframe scope</span>
+                <span className="hrms-trend-muted"> · wireframe scope</span>
               </span>
             }
-            to={canEmployees ? '/employees' : undefined}
-            linkLabel={canEmployees ? 'View roster' : undefined}
           />
           <DashboardKpiCard
+            static
             label="Active staff"
             value={active}
             subtext="Filled posts in scope"
@@ -94,22 +93,16 @@ export function DashboardPage() {
             footnote={<span className="hrms-trend-muted">Status: active</span>}
           />
           <DashboardKpiCard
+            static
             label="On leave"
             value={onLeave}
             subtext="Approved / current leave"
             icon={<i className="ri-calendar-check-line" />}
             tone="warning"
-            footnote={
-              can('page:leave') ? (
-                <Link to="/leave" className="hrms-kpi-card__link" style={{ marginTop: 0 }}>
-                  Leave requests â†’
-                </Link>
-              ) : (
-                <span className="hrms-trend-muted">Leave module</span>
-              )
-            }
+            footnote={<span className="hrms-trend-muted">Leave module</span>}
           />
           <DashboardKpiCard
+            static
             label={canPayroll ? 'Payroll sample' : 'Organisation'}
             value={canPayroll ? employees.length : departments.length}
             subtext={
@@ -119,8 +112,6 @@ export function DashboardPage() {
             }
             icon={<i className={canPayroll ? 'ri-money-dollar-circle-line' : 'ri-building-4-line'} />}
             tone="info"
-            to={canPayroll ? '/master-data' : canDepartments ? '/departments' : undefined}
-            linkLabel={canPayroll ? 'Workbook' : canDepartments ? 'Departments' : undefined}
           />
         </section>
 

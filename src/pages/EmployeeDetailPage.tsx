@@ -1,5 +1,6 @@
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import { homePathForRole } from '../portals/homePath'
 import { employmentTypeLabel } from '../data/employmentStats'
 import {
   getDepartment,
@@ -11,7 +12,7 @@ import {
 import './pages.css'
 
 export function EmployeeDetailPage() {
-  const { can, canViewEmployee } = useAuth()
+  const { user, can, canViewEmployee } = useAuth()
   const canWrite = can('page:employees:write')
   const { id } = useParams<{ id: string }>()
   const e = id ? getEmployee(id) : undefined
@@ -26,7 +27,8 @@ export function EmployeeDetailPage() {
   }
 
   if (!canViewEmployee(e)) {
-    return <Navigate to="/access-denied" replace />
+    const fallback = user && can('page:employees') ? '/employees' : user ? homePathForRole(user.role) : '/login'
+    return <Navigate to={fallback} replace />
   }
 
   const dept = getDepartment(e.departmentId)

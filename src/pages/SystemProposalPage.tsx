@@ -1,4 +1,6 @@
 import { Link } from 'react-router-dom'
+import { useAuth } from '../auth/AuthContext'
+import { canAccessPath } from '../auth/routeAccess'
 import './pages.css'
 
 const flows = [
@@ -53,6 +55,8 @@ const flows = [
 ]
 
 export function SystemProposalPage() {
+  const { user } = useAuth()
+
   return (
     <div className="wf-page wf-page--wide">
       <h1 className="wf-h1">Proposed HRMS flows</h1>
@@ -65,17 +69,34 @@ export function SystemProposalPage() {
           <h2 className="wf-h2">{f.title}</h2>
           <p className="wf-card-desc">{f.steps.join(' → ')}</p>
           <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
-            {f.links.map((l) => (
-              <Link key={l.to} className="wf-card-link" to={l.to}>
-                {l.label} →
-              </Link>
-            ))}
+            {f.links
+              .filter((l) => user && canAccessPath(user.role, l.to))
+              .map((l) => (
+                <Link key={l.to} className="wf-card-link" to={l.to}>
+                  {l.label} →
+                </Link>
+              ))}
           </div>
         </section>
       ))}
       <p className="wf-note">
-        See also <Link to="/modules">Sprint modules</Link>, <Link to="/admin/settings">Admin settings</Link>, and{' '}
-        <Link to="/master-data">Client workbook</Link>.
+        See also{' '}
+        {user && canAccessPath(user.role, '/modules') ? (
+          <Link to="/modules">Sprint modules</Link>
+        ) : (
+          'Sprint modules'
+        )}
+        {user && canAccessPath(user.role, '/admin/settings') ? (
+          <>
+            , <Link to="/admin/settings">Admin settings</Link>
+          </>
+        ) : null}
+        {user && canAccessPath(user.role, '/master-data') ? (
+          <>
+            , and <Link to="/master-data">Client workbook</Link>
+          </>
+        ) : null}
+        .
       </p>
     </div>
   )

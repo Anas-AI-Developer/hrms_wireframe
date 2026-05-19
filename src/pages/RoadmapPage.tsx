@@ -1,4 +1,6 @@
 import { Link } from 'react-router-dom'
+import { useAuth } from '../auth/AuthContext'
+import { canAccessPath } from '../auth/routeAccess'
 import './pages.css'
 
 const phases = [
@@ -30,6 +32,8 @@ const phases = [
 ]
 
 export function RoadmapPage() {
+  const { user } = useAuth()
+
   return (
     <div className="wf-page">
       <h1 className="wf-h1">Planned modules</h1>
@@ -43,11 +47,13 @@ export function RoadmapPage() {
           <section key={p.phase} className="wf-roadmap-block">
             <h2 className="wf-h2">{p.phase}</h2>
             <ul>
-              {p.items.map((item) => (
-                <li key={item.to}>
-                  <Link to={item.to}>{item.label}</Link>
-                </li>
-              ))}
+              {p.items
+                .filter((item) => user && canAccessPath(user.role, item.to))
+                .map((item) => (
+                  <li key={item.to}>
+                    <Link to={item.to}>{item.label}</Link>
+                  </li>
+                ))}
             </ul>
           </section>
         ))}

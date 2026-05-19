@@ -10,6 +10,8 @@ type Props = {
   footnote?: ReactNode
   icon: ReactNode
   tone?: Tone
+  /** When true, card is display-only (no link, no hover lift). */
+  static?: boolean
   to?: string
   linkLabel?: string
 }
@@ -21,11 +23,16 @@ export function DashboardKpiCard({
   footnote,
   icon,
   tone = 'primary',
+  static: isStatic = false,
   to,
   linkLabel,
 }: Props) {
+  const showLink = !isStatic && to && linkLabel
+
   return (
-    <article className={`hrms-kpi-card hrms-kpi-card--${tone}`}>
+    <article
+      className={`hrms-kpi-card hrms-kpi-card--${tone}${isStatic ? ' hrms-kpi-card--static' : ''}`}
+    >
       <div className="hrms-kpi-card__body">
         <div className="hrms-kpi-card__top">
           <div className="hrms-kpi-card__meta">
@@ -38,7 +45,7 @@ export function DashboardKpiCard({
           </span>
         </div>
         {footnote ? <div className="hrms-kpi-card__foot">{footnote}</div> : null}
-        {to && linkLabel ? (
+        {showLink ? (
           <Link to={to} className="hrms-kpi-card__link">
             {linkLabel} <i className="ri-arrow-right-s-line" aria-hidden />
           </Link>

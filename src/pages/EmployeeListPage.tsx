@@ -1,35 +1,78 @@
-import { Link } from 'react-router-dom'
+import { useMemo, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { DataListPanel } from '../components/hrms/DataListPanel'
 import { HrmsListShell } from '../components/hrms/HrmsListShell'
 import { RowActionsMenu } from '../components/hrms/RowActionsMenu'
 import { SortableTh } from '../components/hrms/SortableTh'
 import { StatusBadge } from '../components/hrms/StatusBadge'
-import { employees, getDepartment, getDesignation } from '../data/mock'
+import { departments, designations, employees, getDepartment, getDesignation } from '../data/mock'
 import { useListControls } from '../hooks/useListControls'
 import type { Employee } from '../types/hrms'
 import { formatListDate } from '../utils/formatDate'
 
+const ALL = 'all'
+
+const EMPLOYEE_STATUS_OPTIONS = [
+  { value: 'active' as const, label: 'Active' },
+  { value: 'on_leave' as const, label: 'On leave' },
+  { value: 'inactive' as const, label: 'Inactive' },
+  { value: 'all' as const, label: 'All statuses' },
+]
+
 export function EmployeeListPage() {
   const { can, visibleEmployees } = useAuth()
   const canWrite = can('page:employees:write')
+  const [searchParams] = useSearchParams()
+  const initialDept = searchParams.get('dept') ?? ALL
+
+  const [departmentFilter, setDepartmentFilter] = useState(initialDept)
+  const [designationFilter, setDesignationFilter] = useState(ALL)
+
   const source = visibleEmployees()
 
-  const list = useListControls(source, {
+  const departmentOptions = useMemo(() => {
+    const ids = new Set(source.map((e) => e.departmentId))
+    return departments
+      .filter((d) => ids.has(d.id))
+      .sort((a, b) => a.name.localeCompare(b.name))
+  }, [source])
+
+  const designationOptions = useMemo(() => {
+    const rows =
+      departmentFilter === ALL
+        ? source
+        : source.filter((e) => e.departmentId === departmentFilter)
+    const ids = new Set(rows.map((e) => e.designationId))
+    return designations
+      .filter((d) => ids.has(d.id))
+      .sort((a, b) => a.title.localeCompare(b.title))
+  }, [source, departmentFilter])
+
+  const scopedSource = useMemo(() => {
+    return source.filter((e) => {
+      if (departmentFilter !== ALL && e.departmentId !== departmentFilter) return false
+      if (designationFilter !== ALL && e.designationId !== designationFilter) return false
+      return true
+    })
+  }, [source, departmentFilter, designationFilter])
+
+  const list = useListControls(scopedSource, {
     searchFn: (e, q) => {
       const name = `${e.firstName} ${e.lastName}`.toLowerCase()
       const dept = getDepartment(e.departmentId)?.name.toLowerCase() ?? ''
+      const des = getDesignation(e.designationId)?.title.toLowerCase() ?? ''
       return (
         name.includes(q) ||
         e.employeeNo.toLowerCase().includes(q) ||
         dept.includes(q) ||
+        des.includes(q) ||
         (e.sanctionedPost?.toLowerCase().includes(q) ?? false)
       )
     },
     statusFn: (e, f) => {
       if (f === 'all') return true
-      if (f === 'active') return e.status === 'active'
-      return e.status === 'inactive'
+      return e.status === f
     },
     sortFns: {
       name: (a, b) =>
@@ -44,6 +87,21 @@ export function EmployeeListPage() {
       joinDate: (a, b) => a.joinDate.localeCompare(b.joinDate),
     },
   })
+
+  const hasExtraFilters = departmentFilter !== ALL || designationFilter !== ALL
+  const hasActiveFilters = list.hasActiveFilters || hasExtraFilters
+
+  function resetAllFilters() {
+    list.resetFilters()
+    setDepartmentFilter(ALL)
+    setDesignationFilter(ALL)
+  }
+
+  function onDepartmentFilterChange(value: string) {
+    setDepartmentFilter(value)
+    setDesignationFilter(ALL)
+    list.setPage(1)
+  }
 
   return (
     <HrmsListShell
@@ -60,11 +118,48 @@ export function EmployeeListPage() {
         title="Employees list"
         search={list.search}
         onSearchChange={list.setSearch}
-        searchPlaceholder="Search by name, code, centre, or post..."
+        searchPlaceholder="Search by name, code, centre, post, or designation..."
         statusFilter={list.statusFilter}
         onStatusFilterChange={list.setStatusFilter}
-        hasActiveFilters={list.hasActiveFilters}
-        onResetFilters={list.resetFilters}
+        statusOptions={EMPLOYEE_STATUS_OPTIONS}
+        extraFilters={
+          <>
+            <select
+              id="hrms-dept-filter"
+              className="hrms-ref-select"
+              value={departmentFilter}
+              onChange={(e) => onDepartmentFilterChange(e.target.value)}
+              aria-label="Department filter"
+            >
+              <option value={ALL}>All departments</option>
+              {departmentOptions.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.name}
+                </option>
+              ))}
+            </select>
+            <select
+              id="hrms-designation-filter"
+              className="hrms-ref-select"
+              value={designationFilter}
+              onChange={(e) => {
+                setDesignationFilter(e.target.value)
+                list.setPage(1)
+              }}
+              aria-label="Designation filter"
+            >
+              <option value={ALL}>All designations</option>
+              {designationOptions.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.title}
+                  {d.grade ? ` (BPS ${d.grade})` : ''}
+                </option>
+              ))}
+            </select>
+          </>
+        }
+        hasActiveFilters={hasActiveFilters}
+        onResetFilters={resetAllFilters}
         firstItem={list.firstItem}
         lastItem={list.lastItem}
         total={list.total}
@@ -101,7 +196,7 @@ export function EmployeeListPage() {
           </table>
         </div>
         <p className="wf-note" style={{ marginTop: '0.75rem', marginBottom: 0 }}>
-          Showing scoped roster ({source.length} of {employees.length} MasterList sample rows).
+          Showing scoped roster ({scopedSource.length} of {employees.length} MasterList sample rows).
         </p>
       </DataListPanel>
     </HrmsListShell>

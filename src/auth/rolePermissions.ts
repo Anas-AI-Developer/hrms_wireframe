@@ -150,6 +150,7 @@ export const ROLE_PERMISSIONS: Record<RoleId, readonly Permission[] | readonly [
 
 export function permissionsForRole(role: RoleId): Set<Permission> {
   const raw = ROLE_PERMISSIONS[role]
+  if (!raw) return new Set()
   if (raw[0] === '*') return new Set(ALL_PERMISSIONS)
   return new Set(raw as Permission[])
 }

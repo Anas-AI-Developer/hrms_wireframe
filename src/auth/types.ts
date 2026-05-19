@@ -71,4 +71,4 @@ export type AuthUser = {
   employeeId?: string
 }
 
-export const STORAGE_KEY = 'hrms_wireframe_session_v3'
+export const STORAGE_KEY = 'hrms_wireframe_session_v4'

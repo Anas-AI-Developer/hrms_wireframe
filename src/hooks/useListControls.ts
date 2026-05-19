@@ -2,7 +2,15 @@ import { useMemo, useState } from 'react'
 
 export type SortDir = 'asc' | 'desc' | null
 
-export type StatusFilter = 'active' | 'inactive' | 'all'
+export type StatusFilter =
+  | 'active'
+  | 'inactive'
+  | 'on_leave'
+  | 'all'
+  | 'present'
+  | 'late'
+  | 'absent'
+  | 'half_day'
 
 type Options<T> = {
   searchFn: (item: T, query: string) => boolean
