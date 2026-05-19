@@ -36,6 +36,11 @@ import { ScheduleInterviewPage } from './pages/ScheduleInterviewPage'
 import { SprintModulesPage } from './pages/SprintModulesPage'
 import { SystemProposalPage } from './pages/SystemProposalPage'
 import { TrainingPage } from './pages/TrainingPage'
+import { BenefitsPage } from './pages/BenefitsPage'
+import { CompliancePage } from './pages/CompliancePage'
+import { AttendanceReportPage } from './pages/AttendanceReportPage'
+import { PayrollReportPage } from './pages/PayrollReportPage'
+import { EmployeeAnalyticsPage } from './pages/EmployeeAnalyticsPage'
 
 export default function App() {
   return (
@@ -227,6 +232,30 @@ export default function App() {
               element={
                 <RequirePermission permission="page:reports">
                   <ReportsPage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="reports/attendance"
+              element={
+                <RequirePermission permission="page:reports:attendance">
+                  <AttendanceReportPage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="reports/payroll"
+              element={
+                <RequirePermission permission="page:reports:payroll">
+                  <PayrollReportPage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="reports/employees"
+              element={
+                <RequirePermission permission="page:reports:employees">
+                  <EmployeeAnalyticsPage />
                 </RequirePermission>
               }
             />

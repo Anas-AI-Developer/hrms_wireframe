@@ -1,4 +1,4 @@
-﻿import { Link, Navigate } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { userRoleLabel } from '../auth/roleLabels'
 import { PageBreadcrumb } from '../components/hrms/PageBreadcrumb'

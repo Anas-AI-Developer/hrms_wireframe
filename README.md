@@ -42,14 +42,13 @@ Open `/login` (unauthenticated users are redirected there). UI colours and login
 - **Demo accounts** live in `src/auth/mockUsers.ts` (built from `src/auth/clientRoles.ts`). Password for every account: **`11223344`**.
 - **Role → permissions** map: `src/auth/rolePermissions.ts` (wireframe defaults; adjust with client).
 
-| Role | Example username | Portal (after login) |
-|------|------------------|----------------------|
-| Executive Director | `executive.director` | **Executive leadership** — full access + admin |
-| Director General | `director.general` | **Executive leadership** — full access + admin |
-| Director / Deputy Director / Assistant Director | `director`, `deputy.director`, `assistant.director` | **Directorate HR** — HR modules + write |
-| AAO (Accounts) | `aao.accounts` | **Accounts** — registers, master data, read-only HR |
-| AAO (Finance) | `aao.finance` | **Finance** — same scope, finance-labelled portal |
-| Employee (per designation) | `emp.driver`, `emp.deo`, … | **Employee self-service** (`/ess`) |
+| Role | Example username | Wireframe access (summary) |
+|------|------------------|----------------------------|
+| Executive Director | `executive.director` | Full |
+| Director General | `director.general` | Full |
+| Director / Deputy Director / Assistant Director | `director`, `deputy.director`, `assistant.director` | HR modules + write |
+| AAO (Accounts) / AAO (Finance) | `aao.accounts`, `aao.finance` | Payroll, benefits, compliance, Sprint 4 reports (attendance, payroll, employees) |
+| Employee (per designation) | `emp.driver`, `emp.deo`, … | ESS: leave, attendance, payslip, performance, training, benefits |
 
 Employee designations (18 demo logins): Private Secretary, APS, Librarian / Building Care Taker, MTO, Cashier, Assistant, Stenotypist, DEO, Receptionist, Hardware Technician, General Maintenance Worker, Dispatch Rider, Driver, DMO, Electrician, Naib Qasid, Chowkidar, Sanitary Workers — usernames `emp.<slug>` (see login table).
 
@@ -81,8 +80,12 @@ On the login screen, click **Show role cred** (below the Login button) for the f
 | `/modules` | Four-sprint module catalogue (from developer guide) |
 | `/organogram` | Embedded HQ organogram PDF |
 | `/master-data` | Workbook tab index + regen notes |
+| `/attendance`, `/leave`, `/recruitment`, `/onboarding` | Sprint 2 operations |
+| `/payroll`, `/payslip`, `/performance`, `/training`, `/benefits`, `/compliance` | Sprint 3 |
+| `/reports/attendance`, `/reports/payroll`, `/reports/employees` | Sprint 4 analytics (role-gated) |
 
 ## Next steps
 
 - Mirror new **`hrms`** Filament resources as routes + permission keys + mock slices.
 - Replace mock auth with your real API / OIDC when backend is ready.
+- Optional polish: employee profile tabs (documents, emergency contacts), deeper charts on report pages.
