@@ -70,119 +70,119 @@ export function DashboardPage() {
       </header>
 
       <div className="hrms-dash-stack">
-      <section className="hrms-kpi-grid" aria-label="Key metrics">
-        <DashboardKpiCard
-          label="Workforce (your scope)"
-          value={scoped.length}
-          subtext={`${departments.length} centres in sample data`}
-          icon={<i className="ri-team-line" />}
-          tone="primary"
-          footnote={
-            <span>
-              <span className="hrms-trend-up">{fillRate}% active</span>
-              <span className="hrms-trend-muted"> · wireframe scope</span>
-            </span>
-          }
-          to={canEmployees ? '/employees' : undefined}
-          linkLabel={canEmployees ? 'View roster' : undefined}
-        />
-        <DashboardKpiCard
-          label="Active staff"
-          value={active}
-          subtext="Filled posts in scope"
-          icon={<i className="ri-user-follow-line" />}
-          tone="success"
-          footnote={<span className="hrms-trend-muted">Status: active</span>}
-        />
-        <DashboardKpiCard
-          label="On leave"
-          value={onLeave}
-          subtext="Approved / current leave"
-          icon={<i className="ri-calendar-check-line" />}
-          tone="warning"
-          footnote={
-            can('page:leave') ? (
-              <Link to="/leave" className="hrms-kpi-card__link" style={{ marginTop: 0 }}>
-                Leave requests →
-              </Link>
-            ) : (
-              <span className="hrms-trend-muted">Leave module</span>
-            )
-          }
-        />
-        <DashboardKpiCard
-          label={canPayroll ? 'Payroll sample' : 'Organisation'}
-          value={canPayroll ? employees.length : departments.length}
-          subtext={
-            canPayroll
-              ? 'Roster rows for registers'
-              : `${inactive} inactive in scope`
-          }
-          icon={<i className={canPayroll ? 'ri-money-dollar-circle-line' : 'ri-building-4-line'} />}
-          tone="info"
-          to={canPayroll ? '/master-data' : canDepartments ? '/departments' : undefined}
-          linkLabel={canPayroll ? 'Workbook' : canDepartments ? 'Departments' : undefined}
-        />
-      </section>
-
-      <QuickAccessGrid title="Human Resources" items={DASHBOARD_QUICK_HR} />
-
-      <div className="hrms-dash-columns">
-        <div className="hrms-dash-panel-wrap">
-          <PortalHomePanel
-            panelTitle="Human Resources"
-            panelSubtitle="Choose a section to manage HR records, attendance, and leave."
-            sections={[
-              { title: 'Core HR', accent: 'administration', links: PORTAL_HR_LINKS },
-              { title: 'Planning', accent: 'overview', links: PORTAL_PLANNING_LINKS },
-              { title: 'Configuration', accent: 'administration', links: PORTAL_ADMIN_LINKS },
-            ]}
+        <section className="hrms-kpi-grid" aria-label="Key metrics">
+          <DashboardKpiCard
+            label="Workforce (your scope)"
+            value={scoped.length}
+            subtext={`${departments.length} centres in sample data`}
+            icon={<i className="ri-team-line" />}
+            tone="primary"
+            footnote={
+              <span>
+                <span className="hrms-trend-up">{fillRate}% active</span>
+                <span className="hrms-trend-muted"> · wireframe scope</span>
+              </span>
+            }
+            to={canEmployees ? '/employees' : undefined}
+            linkLabel={canEmployees ? 'View roster' : undefined}
           />
-        </div>
+          <DashboardKpiCard
+            label="Active staff"
+            value={active}
+            subtext="Filled posts in scope"
+            icon={<i className="ri-user-follow-line" />}
+            tone="success"
+            footnote={<span className="hrms-trend-muted">Status: active</span>}
+          />
+          <DashboardKpiCard
+            label="On leave"
+            value={onLeave}
+            subtext="Approved / current leave"
+            icon={<i className="ri-calendar-check-line" />}
+            tone="warning"
+            footnote={
+              can('page:leave') ? (
+                <Link to="/leave" className="hrms-kpi-card__link" style={{ marginTop: 0 }}>
+                  Leave requests →
+                </Link>
+              ) : (
+                <span className="hrms-trend-muted">Leave module</span>
+              )
+            }
+          />
+          <DashboardKpiCard
+            label={canPayroll ? 'Payroll sample' : 'Organisation'}
+            value={canPayroll ? employees.length : departments.length}
+            subtext={
+              canPayroll
+                ? 'Roster rows for registers'
+                : `${inactive} inactive in scope`
+            }
+            icon={<i className={canPayroll ? 'ri-money-dollar-circle-line' : 'ri-building-4-line'} />}
+            tone="info"
+            to={canPayroll ? '/master-data' : canDepartments ? '/departments' : undefined}
+            linkLabel={canPayroll ? 'Workbook' : canDepartments ? 'Departments' : undefined}
+          />
+        </section>
 
-        {canEmployees ? (
-          <section className="hrms-dash-recent" aria-labelledby="recent-employees-title">
-            <div className="hrms-dash-recent__head">
-              <h2 id="recent-employees-title">Recent employees</h2>
-              <Link to="/employees" className="hrms-dash-recent__link">
-                View all →
-              </Link>
-            </div>
-            <div className="hrms-dash-recent__body">
-              <div className="hrms-data-table-wrap">
-                <table className="hrms-data-table">
-                  <thead>
-                    <tr>
-                      <th>Code</th>
-                      <th>Name</th>
-                      <th>Post</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {scoped.slice(0, 8).map((e) => (
-                      <tr key={e.id}>
-                        <td>
-                          <Link to={`/employees/${e.id}`} style={{ color: '#2f4798', fontWeight: 500 }}>
-                            {e.employeeNo}
-                          </Link>
-                        </td>
-                        <td className="font-medium">
-                          {e.firstName} {e.lastName}
-                        </td>
-                        <td>{e.sanctionedPost ?? '—'}</td>
-                        <td>
-                          <StatusBadge status={e.status} />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+        <QuickAccessGrid title="Human Resources" items={DASHBOARD_QUICK_HR} />
+
+        <div className="hrms-dash-columns">
+          <div className="hrms-dash-panel-wrap">
+            <PortalHomePanel
+              panelTitle="Human Resources"
+              panelSubtitle="Choose a section to manage HR records, attendance, and leave."
+              sections={[
+                { title: 'Core HR', accent: 'administration', links: PORTAL_HR_LINKS },
+                { title: 'Planning', accent: 'overview', links: PORTAL_PLANNING_LINKS },
+                { title: 'Configuration', accent: 'administration', links: PORTAL_ADMIN_LINKS },
+              ]}
+            />
+          </div>
+
+          {canEmployees ? (
+            <section className="hrms-dash-recent" aria-labelledby="recent-employees-title">
+              <div className="hrms-dash-recent__head">
+                <h2 id="recent-employees-title">Recent employees</h2>
+                <Link to="/employees" className="hrms-dash-recent__link">
+                  View all →
+                </Link>
               </div>
-            </div>
-          </section>
-        ) : null}
-      </div>
+              <div className="hrms-dash-recent__body">
+                <div className="hrms-data-table-wrap">
+                  <table className="hrms-data-table">
+                    <thead>
+                      <tr>
+                        <th>Code</th>
+                        <th>Name</th>
+                        <th>Post</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {scoped.slice(0, 8).map((e) => (
+                        <tr key={e.id}>
+                          <td>
+                            <Link to={`/employees/${e.id}`} style={{ color: '#2f4798', fontWeight: 500 }}>
+                              {e.employeeNo}
+                            </Link>
+                          </td>
+                          <td className="font-medium">
+                            {e.firstName} {e.lastName}
+                          </td>
+                          <td>{e.sanctionedPost ?? '—'}</td>
+                          <td>
+                            <StatusBadge status={e.status} />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+          ) : null}
+        </div>
       </div>
     </div>
   )
