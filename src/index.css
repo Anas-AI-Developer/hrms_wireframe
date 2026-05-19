@@ -1,0 +1,47 @@
+:root {
+  --wf-text: #334155;
+  --wf-text-strong: #0f172a;
+  --wf-text-muted: #64748b;
+  --wf-border: #e5e7eb;
+  --wf-bg-page: #f0f2f5;
+  --wf-bg-sidebar: #ffffff;
+  --wf-bg-top: #ffffff;
+  --wf-bg-card: #ffffff;
+  --wf-bg-muted: #f9fafb;
+  --wf-bg-hover: #f3f4f6;
+  --wf-code-bg: #f1f5f9;
+  --wf-accent: #4b62be;
+  --wf-accent-strong: #2f4798;
+  --wf-accent-soft: rgba(75, 98, 190, 0.12);
+  --wf-sans: 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif;
+  font-family: var(--wf-sans);
+  line-height: 1.45;
+  color: var(--wf-text);
+  background: var(--wf-bg-page);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+#root {
+  min-height: 100svh;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  text-align: initial;
+  border: none;
+}
+
+a {
+  color: inherit;
+}
