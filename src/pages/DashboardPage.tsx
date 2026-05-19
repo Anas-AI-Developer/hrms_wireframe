@@ -40,7 +40,6 @@ export function DashboardPage() {
   const canDepartments = can('page:departments')
   const canPayroll = can('payroll.view')
   const scoped = visibleEmployees()
-
   const active = scoped.filter((e) => e.status === 'active').length
   const onLeave = scoped.filter((e) => e.status === 'on_leave').length
   const inactive = scoped.filter((e) => e.status === 'inactive').length
@@ -48,6 +47,48 @@ export function DashboardPage() {
     scoped.length > 0 ? Math.round((active / scoped.length) * 100) : 0
 
   return (
+    <div className="wf-page">
+      <h1 className="wf-h1">Dashboard</h1>
+      <p className="wf-lead">
+        NAVTTC HRMS wireframe — proposed modules and role-based flows. Demo data from client MasterList; focus is on
+        screens and hand-offs, not record totals.
+      </p>
+
+      <div className="wf-grid wf-grid--3">
+        <article className="wf-card">
+          <div className="wf-card-kicker">Workforce (your scope)</div>
+          <div className="wf-card-stat">{scoped.length}</div>
+          <div className="wf-card-desc">Active {active} in scope</div>
+          {can('page:employees') ? (
+            <Link className="wf-card-link" to="/employees">
+              Open roster →
+            </Link>
+          ) : null}
+        </article>
+        <article className="wf-card">
+          <div className="wf-card-kicker">Organisation</div>
+          <div className="wf-card-stat">{departments.length}</div>
+          <div className="wf-card-desc">Centres from master data</div>
+          {can('page:departments') ? (
+            <Link className="wf-card-link" to="/departments">
+              Centres & sections →
+            </Link>
+          ) : null}
+        </article>
+        <article className="wf-card">
+          <div className="wf-card-kicker">Proposed system</div>
+          <div className="wf-card-desc">How modules connect</div>
+          {can('page:proposal') ? (
+            <Link className="wf-card-link" to="/proposal">
+              View flows →
+            </Link>
+          ) : (
+            <Link className="wf-card-link" to="/modules">
+              Sprint modules →
+            </Link>
+          )}
+        </article>
+      </div>
     <div className="hrms-ref-page hrms-dash-page">
       <header className="hrms-dash-page-header">
         <PageBreadcrumb current="Dashboard" />

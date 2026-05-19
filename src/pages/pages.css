@@ -449,3 +449,63 @@
   color: var(--wf-text-muted);
   line-height: 1.45;
 }
+
+.wf-page--wide {
+  max-width: 1200px;
+}
+
+.wf-grid--2 {
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+.wf-card--flat {
+  box-shadow: none;
+  border: 1px solid var(--wf-border);
+}
+
+.wf-list {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: var(--wf-text);
+}
+
+.wf-list--ordered {
+  list-style: decimal;
+}
+
+.wf-note--warn {
+  color: #b45309;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+}
+
+.wf-table-wrap--scroll {
+  max-height: min(420px, 50vh);
+  overflow: auto;
+}
+
+.wf-table--compact {
+  font-size: 0.82rem;
+}
+
+.wf-table--compact th,
+.wf-table--compact td {
+  padding: 0.4rem 0.55rem;
+}
+
+.wf-table-th-vertical {
+  font-size: 0.65rem;
+  max-width: 4.5rem;
+  line-height: 1.2;
+  vertical-align: bottom;
+}
+
+.wf-table-cell-center {
+  text-align: center;
+}
+
+.wf-dl--compact dt {
+  margin-top: 0.35rem;
+}

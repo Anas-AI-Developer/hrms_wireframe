@@ -2,7 +2,15 @@ export type EmployeeStatus = 'active' | 'on_leave' | 'inactive'
 
 export type RecordStatus = 'active' | 'inactive'
 
-export type EmploymentType = 'permanent' | 'contract' | 'deputation' | 'intern' | 'other'
+/** Matches client HR classification (see CLIENT_EMPLOYMENT_TYPE_COUNTS). */
+export type EmploymentType =
+  | 'regular'
+  | 'deputation'
+  | 'contingent'
+  | 'dpl'
+  | 'short_term_project'
+  | 'vacant_post'
+  | 'unknown'
 
 export type Department = {
   id: string

@@ -5,15 +5,27 @@ import { RequirePermission } from './auth/RequirePermission'
 import { homePathForRole } from './portals/homePath'
 import { AppLayout } from './layouts/AppLayout'
 import { AccessDeniedPage } from './pages/AccessDeniedPage'
+import { AdminSettingsPage } from './pages/AdminSettingsPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { DepartmentListPage } from './pages/DepartmentListPage'
 import { DesignationListPage } from './pages/DesignationListPage'
 import { EmployeeDetailPage } from './pages/EmployeeDetailPage'
 import { EmployeeFormPage } from './pages/EmployeeFormPage'
 import { EmployeeListPage } from './pages/EmployeeListPage'
+import { EssDashboardPage } from './pages/EssDashboardPage'
 import { LoginPage } from './pages/LoginPage'
 import { MasterDataCatalogPage } from './pages/MasterDataCatalogPage'
 import { OrganogramPage } from './pages/OrganogramPage'
+import { RbacMatrixPage } from './pages/RbacMatrixPage'
+import { AttendanceImportPage } from './pages/AttendanceImportPage'
+import { AttendanceListPage } from './pages/AttendanceListPage'
+import { LeaveApprovalsPage } from './pages/LeaveApprovalsPage'
+import { LeaveRequestsPage } from './pages/LeaveRequestsPage'
+import { OnboardingPage } from './pages/OnboardingPage'
+import { PayrollRunsPage } from './pages/PayrollRunsPage'
+import { PayslipPage } from './pages/PayslipPage'
+import { RecruitmentPage } from './pages/RecruitmentPage'
+import { ReportsPage } from './pages/ReportsPage'
 import { RoadmapPage } from './pages/RoadmapPage'
 import { SprintModulesPage } from './pages/SprintModulesPage'
 import { AdminSettingsPage } from './pages/AdminSettingsPage'
@@ -41,11 +53,36 @@ export default function App() {
           <Route element={<AppLayout />}>
             <Route path="access-denied" element={<AccessDeniedPage />} />
             <Route index element={<HomeRedirect />} />
+            <Route index element={<HomeRedirect />} />
             <Route
               path="dashboard"
               element={
                 <RequirePermission permission="page:dashboard">
                   <DashboardPage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="ess"
+              element={
+                <RequirePermission permission="employee.view_self">
+                  <EssDashboardPage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="admin/settings"
+              element={
+                <RequirePermission permission="page:admin_settings">
+                  <AdminSettingsPage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="admin/rbac"
+              element={
+                <RequirePermission permission="page:rbac">
+                  <RbacMatrixPage />
                 </RequirePermission>
               }
             />
@@ -203,7 +240,7 @@ export default function App() {
             />
           </Route>
         </Route>
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
   )

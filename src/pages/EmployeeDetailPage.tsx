@@ -1,5 +1,6 @@
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import { employmentTypeLabel } from '../data/employmentStats'
 import {
   getDepartment,
   getDesignation,
@@ -73,7 +74,12 @@ export function EmployeeDetailPage() {
             </>
           ) : null}
           <dt>Employment type</dt>
-          <dd>{e.employmentType}</dd>
+          <dd>
+            {employmentTypeLabel(e.employmentType)}
+            {e.modeOfAppointment ? (
+              <span className="wf-card-desc"> · {e.modeOfAppointment}</span>
+            ) : null}
+          </dd>
           <dt>Phone</dt>
           <dd>{e.phone}</dd>
           <dt>Centre</dt>
