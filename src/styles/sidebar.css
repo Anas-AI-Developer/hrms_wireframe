@@ -94,10 +94,11 @@
 }
 
 /* Nav scroll area */
-.app-sidebar.nvqf-sidebar .nvqf-sidebar__body {
+.app-sidebar.nvqf-sidebar .nvqf-sidebar__body,
+.app-sidebar.nvqf-sidebar .main-sidebar.nvqf-sidebar__body {
   display: flex;
   flex-direction: column;
-  flex: 1;
+  flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
 }
@@ -234,13 +235,18 @@
   display: none;
 }
 
-/* Footer / profile */
-.app-sidebar.nvqf-sidebar .sidebar-footer {
+/* Footer / profile — pinned to bottom while nav scrolls */
+.app-sidebar.nvqf-sidebar .sidebar-footer,
+.app-sidebar.nvqf-sidebar .wf-sidebar-footer {
   flex-shrink: 0;
   margin-top: auto;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
   border-top: 1px solid #e2e8f5;
   background: #f7f9fe;
   padding: 0.65rem 0.75rem;
+  box-shadow: 0 -4px 12px rgba(15, 23, 41, 0.04);
 }
 
 .app-sidebar.nvqf-sidebar .wf-user-chip-avatar {
