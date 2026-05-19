@@ -5,36 +5,40 @@ import { RequirePermission } from './auth/RequirePermission'
 import { AppLayout } from './layouts/AppLayout'
 import { AccessDeniedPage } from './pages/AccessDeniedPage'
 import { AdminSettingsPage } from './pages/AdminSettingsPage'
+import { AttendanceImportPage } from './pages/AttendanceImportPage'
+import { AttendanceListPage } from './pages/AttendanceListPage'
+import { AttendanceReportPage } from './pages/AttendanceReportPage'
+import { BenefitsPage } from './pages/BenefitsPage'
+import { CompliancePage } from './pages/CompliancePage'
 import { DashboardPage } from './pages/DashboardPage'
 import { DepartmentListPage } from './pages/DepartmentListPage'
 import { DesignationListPage } from './pages/DesignationListPage'
 import { EmployeeDetailPage } from './pages/EmployeeDetailPage'
 import { EmployeeFormPage } from './pages/EmployeeFormPage'
+import { EmployeeAnalyticsPage } from './pages/EmployeeAnalyticsPage'
 import { EmployeeListPage } from './pages/EmployeeListPage'
 import { EssDashboardPage } from './pages/EssDashboardPage'
-import { LoginPage } from './pages/LoginPage'
-import { MasterDataCatalogPage } from './pages/MasterDataCatalogPage'
-import { OrganogramPage } from './pages/OrganogramPage'
-import { RbacMatrixPage } from './pages/RbacMatrixPage'
-import { AttendanceImportPage } from './pages/AttendanceImportPage'
-import { AttendanceListPage } from './pages/AttendanceListPage'
+import { HiringPipelinePage } from './pages/HiringPipelinePage'
+import { JobPostingsListPage } from './pages/JobPostingsListPage'
 import { LeaveApprovalsPage } from './pages/LeaveApprovalsPage'
 import { LeaveRequestsPage } from './pages/LeaveRequestsPage'
+import { LoginPage } from './pages/LoginPage'
+import { MasterDataCatalogPage } from './pages/MasterDataCatalogPage'
+import { OnboardingListPage } from './pages/OnboardingListPage'
 import { OnboardingPage } from './pages/OnboardingPage'
+import { OrganogramPage } from './pages/OrganogramPage'
+import { PayrollReportPage } from './pages/PayrollReportPage'
 import { PayrollRunsPage } from './pages/PayrollRunsPage'
 import { PayslipPage } from './pages/PayslipPage'
+import { PerformancePage } from './pages/PerformancePage'
+import { RbacMatrixPage } from './pages/RbacMatrixPage'
 import { RecruitmentPage } from './pages/RecruitmentPage'
 import { ReportsPage } from './pages/ReportsPage'
 import { RoadmapPage } from './pages/RoadmapPage'
+import { ScheduleInterviewPage } from './pages/ScheduleInterviewPage'
 import { SprintModulesPage } from './pages/SprintModulesPage'
 import { SystemProposalPage } from './pages/SystemProposalPage'
-import { PerformancePage } from './pages/PerformancePage'
 import { TrainingPage } from './pages/TrainingPage'
-import { BenefitsPage } from './pages/BenefitsPage'
-import { CompliancePage } from './pages/CompliancePage'
-import { AttendanceReportPage } from './pages/AttendanceReportPage'
-import { PayrollReportPage } from './pages/PayrollReportPage'
-import { EmployeeAnalyticsPage } from './pages/EmployeeAnalyticsPage'
 
 export default function App() {
   return (
@@ -126,38 +130,6 @@ export default function App() {
               }
             />
             <Route
-              path="roadmap"
-              element={
-                <RequirePermission permission="page:roadmap">
-                  <RoadmapPage />
-                </RequirePermission>
-              }
-            />
-            <Route
-              path="modules"
-              element={
-                <RequirePermission permission="page:modules">
-                  <SprintModulesPage />
-                </RequirePermission>
-              }
-            />
-            <Route
-              path="organogram"
-              element={
-                <RequirePermission permission="page:organogram">
-                  <OrganogramPage />
-                </RequirePermission>
-              }
-            />
-            <Route
-              path="master-data"
-              element={
-                <RequirePermission permission="page:master_data">
-                  <MasterDataCatalogPage />
-                </RequirePermission>
-              }
-            />
-            <Route
               path="attendance"
               element={
                 <RequirePermission permission="page:attendance">
@@ -190,18 +162,26 @@ export default function App() {
               }
             />
             <Route
-              path="payroll"
+              path="jobs"
               element={
-                <RequirePermission permission="page:payroll">
-                  <PayrollRunsPage />
+                <RequirePermission permission="page:recruitment">
+                  <JobPostingsListPage />
                 </RequirePermission>
               }
             />
             <Route
-              path="payslip"
+              path="hiring-pipeline"
               element={
-                <RequirePermission permission="page:payslip">
-                  <PayslipPage />
+                <RequirePermission permission="page:recruitment">
+                  <HiringPipelinePage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="schedule-interview"
+              element={
+                <RequirePermission permission="page:recruitment">
+                  <ScheduleInterviewPage />
                 </RequirePermission>
               }
             />
@@ -217,7 +197,31 @@ export default function App() {
               path="onboarding"
               element={
                 <RequirePermission permission="page:onboarding">
+                  <OnboardingListPage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="onboarding/cases"
+              element={
+                <RequirePermission permission="page:onboarding">
                   <OnboardingPage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="payroll"
+              element={
+                <RequirePermission permission="page:payroll">
+                  <PayrollRunsPage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="payslip"
+              element={
+                <RequirePermission permission="page:payslip">
+                  <PayslipPage />
                 </RequirePermission>
               }
             />
@@ -290,6 +294,38 @@ export default function App() {
               element={
                 <RequirePermission permission="page:compliance">
                   <CompliancePage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="roadmap"
+              element={
+                <RequirePermission permission="page:roadmap">
+                  <RoadmapPage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="modules"
+              element={
+                <RequirePermission permission="page:modules">
+                  <SprintModulesPage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="organogram"
+              element={
+                <RequirePermission permission="page:organogram">
+                  <OrganogramPage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="master-data"
+              element={
+                <RequirePermission permission="page:master_data">
+                  <MasterDataCatalogPage />
                 </RequirePermission>
               }
             />

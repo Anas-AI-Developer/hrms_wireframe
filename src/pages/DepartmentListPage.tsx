@@ -1,100 +1,157 @@
-import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
-import { departments, employees, getDepartment, sections } from '../data/mock'
-import './pages.css'
+import { DataListPanel } from '../components/hrms/DataListPanel'
+import { HrmsListShell } from '../components/hrms/HrmsListShell'
+import { RowActionsMenu } from '../components/hrms/RowActionsMenu'
+import { SortableTh } from '../components/hrms/SortableTh'
+import { StatusBadge } from '../components/hrms/StatusBadge'
+import { departments } from '../data/mock'
+import { useListControls } from '../hooks/useListControls'
+import type { Department } from '../types/hrms'
+import { formatListDate } from '../utils/formatDate'
 
 export function DepartmentListPage() {
   const { can } = useAuth()
   const canWrite = can('page:departments:write')
 
-  const sectionCounts = new Map<string, number>()
-  for (const s of sections) {
-    sectionCounts.set(s.departmentId, (sectionCounts.get(s.departmentId) ?? 0) + 1)
-  }
-  const headcount = new Map<string, number>()
-  for (const e of employees) {
-    headcount.set(e.departmentId, (headcount.get(e.departmentId) ?? 0) + 1)
-  }
+  const list = useListControls(departments, {
+    searchFn: (d, q) =>
+      d.name.toLowerCase().includes(q) || d.code.toLowerCase().includes(q),
+    statusFn: (d, f) => (f === 'all' ? true : d.status === f),
+    sortFns: {
+      name: (a, b) => a.name.localeCompare(b.name),
+      code: (a, b) => a.code.localeCompare(b.code),
+      status: (a, b) => a.status.localeCompare(b.status),
+      createdAt: (a, b) => a.createdAt.localeCompare(b.createdAt),
+    },
+    defaultSortColumn: 'name',
+  })
 
   return (
-    <div className="wf-page wf-page--wide">
-      <div className="wf-page-head">
-        <div>
-          <h1 className="wf-h1">Departments & sections</h1>
-          <p className="wf-lead">
-            <strong>Centres</strong> from MasterList <code>centre</code> column. <strong>Sections</strong> are
-            sub-units from <code>section_field</code> (client confirmed). Hierarchy is fixed per organogram / sheet.
-          </p>
-        </div>
-        <button
-          type="button"
-          className="wf-btn wf-btn--primary"
-          disabled={!canWrite}
-          title={canWrite ? 'Wireframe: no persistence yet' : 'Your role cannot create departments'}
-          onClick={() => {
-            if (canWrite) alert('Wireframe: create department form is not wired yet.')
-          }}
-        >
-          New centre
-        </button>
-      </div>
-
-      <div className="wf-table-wrap">
-        <table className="wf-table">
-          <thead>
-            <tr>
-              <th>Code</th>
-              <th>Centre</th>
-              <th>Head</th>
-              <th>Sections</th>
-              <th>Roster rows</th>
-            </tr>
-          </thead>
-          <tbody>
-            {departments.map((d) => (
-              <tr key={d.id}>
-                <td>
-                  <code>{d.code}</code>
-                </td>
-                <td>{d.name}</td>
-                <td>{d.headName}</td>
-                <td>{sectionCounts.get(d.id) ?? 0}</td>
-                <td>{headcount.get(d.id) ?? 0}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <section className="wf-section">
-        <h2 className="wf-h2">Sections (sample)</h2>
-        <div className="wf-table-wrap wf-table-wrap--scroll">
-          <table className="wf-table wf-table--compact">
+    <HrmsListShell
+      current="Departments"
+      actions={
+        canWrite ? (
+          <button
+            type="button"
+            className="hrms-btn-primary"
+            onClick={() => alert('Wireframe: create department — matches reference form (not persisted).')}
+          >
+            <i className="ri-add-line" aria-hidden /> New Department
+          </button>
+        ) : undefined
+      }
+    >
+      <DataListPanel
+        title="Departments list"
+        search={list.search}
+        onSearchChange={list.setSearch}
+        searchPlaceholder="Search by name or code..."
+        statusFilter={list.statusFilter}
+        onStatusFilterChange={list.setStatusFilter}
+        hasActiveFilters={list.hasActiveFilters}
+        onResetFilters={list.resetFilters}
+        firstItem={list.firstItem}
+        lastItem={list.lastItem}
+        total={list.total}
+        page={list.page}
+        totalPages={list.totalPages}
+        pageSize={list.pageSize}
+        onPageSizeChange={list.setPageSize}
+        onPageChange={list.setPage}
+      >
+        <div className="hrms-data-table-wrap">
+          <table className="hrms-data-table">
             <thead>
               <tr>
-                <th>Centre</th>
-                <th>Section</th>
+                <SortableTh
+                  label="Name"
+                  column="name"
+                  sortColumn={list.sortColumn}
+                  sortDir={list.sortDir}
+                  onSort={list.toggleSort}
+                />
+                <SortableTh
+                  label="Code"
+                  column="code"
+                  sortColumn={list.sortColumn}
+                  sortDir={list.sortDir}
+                  onSort={list.toggleSort}
+                />
+                <SortableTh
+                  label="Status"
+                  column="status"
+                  sortColumn={list.sortColumn}
+                  sortDir={list.sortDir}
+                  onSort={list.toggleSort}
+                />
+                <SortableTh
+                  label="Created"
+                  column="createdAt"
+                  sortColumn={list.sortColumn}
+                  sortDir={list.sortDir}
+                  onSort={list.toggleSort}
+                />
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {sections.slice(0, 40).map((s) => (
-                <tr key={s.id}>
-                  <td>{getDepartment(s.departmentId)?.name ?? '—'}</td>
-                  <td>{s.name}</td>
+              {list.pageRows.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="hrms-empty">
+                    No departments found.
+                  </td>
                 </tr>
-              ))}
+              ) : (
+                list.pageRows.map((d) => (
+                  <DeptRow key={d.id} dept={d} canWrite={canWrite} />
+                ))
+              )}
             </tbody>
           </table>
         </div>
-        {sections.length > 40 ? (
-          <p className="wf-note">Showing 40 of {sections.length} sections.</p>
-        ) : null}
-      </section>
+      </DataListPanel>
+    </HrmsListShell>
+  )
+}
 
-      <p className="wf-note">
-        Employees belong to <strong>one</strong> centre; transfers are tracked in change history.{' '}
-        <Link to="/employees">Employees</Link> · <Link to="/organogram">Organogram</Link>
-      </p>
-    </div>
+function DeptRow({ dept, canWrite }: { dept: Department; canWrite: boolean }) {
+  return (
+    <tr>
+      <td className="font-medium">{dept.name}</td>
+      <td>{dept.code}</td>
+      <td>
+        <StatusBadge status={dept.status} />
+      </td>
+      <td className="text-sm" style={{ color: '#64748b' }}>
+        {formatListDate(dept.createdAt)}
+      </td>
+      <td>
+        <RowActionsMenu
+          id={dept.id}
+          actions={[
+            ...(canWrite
+              ? [
+                  {
+                    label: 'Edit',
+                    onClick: () => alert(`Wireframe: edit ${dept.name}`),
+                  },
+                  {
+                    label: 'Delete',
+                    danger: true,
+                    onClick: () =>
+                      alert(
+                        'Wireframe: marks department inactive (same as reference delete behaviour).',
+                      ),
+                  },
+                ]
+              : [{ label: 'View', onClick: () => {} }]),
+            {
+              label: 'View employees',
+              href: `/employees?dept=${dept.id}`,
+            },
+          ]}
+        />
+      </td>
+    </tr>
   )
 }

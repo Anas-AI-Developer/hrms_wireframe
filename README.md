@@ -66,7 +66,10 @@ On the login screen, click **Show role cred** (below the Login button) for the f
 |------|--------|
 | `/login` | Sign-in + credential reference |
 | `/access-denied` | Missing permission |
-| `/dashboard` | Summary cards + recent employees (if allowed) |
+| `/dashboard` | Role portal (KPI cards + HR home links like reference `hrms-home`) |
+| `/ess` | Employee self-service portal |
+| `/admin/settings` | Admin settings (ED / DG) |
+| `/admin/rbac` | Roles & permissions matrix (ED / DG) |
 | `/employees` | Roster (client sample) |
 | `/employees/new` | Create form (alert only) |
 | `/employees/:id` | Detail (`m-<S.#>`) |

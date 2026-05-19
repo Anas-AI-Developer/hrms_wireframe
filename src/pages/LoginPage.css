@@ -78,11 +78,12 @@
   padding: 12px 20px;
 }
 
-.nvqf-brand-logo-text {
-  font-size: 1.35rem;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  color: var(--nvqf-login-blue2);
+.nvqf-brand-logo-img {
+  display: block;
+  width: 115px;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
 }
 
 .nvqf-brand-welcome-title {

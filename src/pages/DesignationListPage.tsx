@@ -1,59 +1,126 @@
 import { useAuth } from '../auth/AuthContext'
+import { DataListPanel } from '../components/hrms/DataListPanel'
+import { HrmsListShell } from '../components/hrms/HrmsListShell'
+import { RowActionsMenu } from '../components/hrms/RowActionsMenu'
+import { SortableTh } from '../components/hrms/SortableTh'
+import { StatusBadge } from '../components/hrms/StatusBadge'
 import { designations, getDepartment } from '../data/mock'
-import './pages.css'
+import { useListControls } from '../hooks/useListControls'
+import { formatListDate } from '../utils/formatDate'
 
 export function DesignationListPage() {
   const { can } = useAuth()
   const canWrite = can('page:designations:write')
 
-  return (
-    <div className="wf-page wf-page--wide">
-      <div className="wf-page-head">
-        <div>
-          <h1 className="wf-h1">Designations</h1>
-          <p className="wf-lead">
-            Sanctioned posts from MasterList + organogram — keyed to <strong>centre</strong> and <strong>BPS</strong>{' '}
-            (see organogram PDF).
-          </p>
-        </div>
-        <button
-          type="button"
-          className="wf-btn wf-btn--primary"
-          disabled={!canWrite}
-          title={canWrite ? 'Wireframe: no persistence yet' : 'Your role cannot create designations'}
-          onClick={() => {
-            if (canWrite) alert('Wireframe: create designation form is not wired yet.')
-          }}
-        >
-          New designation
-        </button>
-      </div>
+  const list = useListControls(designations, {
+    searchFn: (g, q) => {
+      const dept = getDepartment(g.departmentId)
+      return (
+        g.title.toLowerCase().includes(q) ||
+        g.grade.toLowerCase().includes(q) ||
+        (dept?.name.toLowerCase().includes(q) ?? false)
+      )
+    },
+    statusFn: (g, f) => (f === 'all' ? true : g.status === f),
+    sortFns: {
+      title: (a, b) => a.title.localeCompare(b.title),
+      centre: (a, b) =>
+        (getDepartment(a.departmentId)?.name ?? '').localeCompare(
+          getDepartment(b.departmentId)?.name ?? '',
+        ),
+      grade: (a, b) => a.grade.localeCompare(b.grade),
+      status: (a, b) => a.status.localeCompare(b.status),
+      createdAt: (a, b) => a.createdAt.localeCompare(b.createdAt),
+    },
+  })
 
-      <div className="wf-table-wrap">
-        <table className="wf-table">
-          <thead>
-            <tr>
-              <th>Centre</th>
-              <th>Title</th>
-              <th>Grade</th>
-            </tr>
-          </thead>
-          <tbody>
-            {designations.map((g) => {
-              const d = getDepartment(g.departmentId)
-              return (
-                <tr key={g.id}>
-                  <td>{d?.name ?? '—'}</td>
-                  <td>{g.title}</td>
-                  <td>
-                    <code>{g.grade}</code>
+  return (
+    <HrmsListShell
+      current="Designations"
+      actions={
+        canWrite ? (
+          <button
+            type="button"
+            className="hrms-btn-primary"
+            onClick={() => alert('Wireframe: create designation (not persisted).')}
+          >
+            <i className="ri-add-line" aria-hidden /> New Designation
+          </button>
+        ) : undefined
+      }
+    >
+      <DataListPanel
+        title="Designations list"
+        search={list.search}
+        onSearchChange={list.setSearch}
+        searchPlaceholder="Search by title, grade, or centre..."
+        statusFilter={list.statusFilter}
+        onStatusFilterChange={list.setStatusFilter}
+        hasActiveFilters={list.hasActiveFilters}
+        onResetFilters={list.resetFilters}
+        firstItem={list.firstItem}
+        lastItem={list.lastItem}
+        total={list.total}
+        page={list.page}
+        totalPages={list.totalPages}
+        pageSize={list.pageSize}
+        onPageSizeChange={list.setPageSize}
+        onPageChange={list.setPage}
+      >
+        <div className="hrms-data-table-wrap">
+          <table className="hrms-data-table">
+            <thead>
+              <tr>
+                <SortableTh label="Title" column="title" sortColumn={list.sortColumn} sortDir={list.sortDir} onSort={list.toggleSort} />
+                <SortableTh label="Centre" column="centre" sortColumn={list.sortColumn} sortDir={list.sortDir} onSort={list.toggleSort} />
+                <SortableTh label="Grade" column="grade" sortColumn={list.sortColumn} sortDir={list.sortDir} onSort={list.toggleSort} />
+                <SortableTh label="Status" column="status" sortColumn={list.sortColumn} sortDir={list.sortDir} onSort={list.toggleSort} />
+                <SortableTh label="Created" column="createdAt" sortColumn={list.sortColumn} sortDir={list.sortDir} onSort={list.toggleSort} />
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {list.pageRows.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="hrms-empty">
+                    No designations found.
                   </td>
                 </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
-    </div>
+              ) : (
+                list.pageRows.map((g) => {
+                  const d = getDepartment(g.departmentId)
+                  return (
+                    <tr key={g.id}>
+                      <td className="font-medium">{g.title}</td>
+                      <td>{d?.name ?? '—'}</td>
+                      <td>{g.grade}</td>
+                      <td>
+                        <StatusBadge status={g.status} />
+                      </td>
+                      <td className="text-sm" style={{ color: '#64748b' }}>
+                        {formatListDate(g.createdAt)}
+                      </td>
+                      <td>
+                        <RowActionsMenu
+                          id={g.id}
+                          actions={[
+                            ...(canWrite
+                              ? [
+                                  { label: 'Edit', onClick: () => alert(`Edit ${g.title}`) },
+                                  { label: 'Delete', danger: true, onClick: () => alert('Mark inactive') },
+                                ]
+                              : [{ label: 'View', onClick: () => {} }]),
+                          ]}
+                        />
+                      </td>
+                    </tr>
+                  )
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </DataListPanel>
+    </HrmsListShell>
   )
 }
