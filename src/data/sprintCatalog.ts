@@ -123,19 +123,19 @@ export const sprintCatalog: SprintBlock[] = [
         id: 's4-r-att',
         title: 'Attendance reports',
         summary: 'Sprint 4 scope — attendance analytics.',
-        wireframeStatus: 'planned',
+        wireframeStatus: 'live_stub',
       },
       {
         id: 's4-r-pay',
         title: 'Payroll reports',
         summary: 'Registers and payroll analytics.',
-        wireframeStatus: 'planned',
+        wireframeStatus: 'live_stub',
       },
       {
         id: 's4-r-emp',
         title: 'Employee analytics',
         summary: 'Demographics, tenure, headcount trends.',
-        wireframeStatus: 'planned',
+        wireframeStatus: 'live_stub',
       },
       {
         id: 's4-dash',

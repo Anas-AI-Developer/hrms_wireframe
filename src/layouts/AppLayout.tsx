@@ -50,7 +50,10 @@ const navGroups: { label: string; items: NavItem[] }[] = [
   {
     label: 'Insights',
     items: [
-      { to: '/reports', label: 'Reports', permission: 'page:reports' },
+      { to: '/reports', label: 'Reports hub', permission: 'page:reports' },
+      { to: '/reports/attendance', label: 'Attendance analytics', permission: 'page:reports:attendance' },
+      { to: '/reports/payroll', label: 'Payroll register', permission: 'page:reports:payroll' },
+      { to: '/reports/employees', label: 'Employee analytics', permission: 'page:reports:employees' },
       { to: '/proposal', label: 'Proposed flows', permission: 'page:proposal' },
     ],
   },

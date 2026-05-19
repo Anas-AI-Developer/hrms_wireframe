@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { ExecutiveDashboardPanel } from '../components/ExecutiveDashboardPanel'
 import { useAuth } from '../auth/AuthContext'
 import { departments } from '../data/mock'
 import './pages.css'
@@ -76,6 +77,8 @@ export function DashboardPage() {
           )}
         </article>
       </div>
+
+      {can('page:dashboard:executive') ? <ExecutiveDashboardPanel /> : null}
 
       <section className="wf-section">
         <h2 className="wf-h2">Module flows (quick links)</h2>

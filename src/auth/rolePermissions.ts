@@ -38,6 +38,8 @@ const HR_MANAGEMENT: Permission[] = [
   'benefits.view_self',
   'page:compliance',
   'page:compliance:manage',
+  'page:reports:attendance',
+  'page:reports:employees',
 ]
 
 const EMPLOYEE_ESS: Permission[] = [
@@ -68,6 +70,9 @@ const ACCOUNTS_FINANCE: Permission[] = [
   'page:proposal',
   'page:benefits',
   'page:compliance',
+  'page:reports:attendance',
+  'page:reports:payroll',
+  'page:reports:employees',
 ]
 
 export const ALL_PERMISSIONS: Permission[] = [
@@ -113,6 +118,10 @@ export const ALL_PERMISSIONS: Permission[] = [
   'benefits.view_self',
   'page:compliance',
   'page:compliance:manage',
+  'page:reports:attendance',
+  'page:reports:payroll',
+  'page:reports:employees',
+  'page:dashboard:executive',
 ]
 
 /** Role → allowed permissions (client-confirmed matrix). */

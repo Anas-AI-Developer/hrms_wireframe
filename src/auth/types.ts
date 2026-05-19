@@ -53,6 +53,10 @@ export type Permission =
   | 'benefits.view_self'
   | 'page:compliance'
   | 'page:compliance:manage'
+  | 'page:reports:attendance'
+  | 'page:reports:payroll'
+  | 'page:reports:employees'
+  | 'page:dashboard:executive'
 
 export type AuthUser = {
   username: string
