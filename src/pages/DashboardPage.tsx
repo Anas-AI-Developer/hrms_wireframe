@@ -1,4 +1,4 @@
-import { Link, Navigate } from 'react-router-dom'
+﻿import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { userRoleLabel } from '../auth/roleLabels'
 import { PageBreadcrumb } from '../components/hrms/PageBreadcrumb'
@@ -47,48 +47,6 @@ export function DashboardPage() {
     scoped.length > 0 ? Math.round((active / scoped.length) * 100) : 0
 
   return (
-    <div className="wf-page">
-      <h1 className="wf-h1">Dashboard</h1>
-      <p className="wf-lead">
-        NAVTTC HRMS wireframe — proposed modules and role-based flows. Demo data from client MasterList; focus is on
-        screens and hand-offs, not record totals.
-      </p>
-
-      <div className="wf-grid wf-grid--3">
-        <article className="wf-card">
-          <div className="wf-card-kicker">Workforce (your scope)</div>
-          <div className="wf-card-stat">{scoped.length}</div>
-          <div className="wf-card-desc">Active {active} in scope</div>
-          {can('page:employees') ? (
-            <Link className="wf-card-link" to="/employees">
-              Open roster →
-            </Link>
-          ) : null}
-        </article>
-        <article className="wf-card">
-          <div className="wf-card-kicker">Organisation</div>
-          <div className="wf-card-stat">{departments.length}</div>
-          <div className="wf-card-desc">Centres from master data</div>
-          {can('page:departments') ? (
-            <Link className="wf-card-link" to="/departments">
-              Centres & sections →
-            </Link>
-          ) : null}
-        </article>
-        <article className="wf-card">
-          <div className="wf-card-kicker">Proposed system</div>
-          <div className="wf-card-desc">How modules connect</div>
-          {can('page:proposal') ? (
-            <Link className="wf-card-link" to="/proposal">
-              View flows →
-            </Link>
-          ) : (
-            <Link className="wf-card-link" to="/modules">
-              Sprint modules →
-            </Link>
-          )}
-        </article>
-      </div>
     <div className="hrms-ref-page hrms-dash-page">
       <header className="hrms-dash-page-header">
         <PageBreadcrumb current="Dashboard" />
@@ -99,7 +57,7 @@ export function DashboardPage() {
             ) : null}
             <h1 className="hrms-dash-welcome__title">Dashboard</h1>
             <p className="hrms-dash-welcome__lead">
-              Welcome back, <strong>{user.displayName}</strong> —{' '}
+              Welcome back, <strong>{user.displayName}</strong> â€”{' '}
               {userRoleLabel(user.role, user.designation)}. Overview of workforce and HR modules
               (wireframe data from client MasterList).
             </p>
@@ -121,7 +79,7 @@ export function DashboardPage() {
             footnote={
               <span>
                 <span className="hrms-trend-up">{fillRate}% active</span>
-                <span className="hrms-trend-muted"> · wireframe scope</span>
+                <span className="hrms-trend-muted"> Â· wireframe scope</span>
               </span>
             }
             to={canEmployees ? '/employees' : undefined}
@@ -144,7 +102,7 @@ export function DashboardPage() {
             footnote={
               can('page:leave') ? (
                 <Link to="/leave" className="hrms-kpi-card__link" style={{ marginTop: 0 }}>
-                  Leave requests →
+                  Leave requests â†’
                 </Link>
               ) : (
                 <span className="hrms-trend-muted">Leave module</span>
@@ -186,7 +144,7 @@ export function DashboardPage() {
               <div className="hrms-dash-recent__head">
                 <h2 id="recent-employees-title">Recent employees</h2>
                 <Link to="/employees" className="hrms-dash-recent__link">
-                  View all →
+                  View all â†’
                 </Link>
               </div>
               <div className="hrms-dash-recent__body">
@@ -211,7 +169,7 @@ export function DashboardPage() {
                           <td className="font-medium">
                             {e.firstName} {e.lastName}
                           </td>
-                          <td>{e.sanctionedPost ?? '—'}</td>
+                          <td>{e.sanctionedPost ?? 'â€”'}</td>
                           <td>
                             <StatusBadge status={e.status} />
                           </td>

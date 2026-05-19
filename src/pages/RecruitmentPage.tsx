@@ -77,7 +77,7 @@ export function RecruitmentPage() {
                     <td>{stageLabel[c.stage] ?? c.stage}</td>
                     <td>
                       {c.stage === 'offer' ? (
-                        <Link className="wf-link-quiet" to="/onboarding">→ Onboarding</Link>
+                        <Link className="wf-link-quiet" to="/onboarding/cases">→ Onboarding</Link>
                       ) : (
                         <button type="button" className="wf-link-quiet" onClick={() => alert('Wireframe: advance stage')}>
                           Advance

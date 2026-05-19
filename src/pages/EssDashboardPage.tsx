@@ -28,7 +28,7 @@ const ESS_MODULES = [
 ] as const
 
 export function EssDashboardPage() {
-  const { user, actorEmployeeId, can } = useAuth()
+  const { user, actorEmployeeId } = useAuth()
   const profile = actorEmployeeId ? getEmployee(actorEmployeeId) : undefined
 
   return (
