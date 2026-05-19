@@ -67,6 +67,8 @@ export type AuthUser = {
   displayName: string
   role: RoleId
   designation?: string
+  email?: string
+  phone?: string
   /** Linked roster row for scope (manager team / ESS self). */
   employeeId?: string
 }

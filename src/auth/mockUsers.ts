@@ -1,4 +1,5 @@
 import { DEMO_PASSWORD, EMPLOYEE_DESIGNATIONS, LEADERSHIP_ACCOUNTS } from './clientRoles'
+import { getEffectivePassword } from './profileStorage'
 import { ROLE_LABELS } from './roleLabels'
 import type { RoleId } from './types'
 
@@ -38,7 +39,10 @@ export function roleLabelForUser(u: MockUserRecord): string {
 }
 
 export function findMockUser(username: string, password: string) {
-  return MOCK_USERS.find(
-    (x) => x.username.toLowerCase() === username.trim().toLowerCase() && x.password === password,
-  )
+  const normalized = username.trim().toLowerCase()
+  const row = MOCK_USERS.find((x) => x.username.toLowerCase() === normalized)
+  if (!row) return undefined
+  const effective = getEffectivePassword(normalized, row.password)
+  if (password !== effective) return undefined
+  return row
 }

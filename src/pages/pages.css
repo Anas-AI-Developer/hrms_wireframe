@@ -473,6 +473,12 @@
   list-style: decimal;
 }
 
+.wf-note--ok {
+  color: #166534;
+  background: #ecfdf3;
+  border-color: #bbf7d0;
+}
+
 .wf-note--warn {
   color: #b45309;
   background: #fffbeb;

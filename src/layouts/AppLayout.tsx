@@ -1,7 +1,6 @@
 import { Fragment } from 'react'
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
-import { userRoleLabel } from '../auth/roleLabels'
 import {
   CONFIG_NAV_GROUP,
   ESS_NAV,
@@ -9,20 +8,19 @@ import {
   PLANNING_NAV_GROUP,
   type NavGroupDef,
 } from '../components/hrms/navConfig'
+import { SidebarUserMenu } from './SidebarUserMenu'
 import './AppLayout.css'
 
 function initials(displayName: string): string {
-  return displayName
-    .split(/\s+/)
-    .filter(Boolean)
+  const parts = displayName.split(/\s+/).filter((part) => /[a-zA-Z]/.test(part))
+  return parts
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase() ?? '')
     .join('')
 }
 
 export function AppLayout() {
-  const { user, logout, can } = useAuth()
-  const navigate = useNavigate()
+  const { user, can } = useAuth()
 
   const isEmployee = user?.role === 'employee'
   const homeTo = isEmployee ? '/ess' : '/dashboard'
@@ -43,11 +41,6 @@ export function AppLayout() {
           items: CONFIG_NAV_GROUP.items.filter((i) => can(i.permission)),
         },
       ].filter((g) => g.items.length > 0)
-
-  function onLogout() {
-    logout()
-    navigate('/login', { replace: true })
-  }
 
   return (
     <div className="wf-shell hrms-ui-ref nvqf-sidebar-layout">
@@ -105,20 +98,7 @@ export function AppLayout() {
 
           {user ? (
             <footer className="sidebar-footer nvqf-sidebar-footer-row wf-sidebar-footer">
-              <div className="wf-user-chip">
-                <div className="wf-user-chip-avatar" aria-hidden>
-                  {initials(user.displayName)}
-                </div>
-                <div className="wf-user-chip-text">
-                  <div className="wf-user-chip-name">{user.displayName}</div>
-                  <div className="wf-user-chip-role">
-                    {userRoleLabel(user.role, user.designation)}
-                  </div>
-                </div>
-              </div>
-              <button type="button" className="wf-sidebar-logout" onClick={onLogout}>
-                Sign out
-              </button>
+              <SidebarUserMenu user={user} initials={initials(user.displayName)} />
             </footer>
           ) : null}
         </div>
