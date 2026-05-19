@@ -46,6 +46,7 @@ import { ScheduleInterviewPage } from './pages/ScheduleInterviewPage'
 import { SprintModulesPage } from './pages/SprintModulesPage'
 import { SystemProposalPage } from './pages/SystemProposalPage'
 import { TrainingPage } from './pages/TrainingPage'
+import { UserProfilePage } from './pages/UserProfilePage'
 
 export default function App() {
   return (
@@ -55,6 +56,8 @@ export default function App() {
         <Route element={<RequireAuth />}>
           <Route element={<AppLayout />}>
             <Route path="access-denied" element={<HomeRedirect />} />
+            <Route path="access-denied" element={<AccessDeniedPage />} />
+            <Route path="profile" element={<UserProfilePage />} />
             <Route index element={<HomeRedirect />} />
             <Route
               path="dashboard"

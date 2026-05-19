@@ -1,6 +1,6 @@
+import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { userRoleLabel } from '../auth/roleLabels'
-import { getEmployee } from '../data/mock'
 import './pages.css'
 import '../components/PortalHomePanel.css'
 
@@ -23,13 +23,13 @@ const ESS_MODULES = [
   {
     title: 'My profile',
     desc: 'Personal details, documents, and contact information.',
-    status: 'Planned',
+    status: 'Open',
+    to: '/profile?section=details',
   },
 ] as const
 
 export function EssDashboardPage() {
-  const { user, actorEmployeeId } = useAuth()
-  const profile = actorEmployeeId ? getEmployee(actorEmployeeId) : undefined
+  const { user } = useAuth()
 
   return (
     <div className="hrms-ref-page wf-page--portal">
@@ -42,24 +42,19 @@ export function EssDashboardPage() {
         </p>
       </header>
 
-      {profile ? (
-        <div className="hrms-portal-panel" style={{ maxWidth: '42rem', marginBottom: '1.25rem' }}>
-          <header className="hrms-portal-panel__header">
-            <h2 className="hrms-portal-panel__title">Your profile</h2>
-            <p className="hrms-portal-panel__subtitle">
-              {profile.firstName} {profile.lastName} · {profile.employeeNo} ·{' '}
-              {profile.sanctionedPost ?? '—'} · {profile.location}
-            </p>
-          </header>
-        </div>
-      ) : null}
-
       <div className="wf-grid wf-grid--3">
         {ESS_MODULES.map((mod) => (
           <article key={mod.title} className="wf-card">
             <h2 className="wf-h2">{mod.title}</h2>
             <p className="wf-card-desc">{mod.desc}</p>
             <span className="wf-pill">{mod.status}</span>
+            {'to' in mod && mod.to ? (
+              <p style={{ marginTop: '0.75rem' }}>
+                <Link to={mod.to} className="wf-btn wf-btn--primary wf-btn--sm">
+                  Open
+                </Link>
+              </p>
+            ) : null}
           </article>
         ))}
       </div>
