@@ -134,7 +134,7 @@ export const CONFIG_NAV_GROUP: NavGroupDef = {
 export const ESS_NAV: NavItemDef[] = [
   {
     to: '/ess',
-    label: 'My dashboard',
+    label: 'Dashboard',
     permission: 'page:dashboard',
     icon: <IconDashboard />,
     end: true,
@@ -142,7 +142,37 @@ export const ESS_NAV: NavItemDef[] = [
   {
     to: '/ess/leave',
     label: 'My leave',
-    permission: 'page:dashboard',
+    permission: 'page:leave',
     icon: <IconCalendar />,
+  },
+  {
+    to: '/ess/attendance',
+    label: 'My attendance',
+    permission: 'page:attendance',
+    icon: <IconAttendance />,
+  },
+  {
+    to: '/ess/payslip',
+    label: 'My payslip',
+    permission: 'page:payslip',
+    icon: <IconBriefcase />,
+  },
+  {
+    to: '/ess/performance',
+    label: 'My performance',
+    permission: 'page:performance',
+    icon: <IconChart />,
+  },
+  {
+    to: '/ess/training',
+    label: 'My training',
+    permission: 'page:training',
+    icon: <IconCheckCircle />,
+  },
+  {
+    to: '/ess/benefits',
+    label: 'My benefits',
+    permission: 'page:benefits',
+    icon: <IconUsers />,
   },
 ]

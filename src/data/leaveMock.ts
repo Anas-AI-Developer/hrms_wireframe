@@ -1,5 +1,6 @@
 import type { Employee } from '../types/hrms'
 import { employees } from './clientDataset'
+import { addDaysIso, WIREFRAME_TODAY } from '../utils/attendanceStats'
 
 export type LeaveTypeId = 'casual' | 'sick' | 'annual' | 'emergency'
 
@@ -25,26 +26,69 @@ export const LEAVE_TYPE_LABELS: Record<LeaveTypeId, string> = {
   emergency: 'Emergency',
 }
 
-const filled = employees.filter((e) => e.status === 'active' && e.employmentType !== 'vacant_post')
+const roster = employees.filter((e) => e.status === 'active' && e.employmentType !== 'vacant_post')
 
-export const leaveRequests: LeaveRequest[] = filled.slice(0, 24).map((e, i) => {
+function pickStatus(i: number): LeaveRequestStatus {
+  if (i % 7 === 0) return 'pending'
+  if (i % 11 === 0) return 'rejected'
+  if (i % 13 === 0) return 'cancelled'
+  return 'approved'
+}
+
+function buildLeaveRequests(): LeaveRequest[] {
   const types: LeaveTypeId[] = ['casual', 'sick', 'annual', 'emergency']
-  const type = types[i % types.length]!
-  const status: LeaveRequestStatus =
-    i % 5 === 0 ? 'pending' : i % 7 === 0 ? 'rejected' : 'approved'
-  return {
-    id: `lr-${i + 1}`,
-    employeeId: e.id,
-    leaveType: type,
-    fromDate: `2026-0${(i % 6) + 4}-0${(i % 9) + 1}`,
-    toDate: `2026-0${(i % 6) + 4}-0${(i % 9) + 2}`,
-    days: (i % 3) + 1,
-    reason: `Wireframe ${LEAVE_TYPE_LABELS[type]} request`,
-    status,
-    submittedAt: `2026-0${(i % 6) + 3}-${10 + i}`,
-    ...(status === 'rejected' ? { approverNote: 'Insufficient balance (demo)' } : {}),
-  }
-})
+  const list: LeaveRequest[] = []
+
+  roster.slice(0, 36).forEach((e, i) => {
+    const type = types[i % types.length]!
+    const status = pickStatus(i)
+    const fromOffset = -(i % 20)
+    const fromDate = addDaysIso(WIREFRAME_TODAY, fromOffset)
+    const days = (i % 4) + 1
+    const toDate = addDaysIso(fromDate, days - 1)
+    const submittedAt = addDaysIso(fromDate, -2)
+
+    list.push({
+      id: `lr-${e.id}-${fromDate}`,
+      employeeId: e.id,
+      leaveType: type,
+      fromDate,
+      toDate,
+      days,
+      reason:
+        status === 'pending'
+          ? `Pending ${LEAVE_TYPE_LABELS[type]} — awaiting HR/manager (demo)`
+          : `${LEAVE_TYPE_LABELS[type]} — ${e.sanctionedPost ?? 'staff'} (demo)`,
+      status,
+      submittedAt,
+      ...(status === 'rejected' ? { approverNote: 'Insufficient balance or peak staffing (demo)' } : {}),
+      ...(status === 'approved' && i % 5 === 0
+        ? { approverNote: 'Approved by Assistant Director (demo)' }
+        : {}),
+    })
+  })
+
+  // Extra pending queue for HR wireframe
+  roster.slice(0, 8).forEach((e, i) => {
+    const fromDate = addDaysIso(WIREFRAME_TODAY, 3 + i)
+    const toDate = addDaysIso(fromDate, 1)
+    list.push({
+      id: `lr-pending-${e.id}`,
+      employeeId: e.id,
+      leaveType: types[i % types.length]!,
+      fromDate,
+      toDate,
+      days: 2,
+      reason: 'Upcoming leave — requires directorate approval',
+      status: 'pending',
+      submittedAt: WIREFRAME_TODAY,
+    })
+  })
+
+  return list.sort((a, b) => b.submittedAt.localeCompare(a.submittedAt))
+}
+
+export const leaveRequests: LeaveRequest[] = buildLeaveRequests()
 
 export type LeaveBalance = {
   employeeId: string
@@ -54,7 +98,7 @@ export type LeaveBalance = {
   emergency: number
 }
 
-export const leaveBalances: LeaveBalance[] = filled.map((e, i) => ({
+export const leaveBalances: LeaveBalance[] = roster.map((e, i) => ({
   employeeId: e.id,
   casual: 10 - (i % 3),
   sick: 8,
@@ -73,4 +117,8 @@ export function getLeaveRequestsForEmployee(employeeId: string) {
 export function getPendingLeaveForApprover(managerId: string, roster: Employee[]) {
   const teamIds = new Set(roster.filter((e) => e.managerId === managerId).map((e) => e.id))
   return leaveRequests.filter((r) => r.status === 'pending' && teamIds.has(r.employeeId))
+}
+
+export function getScopedLeaveRequests(scopedEmployeeIds: Set<string>) {
+  return leaveRequests.filter((r) => scopedEmployeeIds.has(r.employeeId))
 }

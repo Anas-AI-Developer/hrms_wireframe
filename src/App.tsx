@@ -1,9 +1,8 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { HomeRedirect } from './components/HomeRedirect'
 import { RequireAuth } from './auth/RequireAuth'
 import { RequirePermission } from './auth/RequirePermission'
 import { AppLayout } from './layouts/AppLayout'
-import { AccessDeniedPage } from './pages/AccessDeniedPage'
 import { AdminSettingsPage } from './pages/AdminSettingsPage'
 import { AttendanceImportPage } from './pages/AttendanceImportPage'
 import { AttendanceListPage } from './pages/AttendanceListPage'
@@ -17,11 +16,19 @@ import { EmployeeDetailPage } from './pages/EmployeeDetailPage'
 import { EmployeeFormPage } from './pages/EmployeeFormPage'
 import { EmployeeAnalyticsPage } from './pages/EmployeeAnalyticsPage'
 import { EmployeeListPage } from './pages/EmployeeListPage'
-import { EssDashboardPage } from './pages/EssDashboardPage'
+import { EssLayout } from './layouts/EssLayout'
+import { EssAttendancePage } from './pages/ess/EssAttendancePage'
+import { EssBenefitsPage } from './pages/ess/EssBenefitsPage'
+import { EssLeavePage } from './pages/ess/EssLeavePage'
+import { EssDashboardPage } from './pages/ess/EssDashboardPage'
+import { EssPayslipPage } from './pages/ess/EssPayslipPage'
+import { EssPerformancePage } from './pages/ess/EssPerformancePage'
+import { EssTrainingPage } from './pages/ess/EssTrainingPage'
 import { HiringPipelinePage } from './pages/HiringPipelinePage'
 import { JobPostingsListPage } from './pages/JobPostingsListPage'
 import { LeaveApprovalsPage } from './pages/LeaveApprovalsPage'
-import { LeaveRequestsPage } from './pages/LeaveRequestsPage'
+import { LeaveManagementPage } from './pages/LeaveManagementPage'
+import { LeaveHubProvider } from './leave/LeaveHubContext'
 import { LoginPage } from './pages/LoginPage'
 import { MasterDataCatalogPage } from './pages/MasterDataCatalogPage'
 import { OnboardingListPage } from './pages/OnboardingListPage'
@@ -48,7 +55,7 @@ export default function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route element={<RequireAuth />}>
           <Route element={<AppLayout />}>
-            <Route path="access-denied" element={<AccessDeniedPage />} />
+            <Route path="access-denied" element={<HomeRedirect />} />
             <Route path="profile" element={<UserProfilePage />} />
             <Route index element={<HomeRedirect />} />
             <Route
@@ -63,10 +70,60 @@ export default function App() {
               path="ess"
               element={
                 <RequirePermission permission="employee.view_self">
-                  <EssDashboardPage />
+                  <EssLayout />
                 </RequirePermission>
               }
-            />
+            >
+              <Route index element={<EssDashboardPage />} />
+              <Route
+                path="leave"
+                element={
+                  <RequirePermission permission="page:leave">
+                    <EssLeavePage />
+                  </RequirePermission>
+                }
+              />
+              <Route
+                path="attendance"
+                element={
+                  <RequirePermission permission="page:attendance">
+                    <EssAttendancePage />
+                  </RequirePermission>
+                }
+              />
+              <Route
+                path="payslip"
+                element={
+                  <RequirePermission permission="page:payslip">
+                    <EssPayslipPage />
+                  </RequirePermission>
+                }
+              />
+              <Route
+                path="performance"
+                element={
+                  <RequirePermission permission="page:performance">
+                    <EssPerformancePage />
+                  </RequirePermission>
+                }
+              />
+              <Route
+                path="training"
+                element={
+                  <RequirePermission permission="page:training">
+                    <EssTrainingPage />
+                  </RequirePermission>
+                }
+              />
+              <Route
+                path="benefits"
+                element={
+                  <RequirePermission permission="page:benefits">
+                    <EssBenefitsPage />
+                  </RequirePermission>
+                }
+              />
+            </Route>
             <Route
               path="admin/settings"
               element={
@@ -151,18 +208,22 @@ export default function App() {
               path="leave"
               element={
                 <RequirePermission permission="page:leave">
-                  <LeaveRequestsPage />
+                  <LeaveHubProvider>
+                    <Outlet />
+                  </LeaveHubProvider>
                 </RequirePermission>
               }
-            />
-            <Route
-              path="leave/approvals"
-              element={
-                <RequirePermission permission="page:leave:approvals">
-                  <LeaveApprovalsPage />
-                </RequirePermission>
-              }
-            />
+            >
+              <Route index element={<LeaveManagementPage />} />
+              <Route
+                path="approvals"
+                element={
+                  <RequirePermission permission="page:leave:approvals">
+                    <LeaveApprovalsPage />
+                  </RequirePermission>
+                }
+              />
+            </Route>
             <Route
               path="jobs"
               element={

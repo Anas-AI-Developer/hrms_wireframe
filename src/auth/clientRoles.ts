@@ -61,7 +61,7 @@ export const LEADERSHIP_ACCOUNTS: {
     role: 'assistant_director',
     username: 'assistant.director',
     displayName: 'Demo — Assistant Director',
-    description: 'Directorate-level HR and organisation management.',
+    description: 'HR dashboard, employees, leave, attendance, recruitment (not ESS /admin).',
   },
   {
     role: 'assistant_accounts_officer_accounts',

@@ -1,4 +1,5 @@
 import { Navigate } from 'react-router-dom'
+import { homePathForRole } from '../portals/homePath'
 import { useAuth } from './AuthContext'
 import type { Permission } from './types'
 
@@ -16,7 +17,7 @@ export function RequirePermission({
   }
 
   if (!can(permission)) {
-    return <Navigate to="/access-denied" replace />
+    return <Navigate to={homePathForRole(user.role)} replace />
   }
 
   return children

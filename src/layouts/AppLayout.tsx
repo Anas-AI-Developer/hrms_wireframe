@@ -1,5 +1,6 @@
 import { Fragment } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
+import { RouteScopeGuard } from '../auth/RouteScopeGuard'
 import { useAuth } from '../auth/AuthContext'
 import {
   CONFIG_NAV_GROUP,
@@ -106,7 +107,9 @@ export function AppLayout() {
 
       <div className="wf-main main-content app-content">
         <main className="wf-content wf-ref-canvas hrms-ref-canvas">
-          <Outlet />
+          <RouteScopeGuard>
+            <Outlet />
+          </RouteScopeGuard>
         </main>
       </div>
     </div>

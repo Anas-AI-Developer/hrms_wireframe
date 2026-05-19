@@ -10,6 +10,8 @@ type Props = {
   statusFilter?: StatusFilter
   onStatusFilterChange?: (v: StatusFilter) => void
   showStatusFilter?: boolean
+  statusOptions?: { value: StatusFilter; label: string }[]
+  extraFilters?: ReactNode
   hasActiveFilters?: boolean
   onResetFilters?: () => void
   children: ReactNode
@@ -32,6 +34,8 @@ export function DataListPanel({
   statusFilter = 'active',
   onStatusFilterChange,
   showStatusFilter = true,
+  statusOptions,
+  extraFilters,
   hasActiveFilters,
   onResetFilters,
   children,
@@ -50,6 +54,7 @@ export function DataListPanel({
       <header className="hrms-ref-panel-head">
         <h2 className="hrms-ref-panel-title">{title}</h2>
         <div className="hrms-ref-panel-tools">
+          {extraFilters}
           {showStatusFilter && onStatusFilterChange ? (
             <select
               id="hrms-status-filter"
@@ -58,9 +63,15 @@ export function DataListPanel({
               onChange={(e) => onStatusFilterChange(e.target.value as StatusFilter)}
               aria-label="Status filter"
             >
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-              <option value="all">All</option>
+              {(statusOptions ?? [
+                { value: 'active', label: 'Active' },
+                { value: 'inactive', label: 'Inactive' },
+                { value: 'all', label: 'All' },
+              ]).map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
             </select>
           ) : null}
           <input

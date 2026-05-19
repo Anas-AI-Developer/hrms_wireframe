@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { AttendanceStatusBadge } from '../components/hrms/AttendanceStatusBadge'
@@ -25,7 +26,7 @@ function employeeLabel(employeeId: string) {
 }
 
 export function AttendanceListPage() {
-  const { can, visibleEmployees, actorEmployeeId, user } = useAuth()
+  const { can, visibleEmployees } = useAuth()
   const canImport = can('page:attendance:import')
   const scopedIds = new Set(visibleEmployees().map((e) => e.id))
   const scopedLogs = attendanceLogs.filter((l) => scopedIds.has(l.employeeId))

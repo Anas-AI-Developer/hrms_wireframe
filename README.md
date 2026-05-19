@@ -65,7 +65,6 @@ On the login screen, click **Show role cred** (below the Login button) for the f
 | Path | Screen |
 |------|--------|
 | `/login` | Sign-in + credential reference |
-| `/access-denied` | Missing permission |
 | `/dashboard` | Role portal (KPI cards + HR home links like reference `hrms-home`) |
 | `/ess` | Employee self-service portal |
 | `/admin/settings` | Admin settings (ED / DG) |

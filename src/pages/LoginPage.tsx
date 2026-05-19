@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { findMockUser, MOCK_USERS, roleLabelForUser } from '../auth/mockUsers'
-import { homePathForRole } from '../portals/homePath'
+import { resolvePostLoginPath } from '../auth/routeAccess'
 import './LoginPage.css'
 
 export function LoginPage() {
@@ -19,9 +19,7 @@ export function LoginPage() {
   const [showRoleCreds, setShowRoleCreds] = useState(false)
 
   if (user) {
-    const home = homePathForRole(user.role)
-    const target = fromState && fromState !== '/login' ? fromState : home
-    return <Navigate to={target} replace />
+    return <Navigate to={resolvePostLoginPath(user.role, fromState)} replace />
   }
 
   function onSubmit(e: FormEvent) {
@@ -33,8 +31,7 @@ export function LoginPage() {
       return
     }
     const row = findMockUser(username, password)
-    const home = row ? homePathForRole(row.role) : '/dashboard'
-    const target = fromState && fromState !== '/login' ? fromState : home
+    const target = row ? resolvePostLoginPath(row.role, fromState) : '/dashboard'
     navigate(target, { replace: true })
   }
 

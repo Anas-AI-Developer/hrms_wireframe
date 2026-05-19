@@ -1,10 +1,9 @@
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import { homePathForRole } from '../portals/homePath'
 
 export function HomeRedirect() {
   const { user } = useAuth()
-  if (user?.role === 'employee') {
-    return <Navigate to="/ess" replace />
-  }
-  return <Navigate to="/dashboard" replace />
+  if (!user) return <Navigate to="/login" replace />
+  return <Navigate to={homePathForRole(user.role)} replace />
 }

@@ -15,9 +15,24 @@ import {
   getEffectivePassword,
   patchProfileOverride,
 } from './profileStorage'
-import { roleHasPermission } from './rolePermissions'
-import type { AuthUser, Permission } from './types'
+import { permissionsForRole, roleHasPermission } from './rolePermissions'
+import type { AuthUser, Permission, RoleId } from './types'
 import { STORAGE_KEY } from './types'
+
+const ROLE_IDS: RoleId[] = [
+  'executive_director',
+  'director_general',
+  'director',
+  'deputy_director',
+  'assistant_director',
+  'assistant_accounts_officer_accounts',
+  'assistant_accounts_officer_finance',
+  'employee',
+]
+
+function isRoleId(value: unknown): value is RoleId {
+  return typeof value === 'string' && ROLE_IDS.includes(value as RoleId)
+}
 
 export type UpdateProfileInput = {
   displayName: string
@@ -50,7 +65,8 @@ function readStoredUser(): AuthUser | null {
     const raw = sessionStorage.getItem(STORAGE_KEY)
     if (!raw) return null
     const parsed = JSON.parse(raw) as AuthUser
-    if (!parsed?.username || !parsed?.role) return null
+    if (!parsed?.username || !isRoleId(parsed.role)) return null
+    if (permissionsForRole(parsed.role).size === 0) return null
     return parsed
   } catch {
     return null
@@ -202,4 +218,3 @@ export function useAuth() {
   if (!ctx) throw new Error('useAuth must be used within AuthProvider')
   return ctx
 }
-
