@@ -1,97 +1,75 @@
 import { useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
-import { DashboardKpiCard } from '../components/dashboard/DashboardKpiCard'
+import { AttendanceStatusBadge } from '../components/hrms/AttendanceStatusBadge'
 import { DataListPanel } from '../components/hrms/DataListPanel'
 import { HrmsListShell } from '../components/hrms/HrmsListShell'
-import { ATTENDANCE_POLICY, attendanceLogs, WIREFRAME_TODAY } from '../data/attendanceMock'
-import { employmentTypeLabel } from '../data/employmentStats'
-import { getEmployee } from '../data/mock'
-import { useListControls, type StatusFilter } from '../hooks/useListControls'
+import { RowActionsMenu } from '../components/hrms/RowActionsMenu'
+import { SortableTh } from '../components/hrms/SortableTh'
 import {
-  attendanceRatePercent,
-  isAttended,
-  logsInLastDays,
-  summarizeWorkforceToday,
-} from '../utils/attendanceStats'
-import '../styles/dashboard.css'
-import './pages.css'
+  ATTENDANCE_POLICY,
+  type AttendanceLog,
+  type AttendanceStatus,
+  attendanceLogs,
+} from '../data/attendanceMock'
+import { getEmployee } from '../data/mock'
+import { employmentTypeLabel } from '../data/employmentStats'
+import { useListControls } from '../hooks/useListControls'
 
-const STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
-  { value: 'all', label: 'All statuses' },
-  { value: 'present', label: 'Present' },
-  { value: 'late', label: 'Late' },
-  { value: 'half_day', label: 'Half day' },
-  { value: 'absent', label: 'Absent' },
-  { value: 'on_leave', label: 'On leave' },
-]
+type AttendanceStatusFilter = 'all' | AttendanceStatus
+
+function employeeLabel(employeeId: string) {
+  const emp = getEmployee(employeeId)
+  if (!emp) return ''
+  return `${emp.firstName} ${emp.lastName} ${emp.employeeNo}`.toLowerCase()
+}
 
 export function AttendanceListPage() {
   const { can, visibleEmployees } = useAuth()
   const canImport = can('page:attendance:import')
-  const scoped = visibleEmployees()
-  const scopedIds = useMemo(() => new Set(scoped.map((e) => e.id)), [scoped])
+  const scopedIds = new Set(visibleEmployees().map((e) => e.id))
+  const scopedLogs = attendanceLogs.filter((l) => scopedIds.has(l.employeeId))
 
-  const scopedLogs = useMemo(
-    () => attendanceLogs.filter((l) => scopedIds.has(l.employeeId)),
-    [scopedIds],
-  )
+  const [attendanceStatus, setAttendanceStatus] = useState<AttendanceStatusFilter>('all')
 
-  const [viewDate, setViewDate] = useState(WIREFRAME_TODAY)
+  const statusFiltered = useMemo(() => {
+    if (attendanceStatus === 'all') return scopedLogs
+    return scopedLogs.filter((l) => l.status === attendanceStatus)
+  }, [scopedLogs, attendanceStatus])
 
-  const todayLogs = useMemo(
-    () => scopedLogs.filter((l) => l.date === WIREFRAME_TODAY),
-    [scopedLogs],
-  )
-  const last7Logs = useMemo(() => logsInLastDays(scopedLogs, WIREFRAME_TODAY, 7), [scopedLogs])
-  const last30Logs = useMemo(() => logsInLastDays(scopedLogs, WIREFRAME_TODAY, 30), [scopedLogs])
+  const presentCount = scopedLogs.filter((l) => l.status === 'present').length
+  const lateCount = scopedLogs.filter((l) => l.status === 'late').length
 
-  const todaySummary = summarizeWorkforceToday(scoped.length, todayLogs)
-  const rate7 = attendanceRatePercent(last7Logs)
-  const rate30 = attendanceRatePercent(last30Logs)
-
-  const dateFiltered = useMemo(
-    () => (viewDate ? scopedLogs.filter((l) => l.date === viewDate) : scopedLogs),
-    [scopedLogs, viewDate],
-  )
-
-  const list = useListControls(dateFiltered, {
+  const list = useListControls(statusFiltered, {
     searchFn: (l, q) => {
       const emp = getEmployee(l.employeeId)
-      if (!emp) return false
-      const name = `${emp.firstName} ${emp.lastName}`.toLowerCase()
+      const name = emp ? `${emp.firstName} ${emp.lastName}`.toLowerCase() : ''
       return (
         name.includes(q) ||
-        emp.employeeNo.toLowerCase().includes(q) ||
         l.date.includes(q) ||
         l.status.includes(q) ||
-        (l.note?.toLowerCase().includes(q) ?? false)
+        l.source.includes(q) ||
+        employeeLabel(l.employeeId).includes(q)
       )
     },
-    statusFn: (l, f) => {
-      if (f === 'all') return true
-      return l.status === f
-    },
     sortFns: {
-      date: (a, b) => b.date.localeCompare(a.date),
-      employee: (a, b) => {
-        const ea = getEmployee(a.employeeId)
-        const eb = getEmployee(b.employeeId)
-        const na = ea ? `${ea.firstName} ${ea.lastName}` : ''
-        const nb = eb ? `${eb.firstName} ${eb.lastName}` : ''
-        return na.localeCompare(nb)
-      },
+      date: (a, b) => a.date.localeCompare(b.date),
+      employee: (a, b) => employeeLabel(a.employeeId).localeCompare(employeeLabel(b.employeeId)),
+      checkIn: (a, b) => a.checkIn.localeCompare(b.checkIn),
+      hours: (a, b) => a.hoursWorked - b.hoursWorked,
       status: (a, b) => a.status.localeCompare(b.status),
     },
-    defaultSortColumn: 'employee',
+    defaultSortColumn: 'date',
+    defaultPageSize: 15,
   })
 
-  const hasDateFilter = viewDate !== WIREFRAME_TODAY
-  const hasActiveFilters = list.hasActiveFilters || hasDateFilter
+  const hasActiveFilters =
+    list.hasActiveFilters || attendanceStatus !== 'all'
 
-  function resetAll() {
+  function resetAllFilters() {
     list.resetFilters()
-    setViewDate(WIREFRAME_TODAY)
+    setAttendanceStatus('all')
   }
 
   return (
@@ -99,70 +77,63 @@ export function AttendanceListPage() {
       current="Attendance"
       actions={
         canImport ? (
-          <Link className="hrms-btn-primary" to="/attendance/import">
+          <Link to="/attendance/import" className="hrms-btn-primary">
             <i className="ri-upload-2-line" aria-hidden /> Import sheet
           </Link>
         ) : undefined
       }
     >
-      <p className="wf-lead" style={{ marginTop: 0, marginBottom: '1rem' }}>
-        Fixed <strong>{ATTENDANCE_POLICY.standardHours}h</strong> day ({ATTENDANCE_POLICY.coreStart}–
-        {ATTENDANCE_POLICY.coreEnd}). Demo date: <strong>{WIREFRAME_TODAY}</strong>.
-      </p>
-
-      <section className="hrms-kpi-grid" style={{ marginBottom: '1.25rem' }} aria-label="Attendance summary">
-        <DashboardKpiCard
-          static
-          label="Today"
-          value={`${todaySummary.percent}%`}
-          subtext={`${todaySummary.attended} of ${todaySummary.total} staff in scope`}
-          icon={<i className="ri-calendar-check-line" />}
-          tone="primary"
-        />
-        <DashboardKpiCard
-          static
-          label="Last 7 days"
-          value={`${rate7}%`}
-          subtext={`${last7Logs.filter((l) => isAttended(l.status)).length} of ${last7Logs.length} records`}
-          icon={<i className="ri-bar-chart-grouped-line" />}
-          tone="success"
-        />
-        <DashboardKpiCard
-          static
-          label="Last 30 days"
-          value={`${rate30}%`}
-          subtext={`${last30Logs.length} employee-day records in scope`}
-          icon={<i className="ri-line-chart-line" />}
-          tone="info"
-        />
+      <section className="hrms-list-summary" aria-label="Attendance summary">
+        <article className="hrms-list-summary__card">
+          <span className="hrms-list-summary__label">Standard day</span>
+          <span className="hrms-list-summary__value">
+            {ATTENDANCE_POLICY.standardHours}h · {ATTENDANCE_POLICY.coreStart}–
+            {ATTENDANCE_POLICY.coreEnd}
+          </span>
+        </article>
+        <article className="hrms-list-summary__card">
+          <span className="hrms-list-summary__label">Present (scope)</span>
+          <span className="hrms-list-summary__value hrms-list-summary__value--stat">{presentCount}</span>
+        </article>
+        <article className="hrms-list-summary__card">
+          <span className="hrms-list-summary__label">Late arrivals</span>
+          <span className="hrms-list-summary__value hrms-list-summary__value--stat">{lateCount}</span>
+        </article>
+        <article className="hrms-list-summary__card">
+          <span className="hrms-list-summary__label">Policy</span>
+          <span className="hrms-list-summary__value">
+            Flexible {ATTENDANCE_POLICY.flexibleTiming ? 'yes' : 'no'} · Shifts{' '}
+            {ATTENDANCE_POLICY.shiftBased ? 'yes' : 'no'}
+          </span>
+        </article>
       </section>
 
       <DataListPanel
-        title={viewDate === WIREFRAME_TODAY ? "Today's attendance log" : `Attendance for ${viewDate}`}
+        title="Attendance logs"
         search={list.search}
         onSearchChange={list.setSearch}
-        searchPlaceholder="Search employee, code, status, or note..."
-        statusFilter={list.statusFilter}
-        onStatusFilterChange={list.setStatusFilter}
-        statusOptions={STATUS_OPTIONS}
-        extraFilters={
-          <label className="hrms-ref-date-field">
-            <span className="hrms-sr-only">View date</span>
-            <input
-              type="date"
-              className="hrms-ref-select hrms-ref-date-input"
-              value={viewDate}
-              max={WIREFRAME_TODAY}
-              onChange={(e) => {
-                setViewDate(e.target.value || WIREFRAME_TODAY)
-                list.setPage(1)
-              }}
-              aria-label="Attendance date"
-            />
-          </label>
-        }
+        searchPlaceholder="Search by employee, date, or status..."
+        showStatusFilter={false}
         hasActiveFilters={hasActiveFilters}
-        onResetFilters={resetAll}
+        onResetFilters={resetAllFilters}
+        toolbarExtra={
+          <select
+            className="hrms-ref-select"
+            value={attendanceStatus}
+            onChange={(e) => {
+              setAttendanceStatus(e.target.value as AttendanceStatusFilter)
+              list.setPage(1)
+            }}
+            aria-label="Attendance status filter"
+          >
+            <option value="all">All statuses</option>
+            <option value="present">Present</option>
+            <option value="late">Late</option>
+            <option value="absent">Absent</option>
+            <option value="on_leave">On leave</option>
+            <option value="half_day">Half day</option>
+          </select>
+        }
         firstItem={list.firstItem}
         lastItem={list.lastItem}
         total={list.total}
@@ -176,63 +147,115 @@ export function AttendanceListPage() {
           <table className="hrms-data-table">
             <thead>
               <tr>
-                <th>Date</th>
-                <th>Employee</th>
-                <th>Type</th>
-                <th>In</th>
+                <SortableTh
+                  label="Date"
+                  column="date"
+                  sortColumn={list.sortColumn}
+                  sortDir={list.sortDir}
+                  onSort={list.toggleSort}
+                />
+                <SortableTh
+                  label="Employee"
+                  column="employee"
+                  sortColumn={list.sortColumn}
+                  sortDir={list.sortDir}
+                  onSort={list.toggleSort}
+                />
+                <th>Employment type</th>
+                <SortableTh
+                  label="In"
+                  column="checkIn"
+                  sortColumn={list.sortColumn}
+                  sortDir={list.sortDir}
+                  onSort={list.toggleSort}
+                />
                 <th>Out</th>
-                <th>Hours</th>
-                <th>Status</th>
+                <SortableTh
+                  label="Hours"
+                  column="hours"
+                  sortColumn={list.sortColumn}
+                  sortDir={list.sortDir}
+                  onSort={list.toggleSort}
+                />
+                <SortableTh
+                  label="Status"
+                  column="status"
+                  sortColumn={list.sortColumn}
+                  sortDir={list.sortDir}
+                  onSort={list.toggleSort}
+                />
                 <th>Source</th>
-                <th>Note</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {list.pageRows.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="hrms-empty">
-                    No attendance records for this date and filters.
+                    No attendance logs match your filters.
                   </td>
                 </tr>
               ) : (
-                list.pageRows.map((l) => {
-                  const emp = getEmployee(l.employeeId)
-                  return (
-                    <tr key={l.id}>
-                      <td>{l.date}</td>
-                      <td>
-                        {emp ? (
-                          <Link to={`/employees/${emp.id}`} style={{ color: '#2f4798', fontWeight: 500 }}>
-                            {emp.firstName} {emp.lastName}
-                          </Link>
-                        ) : (
-                          '—'
-                        )}
-                      </td>
-                      <td>{emp ? employmentTypeLabel(emp.employmentType) : '—'}</td>
-                      <td>{l.checkIn}</td>
-                      <td>{l.checkOut}</td>
-                      <td>{l.hoursWorked}</td>
-                      <td>
-                        <span
-                          className={`wf-pill wf-pill--${
-                            l.status === 'present' || l.status === 'late' ? 'active' : 'inactive'
-                          }`}
-                        >
-                          {l.status}
-                          {l.secondaryJob ? ' · 2nd job' : ''}
-                        </span>
-                      </td>
-                      <td>{l.source}</td>
-                      <td>{l.note ?? '—'}</td>
-                    </tr>
-                  )
-                })
+                list.pageRows.map((l) => <AttendanceRow key={l.id} log={l} />)
               )}
             </tbody>
           </table>
         </div>
+        <p className="hrms-list-footnote">
+          Showing {list.total} log{list.total === 1 ? '' : 's'} in your scope.
+          {user?.role === 'employee' && actorEmployeeId ? (
+            <>
+              {' '}
+              <Link to={`/employees/${actorEmployeeId}`}>View your employee profile</Link>
+            </>
+          ) : null}
+        </p>
       </DataListPanel>
     </HrmsListShell>
+  )
+}
+
+function AttendanceRow({ log: l }: { log: AttendanceLog }) {
+  const emp = getEmployee(l.employeeId)
+  return (
+    <tr>
+      <td className="text-sm" style={{ color: '#64748b' }}>
+        {l.date}
+      </td>
+      <td className="font-medium">
+        {emp ? (
+          <Link to={`/employees/${emp.id}`} style={{ color: '#2f4798', textDecoration: 'none' }}>
+            {emp.firstName} {emp.lastName}
+          </Link>
+        ) : (
+          '—'
+        )}
+        {emp ? (
+          <div className="hrms-table-subtext">
+            <code>{emp.employeeNo}</code>
+          </div>
+        ) : null}
+      </td>
+      <td>{emp ? employmentTypeLabel(emp.employmentType) : '—'}</td>
+      <td>{l.checkIn}</td>
+      <td>{l.checkOut}</td>
+      <td>{l.hoursWorked}</td>
+      <td>
+        <AttendanceStatusBadge status={l.status} secondaryJob={l.secondaryJob} />
+      </td>
+      <td>
+        <span className="hrms-source-pill">{l.source}</span>
+      </td>
+      <td>
+        {emp ? (
+          <RowActionsMenu
+            id={l.id}
+            actions={[{ label: 'View employee', href: `/employees/${emp.id}` }]}
+          />
+        ) : (
+          '—'
+        )}
+      </td>
+    </tr>
   )
 }

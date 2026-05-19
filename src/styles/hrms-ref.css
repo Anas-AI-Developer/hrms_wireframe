@@ -321,6 +321,11 @@
   color: #b45309;
 }
 
+.hrms-badge--rejected {
+  background: rgba(220, 38, 38, 0.1);
+  color: #b42318;
+}
+
 /* Row actions */
 .hrms-row-actions {
   position: relative;
@@ -459,6 +464,119 @@
   color: #fff;
 }
 
+/* List page summary strip */
+.hrms-list-summary {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 640px) {
+  .hrms-list-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1100px) {
+  .hrms-list-summary {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.hrms-list-summary__card {
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 41, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.hrms-list-summary__label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.hrms-list-summary__value {
+  font-size: 0.8125rem;
+  color: #334155;
+  line-height: 1.4;
+}
+
+.hrms-list-summary__value--stat {
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+
+.hrms-list-footnote {
+  margin: 0.75rem 0 0;
+  font-size: 0.8125rem;
+  color: #64748b;
+}
+
+.hrms-list-footnote a {
+  color: #4b62be;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.hrms-list-footnote a:hover {
+  text-decoration: underline;
+}
+
+.hrms-table-subtext {
+  margin-top: 0.15rem;
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.hrms-table-subtext code {
+  font-size: 0.72rem;
+}
+
+.hrms-source-pill {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 500;
+  padding: 0.15em 0.45em;
+  border-radius: 4px;
+  background: #f1f5f9;
+  color: #64748b;
+  text-transform: capitalize;
+}
+
+.hrms-attendance-status {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.hrms-attendance-status__tag {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #64748b;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  background: #f1f5f9;
+}
+
+.hrms-breadcrumb-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 /* Profile & settings forms */
 .hrms-profile-layout {
   max-width: 42rem;
@@ -579,6 +697,28 @@
   outline: none;
   border-color: #4b62be;
   box-shadow: 0 0 0 3px rgba(75, 98, 190, 0.15);
+}
+
+.hrms-ref-field select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.5rem 0.75rem;
+  font: inherit;
+  font-size: 0.875rem;
+  color: #1e293b;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+}
+
+.hrms-ref-field select:focus {
+  outline: none;
+  border-color: #4b62be;
+  box-shadow: 0 0 0 3px rgba(75, 98, 190, 0.15);
+}
+
+.hrms-leave-request-panel {
+  margin-bottom: 1rem;
 }
 
 .hrms-ref-form-alert {
