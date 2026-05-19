@@ -151,6 +151,45 @@
   border: 0;
 }
 
+.hrms-leave-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.hrms-leave-tabs__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #fff;
+  color: #475569;
+  cursor: pointer;
+}
+
+.hrms-leave-tabs__btn--active {
+  border-color: #4b62be;
+  background: #eef2ff;
+  color: #2f4798;
+}
+
+.hrms-leave-tabs__badge {
+  display: inline-flex;
+  min-width: 1.25rem;
+  justify-content: center;
+  padding: 0.1rem 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 999px;
+  background: #f59e0b;
+  color: #fff;
+}
+
 .hrms-ref-search {
   width: 100%;
   min-width: 200px;

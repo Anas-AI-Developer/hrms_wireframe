@@ -11,6 +11,10 @@ export type StatusFilter =
   | 'late'
   | 'absent'
   | 'half_day'
+  | 'pending'
+  | 'approved'
+  | 'rejected'
+  | 'cancelled'
 
 type Options<T> = {
   searchFn: (item: T, query: string) => boolean

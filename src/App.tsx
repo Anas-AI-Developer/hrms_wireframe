@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { HomeRedirect } from './components/HomeRedirect'
 import { RequireAuth } from './auth/RequireAuth'
 import { RequirePermission } from './auth/RequirePermission'
@@ -27,7 +27,8 @@ import { EssTrainingPage } from './pages/ess/EssTrainingPage'
 import { HiringPipelinePage } from './pages/HiringPipelinePage'
 import { JobPostingsListPage } from './pages/JobPostingsListPage'
 import { LeaveApprovalsPage } from './pages/LeaveApprovalsPage'
-import { LeaveRequestsPage } from './pages/LeaveRequestsPage'
+import { LeaveManagementPage } from './pages/LeaveManagementPage'
+import { LeaveHubProvider } from './leave/LeaveHubContext'
 import { LoginPage } from './pages/LoginPage'
 import { MasterDataCatalogPage } from './pages/MasterDataCatalogPage'
 import { OnboardingListPage } from './pages/OnboardingListPage'
@@ -205,18 +206,22 @@ export default function App() {
               path="leave"
               element={
                 <RequirePermission permission="page:leave">
-                  <LeaveRequestsPage />
+                  <LeaveHubProvider>
+                    <Outlet />
+                  </LeaveHubProvider>
                 </RequirePermission>
               }
-            />
-            <Route
-              path="leave/approvals"
-              element={
-                <RequirePermission permission="page:leave:approvals">
-                  <LeaveApprovalsPage />
-                </RequirePermission>
-              }
-            />
+            >
+              <Route index element={<LeaveManagementPage />} />
+              <Route
+                path="approvals"
+                element={
+                  <RequirePermission permission="page:leave:approvals">
+                    <LeaveApprovalsPage />
+                  </RequirePermission>
+                }
+              />
+            </Route>
             <Route
               path="jobs"
               element={
