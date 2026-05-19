@@ -1,6 +1,8 @@
 import type { FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { departments, designations, getEmployee } from '../data/mock'
+import { EMPLOYMENT_TYPES_FILTERABLE } from '../data/employmentTypes'
+import { employmentTypeLabel } from '../data/employmentStats'
+import { departments, designations, employees, getEmployee } from '../data/mock'
 import './pages.css'
 
 export function EmployeeFormPage() {
@@ -8,6 +10,11 @@ export function EmployeeFormPage() {
   const navigate = useNavigate()
   const existing = id ? getEmployee(id) : undefined
   const isEdit = Boolean(existing)
+  const nextCode = `EMP-${String(employees.length + 1).padStart(4, '0')}`
+
+  const managerOptions = employees.filter(
+    (e) => e.status === 'active' && !/^vacant$/i.test(e.firstName) && e.id !== existing?.id,
+  )
 
   function onSubmit(ev: FormEvent) {
     ev.preventDefault()
@@ -17,14 +24,16 @@ export function EmployeeFormPage() {
   }
 
   return (
-    <div className="wf-page">
+    <div className="wf-page wf-page--wide">
       <div className="wf-breadcrumb">
         <Link to="/employees">Employees</Link>
         <span aria-hidden> / </span>
         <span>{isEdit ? `Edit · ${existing?.employeeNo}` : 'New'}</span>
       </div>
       <h1 className="wf-h1">{isEdit ? 'Edit employee' : 'Create employee'}</h1>
-      <p className="wf-lead">Form layout placeholder — fields align with future HrmsEmployee resource.</p>
+      <p className="wf-lead">
+        Auto code on create: <code>{nextCode}</code>. One department, one reporting manager (client rules).
+      </p>
 
       <form className="wf-form" onSubmit={onSubmit}>
         <div className="wf-form-grid">
@@ -41,15 +50,26 @@ export function EmployeeFormPage() {
             <input type="email" name="email" defaultValue={existing?.email} />
           </label>
           <label className="wf-field">
-            <span>Phone</span>
-            <input name="phone" defaultValue={existing?.phone} />
+            <span>Employee code</span>
+            <input
+              name="employeeNo"
+              defaultValue={existing?.employeeNo ?? nextCode}
+              readOnly={!isEdit}
+              placeholder="EMP-0001"
+            />
           </label>
           <label className="wf-field">
-            <span>Employee no.</span>
-            <input name="employeeNo" defaultValue={existing?.employeeNo} placeholder="EMP-YYYY-###" />
+            <span>Employment type</span>
+            <select name="employmentType" defaultValue={existing?.employmentType ?? 'regular'}>
+              {EMPLOYMENT_TYPES_FILTERABLE.map((t) => (
+                <option key={t} value={t}>
+                  {employmentTypeLabel(t)}
+                </option>
+              ))}
+            </select>
           </label>
           <label className="wf-field">
-            <span>Department</span>
+            <span>Department (centre)</span>
             <select name="departmentId" defaultValue={existing?.departmentId ?? departments[0]?.id}>
               {departments.map((d) => (
                 <option key={d.id} value={d.id}>
@@ -69,6 +89,17 @@ export function EmployeeFormPage() {
             </select>
           </label>
           <label className="wf-field">
+            <span>Reporting manager</span>
+            <select name="managerId" defaultValue={existing?.managerId ?? ''}>
+              <option value="">— None —</option>
+              {managerOptions.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.firstName} {m.lastName} · {m.sanctionedPost}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="wf-field">
             <span>Status</span>
             <select name="status" defaultValue={existing?.status ?? 'active'}>
               <option value="active">active</option>
@@ -79,10 +110,6 @@ export function EmployeeFormPage() {
           <label className="wf-field">
             <span>Join date</span>
             <input type="date" name="joinDate" defaultValue={existing?.joinDate} />
-          </label>
-          <label className="wf-field">
-            <span>Location</span>
-            <input name="location" defaultValue={existing?.location} />
           </label>
         </div>
         <div className="wf-form-actions">

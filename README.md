@@ -36,7 +36,8 @@ Open `/login` (unauthenticated users are redirected there). UI colours and login
 
 ## Mock authentication & roles
 
-- Session is stored in **`sessionStorage`** (key in `src/auth/types.ts`). Sign out clears it.
+- Session is stored in **`sessionStorage`** (key `hrms_wireframe_session_v3` in `src/auth/types.ts`). Sign out clears it.
+- **339 MasterList rows** imported into `src/data/clientMasterList.json` (regenerate: `python scripts/export_masterlist_json.py` from repo root).
 - **Client roles** (organogram): Executive Director, Director General, Director, Deputy Director, Assistant Director, AAO (Accounts), AAO (Finance), and **Employee** (ESS portal for all staff designations).
 - **Demo accounts** live in `src/auth/mockUsers.ts` (built from `src/auth/clientRoles.ts`). Password for every account: **`11223344`**.
 - **Role → permissions** map: `src/auth/rolePermissions.ts` (wireframe defaults; adjust with client).

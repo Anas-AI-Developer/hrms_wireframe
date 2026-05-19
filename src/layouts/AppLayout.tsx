@@ -9,14 +9,56 @@ type NavItem = { to: string; label: string; permission: Permission }
 const navGroups: { label: string; items: NavItem[] }[] = [
   {
     label: 'Overview',
-    items: [{ to: '/dashboard', label: 'Dashboard', permission: 'page:dashboard' }],
+    items: [
+      { to: '/dashboard', label: 'Dashboard', permission: 'page:dashboard' },
+      { to: '/ess', label: 'Self-service', permission: 'employee.view_self' },
+    ],
   },
   {
     label: 'Organisation',
     items: [
       { to: '/employees', label: 'Employees', permission: 'page:employees' },
-      { to: '/departments', label: 'Departments', permission: 'page:departments' },
+      { to: '/departments', label: 'Centres & sections', permission: 'page:departments' },
       { to: '/designations', label: 'Designations', permission: 'page:designations' },
+    ],
+  },
+  {
+    label: 'Time & attendance',
+    items: [
+      { to: '/attendance', label: 'Attendance', permission: 'page:attendance' },
+      { to: '/leave', label: 'Leave', permission: 'page:leave' },
+      { to: '/leave/approvals', label: 'Leave approvals', permission: 'page:leave:approvals' },
+    ],
+  },
+  {
+    label: 'HR operations',
+    items: [
+      { to: '/recruitment', label: 'Recruitment', permission: 'page:recruitment' },
+      { to: '/onboarding', label: 'Onboarding', permission: 'page:onboarding' },
+      { to: '/performance', label: 'Performance', permission: 'page:performance' },
+      { to: '/training', label: 'Training', permission: 'page:training' },
+    ],
+  },
+  {
+    label: 'Finance',
+    items: [
+      { to: '/payroll', label: 'Payroll', permission: 'page:payroll' },
+      { to: '/benefits', label: 'Benefits', permission: 'page:benefits' },
+      { to: '/compliance', label: 'Compliance', permission: 'page:compliance' },
+    ],
+  },
+  {
+    label: 'Insights',
+    items: [
+      { to: '/reports', label: 'Reports', permission: 'page:reports' },
+      { to: '/proposal', label: 'Proposed flows', permission: 'page:proposal' },
+    ],
+  },
+  {
+    label: 'Administration',
+    items: [
+      { to: '/admin/settings', label: 'System settings', permission: 'page:admin_settings' },
+      { to: '/admin/rbac', label: 'Roles & permissions', permission: 'page:rbac' },
     ],
   },
   {

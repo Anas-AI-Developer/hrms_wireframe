@@ -95,12 +95,20 @@ export function assignManagers(rows: Employee[]): Employee[] {
   }))
 }
 
-export function mapEmploymentType(mode: string): Employee['employmentType'] {
-  const m = mode.toLowerCase()
-  if (m.includes('deput')) return 'deputation'
-  if (m.includes('contract')) return 'contract'
-  if (m.includes('intern')) return 'intern'
-  if (m.includes('regular') || m.includes('appointment') || m.includes('promot')) return 'permanent'
-  if (m) return 'other'
-  return 'permanent'
+export function mapEmploymentType(
+  mode: string,
+  opts?: { statusText?: string; parentDepartment?: string; centre?: string },
+): Employee['employmentType'] {
+  const status = (opts?.statusText ?? '').toLowerCase()
+  if (status === 'vacant' || mode.toLowerCase() === 'vacant') return 'vacant_post'
+
+  const blob = `${mode} ${opts?.parentDepartment ?? ''} ${opts?.centre ?? ''}`.toLowerCase()
+  if (/\bdpl\b/.test(blob) || blob.includes('development partner')) return 'dpl'
+  if (blob.includes('contingent')) return 'contingent'
+  if (blob.includes('short term') || blob.includes('short-term')) return 'short_term_project'
+  if (blob.includes('deput')) return 'deputation'
+  if (blob.includes('regular')) return 'regular'
+
+  if (mode.trim()) return 'unknown'
+  return 'unknown'
 }

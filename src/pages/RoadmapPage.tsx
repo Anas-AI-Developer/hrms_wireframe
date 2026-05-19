@@ -3,26 +3,29 @@ import './pages.css'
 
 const phases = [
   {
-    phase: 'Phase 1 — done in wireframe',
+    phase: 'Foundation (wireframe)',
     items: [
-      'Shell layout & navigation',
-      'Login (NVQF colours) + mock RBAC in sessionStorage',
-      'Dashboard snapshot',
-      'Employees / departments / designations driven from client MasterList sample',
-      'Sprint module catalogue, HQ organogram (PDF), workbook tab index',
+      { label: 'Employees & master data', to: '/employees' },
+      { label: 'RBAC & admin settings', to: '/admin/rbac' },
+      { label: 'Proposed end-to-end flows', to: '/proposal' },
     ],
   },
   {
-    phase: 'Phase 2 — align with Laravel HRMS',
+    phase: 'Operations (wireframe)',
     items: [
-      'Employee documents (see hrms migrations: hrms_employee_documents)',
-      'Payroll / projects / centres (hrms_pay_projects_centres)',
-      'User management screens (mirror Filament User resources)',
+      { label: 'Attendance import & logs', to: '/attendance' },
+      { label: 'Leave request & approval', to: '/leave' },
+      { label: 'Recruitment pipeline', to: '/recruitment' },
+      { label: 'Onboarding → employee record', to: '/onboarding' },
     ],
   },
   {
-    phase: 'Phase 3 — your upcoming materials',
-    items: ['Leave & attendance', 'Recruitment', 'Reporting', 'Any GIZ-specific workflows you specify'],
+    phase: 'Finance & ESS (wireframe)',
+    items: [
+      { label: 'Payroll runs (AAO)', to: '/payroll' },
+      { label: 'Employee payslip', to: '/payslip' },
+      { label: 'Self-service portal', to: '/ess' },
+    ],
   },
 ]
 
@@ -31,11 +34,8 @@ export function RoadmapPage() {
     <div className="wf-page">
       <h1 className="wf-h1">Planned modules</h1>
       <p className="wf-lead">
-        This page tracks what is stubbed in the wireframe versus what still lives only in the{' '}
-        <code>hrms</code> reference project. For the full four-sprint breakdown from the developer guide, open{' '}
-        <Link to="/modules">Sprint modules</Link>. Client Excel tabs are indexed under{' '}
-        <Link to="/master-data">Client workbook</Link>; HQ structure is under{' '}
-        <Link to="/organogram">HQ organogram</Link>.
+        Click through live wireframe stubs by phase. Full sprint breakdown:{' '}
+        <Link to="/modules">Sprint modules</Link>.
       </p>
 
       <div className="wf-roadmap">
@@ -44,7 +44,9 @@ export function RoadmapPage() {
             <h2 className="wf-h2">{p.phase}</h2>
             <ul>
               {p.items.map((item) => (
-                <li key={item}>{item}</li>
+                <li key={item.to}>
+                  <Link to={item.to}>{item.label}</Link>
+                </li>
               ))}
             </ul>
           </section>

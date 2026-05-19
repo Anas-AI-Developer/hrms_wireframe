@@ -117,7 +117,11 @@ const employeesDraft: Employee[] = rawList.map((r) => {
     departmentId: deptId,
     sectionId,
     designationId,
-    employmentType: mapEmploymentType(mode),
+    employmentType: mapEmploymentType(mode, {
+      statusText: str(r.status),
+      parentDepartment: str(r.parent_department),
+      centre,
+    }),
     status: mapStatus(str(r.status), vacant),
     joinDate,
     location: centre,

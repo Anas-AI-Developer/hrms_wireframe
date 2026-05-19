@@ -1,12 +1,23 @@
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import { EMPLOYMENT_TYPES_FILTERABLE } from '../data/employmentTypes'
+import { employmentTypeLabel } from '../data/employmentStats'
+import type { EmploymentType } from '../types/hrms'
 import { employees, getDepartment, getDesignation, getEmployee } from '../data/mock'
 import './pages.css'
 
 export function EmployeeListPage() {
   const { can, visibleEmployees, user } = useAuth()
   const canWrite = can('page:employees:write')
-  const list = visibleEmployees()
+  const [typeFilter, setTypeFilter] = useState<EmploymentType | 'all'>('all')
+
+  const list = useMemo(() => {
+    const scoped = visibleEmployees()
+    if (typeFilter === 'all') return scoped
+    return scoped.filter((e) => e.employmentType === typeFilter)
+  }, [typeFilter, visibleEmployees])
+
   const total = employees.length
 
   return (
@@ -30,6 +41,18 @@ export function EmployeeListPage() {
       {user?.role === 'employee' ? (
         <p className="wf-note wf-note--warn">Use the Employee self-service portal for your own record.</p>
       ) : null}
+
+      <label className="wf-field" style={{ maxWidth: '16rem', marginBottom: '1rem' }}>
+        <span>Employment type</span>
+        <select value={typeFilter} onChange={(ev) => setTypeFilter(ev.target.value as EmploymentType | 'all')}>
+          <option value="all">All types</option>
+          {EMPLOYMENT_TYPES_FILTERABLE.map((t) => (
+            <option key={t} value={t}>
+              {employmentTypeLabel(t)}
+            </option>
+          ))}
+        </select>
+      </label>
 
       <div className="wf-table-wrap">
         <table className="wf-table">
@@ -73,7 +96,7 @@ export function EmployeeListPage() {
                       '—'
                     )}
                   </td>
-                  <td>{e.employmentType}</td>
+                  <td>{employmentTypeLabel(e.employmentType)}</td>
                   <td>
                     <span className={`wf-pill wf-pill--${e.status}`}>{e.status}</span>
                   </td>

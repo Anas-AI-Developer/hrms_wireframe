@@ -1,6 +1,9 @@
 /** Tab names from `Master Data updated on 30 April, 2026.xls` (client workbook). */
 export const workbookSheetNames: { name: string; note: string }[] = [
-  { name: 'MasterList', note: 'Primary roster — wireframe loads first 35 rows into UI.' },
+  {
+    name: 'MasterList',
+    note: 'Primary roster (339 posts). Employment per row: column Mode of Appointment → Regular / Deputation / Vacant.',
+  },
   { name: 'MasterList (B4CoE)', note: 'Alternate master slice.' },
   { name: 'PM Office', note: 'PM Office roster variant.' },
   { name: 'Summary', note: 'Summary views.' },
@@ -26,7 +29,7 @@ export const workbookSheetNames: { name: string; note: string }[] = [
   { name: 'Repatriation', note: 'Repatriation.' },
   { name: 'Transfer of post', note: 'Transfers.' },
   { name: 'Requisition', note: 'Requisitions.' },
-  { name: 'Project - DPL', note: 'DPL project data.' },
+  { name: 'Project - DPL', note: 'DPL & short-term project hires (Mode of Appointment: DPL / Short term basis).' },
   { name: 'PTCL Existing', note: 'PTCL reference.' },
   { name: 'PTCL Previuos', note: 'PTCL historical.' },
   { name: 'total sanction strength', note: 'Sanctioned strength totals.' },

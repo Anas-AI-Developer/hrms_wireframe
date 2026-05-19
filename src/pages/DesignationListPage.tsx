@@ -12,8 +12,8 @@ export function DesignationListPage() {
         <div>
           <h1 className="wf-h1">Designations</h1>
           <p className="wf-lead">
-            Sanctioned post titles from the client sample, keyed to <strong>centre</strong> (department) per sprint
-            guide.
+            Sanctioned posts from MasterList + organogram — keyed to <strong>centre</strong> and <strong>BPS</strong>{' '}
+            (see organogram PDF).
           </p>
         </div>
         <button
