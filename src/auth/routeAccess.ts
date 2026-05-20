@@ -43,6 +43,7 @@ export function permissionForPath(pathname: string): Permission | null {
   if (path === '/leave') return 'page:leave'
   if (path === '/employee-requests') return 'page:ess_requests:manage'
 
+  if (path === '/jobs/new' || /^\/jobs\/[^/]+\/edit$/.test(path)) return 'page:recruitment'
   if (
     path === '/jobs' ||
     path === '/hiring-pipeline' ||

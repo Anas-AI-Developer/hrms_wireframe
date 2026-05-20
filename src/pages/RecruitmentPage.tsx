@@ -1,10 +1,13 @@
 import { Link } from 'react-router-dom'
-import { candidates, jobPostings, RECRUITMENT_STAGES } from '../data/recruitmentMock'
+import { candidates, RECRUITMENT_STAGES } from '../data/recruitmentMock'
+import { useJobPostings } from '../hooks/useJobPostings'
 import './pages.css'
 
 const stageLabel = Object.fromEntries(RECRUITMENT_STAGES.map((s) => [s.id, s.label]))
 
 export function RecruitmentPage() {
+  const jobPostings = useJobPostings()
+
   return (
     <div className="wf-page wf-page--wide">
       <h1 className="wf-h1">Recruitment</h1>

@@ -30,6 +30,7 @@ import { EssPerformancePage } from './pages/ess/EssPerformancePage'
 import { EssRequestsPage } from './pages/ess/EssRequestsPage'
 import { EssTrainingPage } from './pages/ess/EssTrainingPage'
 import { HiringPipelinePage } from './pages/HiringPipelinePage'
+import { JobPostingFormPage } from './pages/JobPostingFormPage'
 import { JobPostingsListPage } from './pages/JobPostingsListPage'
 import { LeaveApprovalsPage } from './pages/LeaveApprovalsPage'
 import { LeaveManagementPage } from './pages/LeaveManagementPage'
@@ -286,6 +287,22 @@ export default function App() {
               element={
                 <RequirePermission permission="page:recruitment">
                   <JobPostingsListPage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="jobs/new"
+              element={
+                <RequirePermission permission="page:recruitment">
+                  <JobPostingFormPage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="jobs/:id/edit"
+              element={
+                <RequirePermission permission="page:recruitment">
+                  <JobPostingFormPage />
                 </RequirePermission>
               }
             />

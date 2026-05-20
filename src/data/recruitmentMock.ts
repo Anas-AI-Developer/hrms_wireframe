@@ -9,6 +9,7 @@ export type CandidateStage =
 
 export type JobPosting = {
   id: string
+  code: string
   title: string
   department: string
   bps: string
@@ -17,6 +18,7 @@ export type JobPosting = {
   publishedAt?: string
   closesAt: string
   portalVisible: boolean
+  createdAt: string
 }
 
 export type Candidate = {
@@ -29,9 +31,10 @@ export type Candidate = {
   interviewRound?: number
 }
 
-export const jobPostings: JobPosting[] = [
+export const jobPostingsSeed: JobPosting[] = [
   {
     id: 'job-1',
+    code: 'JOB-AD-P',
     title: 'Assistant Director (Planning)',
     department: 'NAVTTC HQs',
     bps: '17',
@@ -40,9 +43,11 @@ export const jobPostings: JobPosting[] = [
     publishedAt: '2026-04-01',
     closesAt: '2026-05-30',
     portalVisible: true,
+    createdAt: '2026-04-01T10:00:00.000Z',
   },
   {
     id: 'job-2',
+    code: 'JOB-DEO',
     title: 'Data Entry Operator',
     department: 'RO Lahore',
     bps: '14',
@@ -51,9 +56,11 @@ export const jobPostings: JobPosting[] = [
     publishedAt: '2026-04-15',
     closesAt: '2026-06-15',
     portalVisible: true,
+    createdAt: '2026-04-15T10:00:00.000Z',
   },
   {
     id: 'job-3',
+    code: 'JOB-DD-T',
     title: 'Deputy Director (Technical)',
     department: 'NAVTTC HQs',
     bps: '18',
@@ -61,8 +68,12 @@ export const jobPostings: JobPosting[] = [
     status: 'draft',
     closesAt: '2026-07-01',
     portalVisible: false,
+    createdAt: '2026-05-01T10:00:00.000Z',
   },
 ]
+
+/** @deprecated use jobPostingsStore */
+export const jobPostings = jobPostingsSeed
 
 export const candidates: Candidate[] = [
   {
@@ -109,7 +120,7 @@ export const RECRUITMENT_STAGES: { id: CandidateStage; label: string }[] = [
 ]
 
 export function getJob(id: string) {
-  return jobPostings.find((j) => j.id === id)
+  return jobPostingsSeed.find((j) => j.id === id)
 }
 
 export function getCandidatesForJob(jobId: string) {
