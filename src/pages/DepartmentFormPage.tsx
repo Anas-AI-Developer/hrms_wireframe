@@ -51,9 +51,6 @@ export function DepartmentFormPage() {
   }
 
   const heading = isEdit ? 'Edit department' : 'Create department'
-  const sub = isEdit
-    ? 'Update centre name, code, head, or status.'
-    : 'Register an organization unit (centre) for roster and reporting.'
 
   return (
     <HrmsListShell
@@ -61,7 +58,7 @@ export function DepartmentFormPage() {
       dashboardHref="/departments"
     >
       <CompactFormPage>
-        <CompactFormCard icon="ri-building-4-line" title={heading} description={sub}>
+        <CompactFormCard icon="ri-building-4-line" title={heading}>
           <form onSubmit={onSubmit}>
             {error ? <CompactFormAlert>{error}</CompactFormAlert> : null}
             <CompactFormSection legend="Centre details">
@@ -113,7 +110,7 @@ export function DepartmentFormPage() {
                     />
                   </CompactFormField>
                 </CompactFormGrid>
-                <CompactFormField full label="Head name" hint="Optional — shown on org charts and reports.">
+                <CompactFormField full label="Head name">
                   <CompactFormInputWrap icon="ri-user-line">
                     <input
                       value={headName}

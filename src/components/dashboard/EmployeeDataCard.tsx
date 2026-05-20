@@ -27,7 +27,6 @@ export function EmployeeDataCard({ employees, canViewList }: Props) {
           </span>
           <div>
             <h3 className="hrms-dash-featured__title">Employee data</h3>
-            <p className="hrms-dash-featured__sub">Headcount in your scope by appointment type</p>
           </div>
         </div>
 

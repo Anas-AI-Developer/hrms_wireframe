@@ -19,7 +19,6 @@ export function DashboardJobTypesSection({ employees, canViewList }: Props) {
           <h2 id="dash-job-types-title" className="hrms-dash-panel__title">
             Job types
           </h2>
-          <p className="hrms-dash-panel__sub">Open the employee list filtered by category</p>
         </div>
       </header>
 

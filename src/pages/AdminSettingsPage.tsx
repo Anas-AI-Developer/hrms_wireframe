@@ -10,10 +10,6 @@ export function AdminSettingsPage() {
   return (
     <div className="wf-page wf-page--wide">
       <h1 className="wf-h1">Admin settings</h1>
-      <p className="wf-lead">
-        Executive Director / Director General configure leave policies, office hours, recruitment pipeline,
-        and approval chains. Wireframe only — values are not persisted yet.
-      </p>
 
       <div className="wf-grid wf-grid--2">
         <section className="wf-card wf-card--flat">
@@ -23,7 +19,6 @@ export function AdminSettingsPage() {
               <li key={t}>{t}</li>
             ))}
           </ul>
-          <p className="wf-note">Balance rules, annual reset vs cumulative — editable when backend is connected.</p>
         </section>
 
         <section className="wf-card wf-card--flat">
@@ -40,7 +35,6 @@ export function AdminSettingsPage() {
 
         <section className="wf-card wf-card--flat">
           <h2 className="wf-h2">Leave approval</h2>
-          <p className="wf-card-desc">Default chain: reporting manager → HR (Assistant Director+).</p>
           <label className="wf-field">
             <span>HR approval required after manager</span>
             <select defaultValue="yes" disabled={!canEdit}>
@@ -60,7 +54,6 @@ export function AdminSettingsPage() {
             <li>Offer / reject</li>
             <li>Onboarding</li>
           </ol>
-          <p className="wf-note">Stages and interview round count — configurable here in production.</p>
         </section>
       </div>
 

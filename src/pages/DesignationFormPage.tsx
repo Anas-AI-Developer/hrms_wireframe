@@ -50,9 +50,6 @@ export function DesignationFormPage() {
   }
 
   const heading = isEdit ? 'Edit designation' : 'Create designation'
-  const sub = isEdit
-    ? 'Update the post title, pay scale, or availability for this designation.'
-    : 'Add a post title and BPS grade. Designations are organization-wide and can be assigned to employees.'
 
   return (
     <HrmsListShell
@@ -60,7 +57,7 @@ export function DesignationFormPage() {
       dashboardHref="/designations"
     >
       <CompactFormPage>
-        <CompactFormCard icon="ri-briefcase-4-line" title={heading} description={sub}>
+        <CompactFormCard icon="ri-briefcase-4-line" title={heading}>
           <form onSubmit={onSubmit}>
             {error ? <CompactFormAlert>{error}</CompactFormAlert> : null}
             <CompactFormSection legend="Designation details">
@@ -72,7 +69,6 @@ export function DesignationFormPage() {
                       Title <CompactFormRequired />
                     </>
                   }
-                  hint="Official post name as used on orders and payroll."
                 >
                   <CompactFormInputWrap icon="ri-text">
                     <input
@@ -101,10 +97,7 @@ export function DesignationFormPage() {
                       />
                     </CompactFormInputWrap>
                   </CompactFormField>
-                  <CompactFormField
-                    label="Status"
-                    hint="Inactive posts are hidden from new assignments."
-                  >
+                  <CompactFormField label="Status">
                     <CompactFormStatus
                       name="designation-status"
                       value={status}

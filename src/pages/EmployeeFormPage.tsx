@@ -101,9 +101,6 @@ export function EmployeeFormPage() {
   }
 
   const heading = isEdit ? 'Edit employee' : 'Create employee'
-  const sub = isEdit
-    ? 'Update roster details. Changes are saved for this browser session.'
-    : `New code ${nextCode}. Saved to the wireframe roster for this session.`
 
   return (
     <HrmsListShell
@@ -111,7 +108,7 @@ export function EmployeeFormPage() {
       dashboardHref="/employees"
     >
       <CompactFormPage wide>
-        <CompactFormCard icon="ri-user-add-line" title={heading} description={sub}>
+        <CompactFormCard icon="ri-user-add-line" title={heading}>
           <form onSubmit={onSubmit}>
             {error ? <CompactFormAlert>{error}</CompactFormAlert> : null}
 
@@ -259,10 +256,7 @@ export function EmployeeFormPage() {
                       />
                     </CompactFormInputWrap>
                   </CompactFormField>
-                  <CompactFormField
-                    label="End date"
-                    hint="Leave blank for open-ended appointments."
-                  >
+                  <CompactFormField label="End date">
                     <CompactFormInputWrap icon="ri-calendar-close-line">
                       <input
                         type="date"

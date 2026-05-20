@@ -1,7 +1,6 @@
 import { Link, Navigate } from 'react-router-dom'
 import { useMemo } from 'react'
 import { useAuth } from '../auth/AuthContext'
-import { userRoleLabel } from '../auth/roleLabels'
 import { DashboardCharts } from '../components/dashboard/DashboardCharts'
 import { DashboardContractsSection } from '../components/dashboard/DashboardContractsSection'
 import { DashboardJobTypesSection } from '../components/dashboard/DashboardJobTypesSection'
@@ -58,11 +57,6 @@ export function DashboardPage() {
               <span className="hrms-dash-welcome__badge">{portal.tagline}</span>
             ) : null}
             <h1 className="hrms-dash-welcome__title">Dashboard</h1>
-            <p className="hrms-dash-welcome__lead">
-              Welcome back, <strong>{user.displayName}</strong> —{' '}
-              {userRoleLabel(user.role, user.designation)}. Employee overview and analytics for your
-              scope.
-            </p>
           </div>
           <time className="hrms-dash-welcome__date" dateTime={new Date().toISOString().slice(0, 10)}>
             {todayLabel()}

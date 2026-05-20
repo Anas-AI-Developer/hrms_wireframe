@@ -15,10 +15,6 @@ export function RbacMatrixPage() {
   return (
     <div className="wf-page wf-page--wide">
       <h1 className="wf-h1">Roles & permissions</h1>
-      <p className="wf-lead">
-        Module- and feature-level access per client organogram role. Production system will persist this matrix
-        in <code>hrms_role_permissions</code>.
-      </p>
 
       <div className="wf-table-wrap wf-table-wrap--scroll">
         <table className="wf-table wf-table--compact">

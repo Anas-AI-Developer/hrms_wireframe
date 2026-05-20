@@ -16,7 +16,6 @@ import {
   filterPendingForApprover,
   isDirectorateHrRole,
   summarizeLeaveForScope,
-  WIREFRAME_TODAY,
 } from '../utils/leaveStats'
 import '../styles/dashboard.css'
 import './pages.css'
@@ -147,11 +146,6 @@ export function LeaveManagementPage() {
 
   return (
     <HrmsListShell current="Leave Management">
-      <p className="wf-lead" style={{ marginTop: 0, marginBottom: '1rem' }}>
-        HR leave pipeline: employees submit via ESS → manager review (where configured) → directorate HR
-        approval. Demo date: <strong>{WIREFRAME_TODAY}</strong>.
-      </p>
-
       <section className="hrms-kpi-grid" style={{ marginBottom: '1rem' }} aria-label="Leave summary">
         <DashboardKpiCard
           static
@@ -362,12 +356,6 @@ export function LeaveManagementPage() {
         </div>
       </DataListPanel>
 
-      {isDirectorateHrRole(user?.role ?? '') ? (
-        <p className="wf-note" style={{ marginTop: '0.75rem' }}>
-          As <strong>Assistant Director</strong>, you see all leave in your workforce scope and can approve pending
-          requests. Employees submit from <Link to="/ess">Self-service → My leave</Link>.
-        </p>
-      ) : null}
     </HrmsListShell>
   )
 }
