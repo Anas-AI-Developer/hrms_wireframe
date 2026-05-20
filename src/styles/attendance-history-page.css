@@ -1,0 +1,244 @@
+/* Full-page employee attendance history */
+
+.hrms-att-history-crumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8125rem;
+  margin-bottom: 1rem;
+  color: #64748b;
+}
+
+.hrms-att-history-crumb a {
+  color: #2f4798;
+  text-decoration: none;
+}
+
+.hrms-att-history-crumb a:hover {
+  text-decoration: underline;
+}
+
+.hrms-att-history-crumb [aria-current='page'] {
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.hrms-att-history-hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.25rem;
+  padding: 1.5rem 1.75rem;
+  margin-bottom: 1rem;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #1e3a6e 0%, #2f4798 48%, #3d5aa6 100%);
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(47, 71, 152, 0.22);
+}
+
+.hrms-att-history-hero__main {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+.hrms-att-history-hero__avatar {
+  flex-shrink: 0;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  background: rgba(255, 255, 255, 0.18);
+  border: 2px solid rgba(255, 255, 255, 0.35);
+}
+
+.hrms-att-history-hero__eyebrow {
+  margin: 0 0 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.85;
+}
+
+.hrms-att-history-hero__title {
+  margin: 0 0 0.35rem;
+  font-size: 1.65rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.hrms-att-history-hero__meta {
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.92;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.hrms-att-history-hero__meta code {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.hrms-att-history-hero__email {
+  margin: 0.5rem 0 0;
+  font-size: 0.875rem;
+}
+
+.hrms-att-history-hero__email a {
+  color: #e0e7ff;
+  text-decoration: none;
+}
+
+.hrms-att-history-hero__email a:hover {
+  text-decoration: underline;
+}
+
+.hrms-att-history-hero__aside {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.hrms-att-history-hero__today {
+  text-align: right;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  min-width: 10rem;
+}
+
+.hrms-att-history-hero__today-label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.8;
+  margin-bottom: 0.15rem;
+}
+
+.hrms-att-history-hero__today-value {
+  display: block;
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.hrms-att-history-hero__today-sub {
+  display: block;
+  font-size: 0.8rem;
+  opacity: 0.85;
+  margin-top: 0.15rem;
+}
+
+.hrms-att-history-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.hrms-att-history-kpis {
+  margin-bottom: 1.25rem;
+}
+
+.hrms-att-history-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+@media (min-width: 900px) {
+  .hrms-att-history-layout {
+    grid-template-columns: minmax(220px, 260px) 1fr;
+  }
+}
+
+.hrms-att-history-filters-panel {
+  padding: 1.25rem;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  position: sticky;
+  top: 1rem;
+}
+
+.hrms-att-history-filters-panel__title {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.hrms-att-history-filters-panel__title i {
+  color: #2f4798;
+}
+
+.hrms-att-history-filters-panel__block {
+  margin-bottom: 1rem;
+}
+
+.hrms-att-history-filters-panel__block:last-of-type {
+  margin-bottom: 0;
+}
+
+.hrms-att-history-filters-panel__label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 0.4rem;
+}
+
+.hrms-att-history-filters-panel__full {
+  width: 100%;
+}
+
+.hrms-att-history-filters-panel__reset {
+  width: 100%;
+  margin-top: 0.5rem;
+  justify-content: center;
+}
+
+.hrms-attendance-date-filters--stacked {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.hrms-attendance-date-filters--stacked .hrms-ref-date-field {
+  width: 100%;
+}
+
+.hrms-att-history-main {
+  min-width: 0;
+}
+
+.hrms-att-history-table__row--focus {
+  background: #eef2ff !important;
+  box-shadow: inset 3px 0 0 #2f4798;
+}
+
+.hrms-att-history-table__row--focus td:first-child {
+  font-weight: 600;
+  color: #2f4798;
+}

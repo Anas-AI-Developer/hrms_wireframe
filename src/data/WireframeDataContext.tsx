@@ -11,9 +11,13 @@ import type {
   Designation,
   Employee,
   EmployeeHistoryEvent,
+  NavttcOffice,
   OrgSection,
 } from '../types/hrms'
+import { getActiveOffices, getDepartmentsForOffice } from './navttcOffices'
+import type { EmploymentType } from '../types/hrms'
 import {
+  addBenefitDefinition,
   addDepartment,
   addDesignation,
   addEmployee,
@@ -22,29 +26,38 @@ import {
   getEmployees,
   getWireframeStore,
   resetWireframeStore,
+  setEmploymentTypeBenefitDefaults,
   subscribeWireframeStore,
   updateDepartment,
   updateDesignation,
   updateEmployee,
+  type BenefitDefinitionInput,
   type DepartmentInput,
   type DesignationInput,
   type EmployeeInput,
 } from './wireframeStore'
+import type { BenefitDefinition, EmployeeBenefitEnrollment } from './benefitsData'
 import {
   getDepartment,
   getDesignation,
   getEmployee,
   getEmployeeHistory,
   getDirectReports,
+  getEmployeeBenefitIds,
   getSection,
 } from './wireframeStore'
 
 type WireframeDataValue = {
+  offices: NavttcOffice[]
   departments: Department[]
   designations: Designation[]
+  getDepartmentsForOffice: (officeId: string) => Department[]
   sections: OrgSection[]
   employees: Employee[]
   employeeHistory: EmployeeHistoryEvent[]
+  benefitDefinitions: BenefitDefinition[]
+  employmentTypeBenefitDefaults: Record<EmploymentType, string[]>
+  employeeBenefitEnrollments: EmployeeBenefitEnrollment[]
   addDepartment: (input: DepartmentInput) => Department
   updateDepartment: (id: string, input: DepartmentInput) => Department | undefined
   deleteDepartment: (id: string) => void
@@ -53,6 +66,9 @@ type WireframeDataValue = {
   deleteDesignation: (id: string) => void
   addEmployee: (input: EmployeeInput) => Employee
   updateEmployee: (id: string, input: EmployeeInput) => Employee | undefined
+  addBenefitDefinition: (input: BenefitDefinitionInput) => BenefitDefinition
+  setEmploymentTypeBenefitDefaults: (employmentType: EmploymentType, benefitIds: string[]) => void
+  getEmployeeBenefitIds: (employeeId: string) => string[]
   resetAll: () => void
   getDepartment: typeof getDepartment
   getDesignation: typeof getDesignation
@@ -79,11 +95,17 @@ export function WireframeDataProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<WireframeDataValue>(
     () => ({
+      offices: getActiveOffices(),
       departments: snapshot.departments,
+      getDepartmentsForOffice: (officeId: string) =>
+        getDepartmentsForOffice(officeId, snapshot.departments),
       designations: snapshot.designations,
       sections: snapshot.sections,
       employees: snapshot.employees,
       employeeHistory: snapshot.employeeHistory,
+      benefitDefinitions: snapshot.benefitDefinitions,
+      employmentTypeBenefitDefaults: snapshot.employmentTypeBenefitDefaults,
+      employeeBenefitEnrollments: snapshot.employeeBenefitEnrollments,
       addDepartment,
       updateDepartment,
       deleteDepartment,
@@ -92,6 +114,9 @@ export function WireframeDataProvider({ children }: { children: ReactNode }) {
       deleteDesignation,
       addEmployee,
       updateEmployee,
+      addBenefitDefinition,
+      setEmploymentTypeBenefitDefaults,
+      getEmployeeBenefitIds,
       resetAll,
       getDepartment,
       getDesignation,

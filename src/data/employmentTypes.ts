@@ -34,3 +34,15 @@ export const EMPLOYMENT_TYPES_FILTERABLE: EmploymentType[] = [
   'short_term_project',
   'vacant_post',
 ]
+
+/** Fixed-term / non-permanent types that require an end date on the employee form. */
+export const EMPLOYMENT_TYPES_WITH_END_DATE: EmploymentType[] = [
+  'deputation',
+  'contingent',
+  'dpl',
+  'short_term_project',
+]
+
+export function employmentTypeRequiresEndDate(type: EmploymentType): boolean {
+  return EMPLOYMENT_TYPES_WITH_END_DATE.includes(type)
+}

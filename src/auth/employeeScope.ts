@@ -1,5 +1,6 @@
 import { getEmployees } from '../data/mock'
 import type { Employee } from '../types/hrms'
+import { employeeIdForEmpUsername } from './empLoginMap'
 import type { AuthUser, RoleId } from './types'
 
 const DEMO_ACTOR_BY_USERNAME: Record<string, string> = {
@@ -38,6 +39,9 @@ export function resolveActorEmployeeId(user: AuthUser): string | undefined {
   if (demo && roster.some((e) => e.id === demo)) return demo
 
   if (user.role === 'employee' && user.username.startsWith('emp.')) {
+    const mapped = employeeIdForEmpUsername(user.username)
+    if (mapped && roster.some((e) => e.id === mapped)) return mapped
+
     const slug = user.username.slice(4)
     const title = EMP_SLUG_TO_TITLE[slug]
     if (title) {

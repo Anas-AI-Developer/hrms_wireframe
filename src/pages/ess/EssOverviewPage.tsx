@@ -30,7 +30,8 @@ export function EssOverviewPage() {
     return (
       <div className="hrms-portal-panel">
         <p className="wf-note wf-note--warn">
-          No employee record linked. Try <strong>emp.deo</strong> / password <strong>11223344</strong>.
+          No employee record linked. Try <strong>emp.chowkidar</strong> or <strong>emp.deo</strong> / password{' '}
+          <strong>11223344</strong>.
         </p>
       </div>
     )

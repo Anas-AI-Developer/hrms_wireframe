@@ -196,3 +196,42 @@
   color: #64748b;
   font-size: 0.9rem;
 }
+
+.ess-payslip-page.hrms-ref-page {
+  max-width: none;
+}
+
+.ess-payslip-net-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem 0.75rem;
+  margin-top: 1.25rem;
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.ess-payslip-net-bar__label {
+  margin-right: auto;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.ess-payslip-net-bar__math {
+  font-size: 0.8125rem;
+  color: #64748b;
+  font-variant-numeric: tabular-nums;
+}
+
+.ess-payslip-net-bar__value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1e40af;
+  font-variant-numeric: tabular-nums;
+}

@@ -6,6 +6,7 @@ import { AppLayout } from './layouts/AppLayout'
 import { AdminSettingsPage } from './pages/AdminSettingsPage'
 import { AttendanceImportPage } from './pages/AttendanceImportPage'
 import { AttendanceListPage } from './pages/AttendanceListPage'
+import { EmployeeAttendanceHistoryPage } from './pages/EmployeeAttendanceHistoryPage'
 import { AttendanceReportPage } from './pages/AttendanceReportPage'
 import { BenefitsPage } from './pages/BenefitsPage'
 import { CompliancePage } from './pages/CompliancePage'
@@ -18,6 +19,7 @@ import { EmployeeDetailPage } from './pages/EmployeeDetailPage'
 import { EmployeeFormPage } from './pages/EmployeeFormPage'
 import { EmployeeAnalyticsPage } from './pages/EmployeeAnalyticsPage'
 import { EmployeeListPage } from './pages/EmployeeListPage'
+import { EmployeeRequestsManagementPage } from './pages/EmployeeRequestsManagementPage'
 import { EssLayout } from './layouts/EssLayout'
 import { EssAttendancePage } from './pages/ess/EssAttendancePage'
 import { EssBenefitsPage } from './pages/ess/EssBenefitsPage'
@@ -27,7 +29,6 @@ import { EssPayslipPage } from './pages/ess/EssPayslipPage'
 import { EssPerformancePage } from './pages/ess/EssPerformancePage'
 import { EssRequestsPage } from './pages/ess/EssRequestsPage'
 import { EssTrainingPage } from './pages/ess/EssTrainingPage'
-import { RequireEmployeeRole } from './auth/RequireEmployeeRole'
 import { HiringPipelinePage } from './pages/HiringPipelinePage'
 import { JobPostingsListPage } from './pages/JobPostingsListPage'
 import { LeaveApprovalsPage } from './pages/LeaveApprovalsPage'
@@ -69,7 +70,7 @@ export default function App() {
             <Route
               path="ess"
               element={
-                <RequirePermission permission="employee.view_self">
+                <RequirePermission permission="page:dashboard">
                   <EssLayout />
                 </RequirePermission>
               }
@@ -86,11 +87,9 @@ export default function App() {
               <Route
                 path="requests"
                 element={
-                  <RequireEmployeeRole>
-                    <RequirePermission permission="page:ess_requests">
-                      <EssRequestsPage />
-                    </RequirePermission>
-                  </RequireEmployeeRole>
+                  <RequirePermission permission="page:ess_requests">
+                    <EssRequestsPage />
+                  </RequirePermission>
                 }
               />
               <Route
@@ -239,10 +238,26 @@ export default function App() {
               }
             />
             <Route
+              path="attendance/employee/:employeeId"
+              element={
+                <RequirePermission permission="page:attendance">
+                  <EmployeeAttendanceHistoryPage />
+                </RequirePermission>
+              }
+            />
+            <Route
               path="attendance/import"
               element={
                 <RequirePermission permission="page:attendance:import">
                   <AttendanceImportPage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="employee-requests"
+              element={
+                <RequirePermission permission="page:ess_requests:manage">
+                  <EmployeeRequestsManagementPage />
                 </RequirePermission>
               }
             />

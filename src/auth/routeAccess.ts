@@ -15,7 +15,14 @@ export function permissionForPath(pathname: string): Permission | null {
   if (path === '/' || path === '/login') return null
 
   if (path === '/dashboard') return 'page:dashboard'
-  if (path.startsWith('/ess')) return 'employee.view_self'
+  if (path === '/ess' || path === '/ess/') return 'page:dashboard'
+  if (path === '/ess/leave') return 'page:leave'
+  if (path === '/ess/requests') return 'page:ess_requests'
+  if (path === '/ess/attendance') return 'page:attendance'
+  if (path === '/ess/payslip') return 'page:payslip'
+  if (path === '/ess/performance') return 'page:performance'
+  if (path === '/ess/training') return 'page:training'
+  if (path === '/ess/benefits') return 'page:benefits'
 
   if (path === '/admin/settings') return 'page:admin_settings'
   if (path === '/admin/rbac') return 'page:rbac'
@@ -29,10 +36,12 @@ export function permissionForPath(pathname: string): Permission | null {
   if (path === '/designations') return 'page:designations'
 
   if (path === '/attendance/import') return 'page:attendance:import'
+  if (/^\/attendance\/employee\/[^/]+$/.test(path)) return 'page:attendance'
   if (path === '/attendance') return 'page:attendance'
 
   if (path === '/leave/approvals') return 'page:leave:approvals'
   if (path === '/leave') return 'page:leave'
+  if (path === '/employee-requests') return 'page:ess_requests:manage'
 
   if (
     path === '/jobs' ||

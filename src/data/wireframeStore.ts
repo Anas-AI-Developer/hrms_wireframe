@@ -8,6 +8,13 @@ import type {
   OrgSection,
   RecordStatus,
 } from '../types/hrms'
+import {
+  cloneBenefitsSeed,
+  getDefaultBenefitIdsForType,
+  type BenefitDefinition,
+  type BenefitType,
+  type EmployeeBenefitEnrollment,
+} from './benefitsData'
 import { assignManagers } from './hierarchy'
 import {
   departments as seedDepartments,
@@ -17,7 +24,7 @@ import {
   sections as seedSections,
 } from './dummyDataset'
 
-const STORAGE_KEY = 'hrms-wireframe-store-v1'
+const STORAGE_KEY = 'hrms-wireframe-store-v2'
 
 export type WireframeStoreState = {
   departments: Department[]
@@ -25,6 +32,9 @@ export type WireframeStoreState = {
   sections: OrgSection[]
   employees: Employee[]
   employeeHistory: EmployeeHistoryEvent[]
+  benefitDefinitions: BenefitDefinition[]
+  employmentTypeBenefitDefaults: Record<EmploymentType, string[]>
+  employeeBenefitEnrollments: EmployeeBenefitEnrollment[]
 }
 
 function cloneSeed(): WireframeStoreState {
@@ -34,14 +44,46 @@ function cloneSeed(): WireframeStoreState {
     sections: [...seedSections],
     employees: [...seedEmployees],
     employeeHistory: [...seedHistory],
+    ...cloneBenefitsSeed(),
+  }
+}
+
+function mergeById<T extends { id: string }>(parsed: T[] | undefined, seed: T[]): T[] {
+  const list = parsed ?? []
+  const byId = new Map(list.map((row) => [row.id, row]))
+  for (const row of seed) {
+    if (!byId.has(row.id)) byId.set(row.id, row)
+  }
+  return [...byId.values()]
+}
+
+function normalizeState(parsed: Partial<WireframeStoreState>): WireframeStoreState {
+  const seed = cloneSeed()
+  return {
+    departments: mergeById(parsed.departments, seed.departments),
+    designations: mergeById(parsed.designations, seed.designations),
+    sections: mergeById(parsed.sections, seed.sections),
+    employees: mergeById(parsed.employees, seed.employees),
+    employeeHistory: mergeById(parsed.employeeHistory, seed.employeeHistory),
+    benefitDefinitions: mergeById(parsed.benefitDefinitions, seed.benefitDefinitions),
+    employmentTypeBenefitDefaults:
+      parsed.employmentTypeBenefitDefaults ?? seed.employmentTypeBenefitDefaults,
+    employeeBenefitEnrollments: mergeById(
+      parsed.employeeBenefitEnrollments,
+      seed.employeeBenefitEnrollments,
+    ),
   }
 }
 
 function loadState(): WireframeStoreState {
   try {
     const raw = sessionStorage.getItem(STORAGE_KEY)
-    if (!raw) return cloneSeed()
-    return JSON.parse(raw) as WireframeStoreState
+    if (!raw) {
+      const legacy = sessionStorage.getItem('hrms-wireframe-store-v1')
+      if (legacy) return normalizeState(JSON.parse(legacy) as Partial<WireframeStoreState>)
+      return cloneSeed()
+    }
+    return normalizeState(JSON.parse(raw) as Partial<WireframeStoreState>)
   } catch {
     return cloneSeed()
   }
@@ -91,6 +133,7 @@ function reassignEmployees(employees: Employee[]) {
 }
 
 export type DepartmentInput = {
+  officeId?: string
   name: string
   code: string
   headName?: string
@@ -100,6 +143,7 @@ export type DepartmentInput = {
 export function addDepartment(input: DepartmentInput): Department {
   const dept: Department = {
     id: nextId('c', state.departments),
+    officeId: input.officeId?.trim() || 'o-hq',
     name: input.name.trim(),
     code: input.code.trim().toUpperCase(),
     headName: input.headName?.trim() || '—',
@@ -199,6 +243,31 @@ export type EmployeeInput = {
   endDate?: string
   sanctionedPost?: string
   workingAs?: string
+  benefitIds?: string[]
+}
+
+function replaceEmployeeBenefits(
+  enrollments: EmployeeBenefitEnrollment[],
+  defaults: Record<EmploymentType, string[]>,
+  employeeId: string,
+  benefitIds: string[],
+  employmentType: EmploymentType,
+  enrolledSince: string,
+): EmployeeBenefitEnrollment[] {
+  const defaultIds = new Set(getDefaultBenefitIdsForType(employmentType, defaults))
+  const rest = enrollments.filter((e) => e.employeeId !== employeeId)
+  const added: EmployeeBenefitEnrollment[] = []
+  for (const benefitId of [...new Set(benefitIds)]) {
+    added.push({
+      id: nextId('eb', [...rest, ...added]),
+      employeeId,
+      benefitId,
+      source: defaultIds.has(benefitId) ? 'default' : 'additional',
+      enrolledSince,
+      status: 'active',
+    })
+  }
+  return [...rest, ...added]
 }
 
 export function addEmployee(input: EmployeeInput): Employee {
@@ -233,9 +302,25 @@ export function addEmployee(input: EmployeeInput): Employee {
     parentDepartment: 'NAVTTC',
   }
 
+  const benefitIds =
+    input.benefitIds ??
+    getDefaultBenefitIdsForType(input.employmentType, state.employmentTypeBenefitDefaults)
+  const enrolledSince =
+    input.joinDate && input.joinDate !== '—' ? input.joinDate : new Date().toISOString().slice(0, 10)
   const employees = reassignEmployees([...state.employees, draft])
   const created = employees.find((e) => e.id === draft.id)!
-  commit({ ...state, employees })
+  commit({
+    ...state,
+    employees,
+    employeeBenefitEnrollments: replaceEmployeeBenefits(
+      state.employeeBenefitEnrollments,
+      state.employmentTypeBenefitDefaults,
+      created.id,
+      benefitIds,
+      input.employmentType,
+      enrolledSince,
+    ),
+  })
   return created
 }
 
@@ -271,7 +356,23 @@ export function updateEmployee(id: string, input: EmployeeInput): Employee | und
   const employees = reassignEmployees(mapped)
   const updated = employees.find((e) => e.id === targetId)
   if (!updated) return undefined
-  commit({ ...state, employees })
+  const benefitIds =
+    input.benefitIds ??
+    getDefaultBenefitIdsForType(input.employmentType, state.employmentTypeBenefitDefaults)
+  const enrolledSince =
+    input.joinDate && input.joinDate !== '—' ? input.joinDate : updated.joinDate !== '—' ? updated.joinDate : new Date().toISOString().slice(0, 10)
+  commit({
+    ...state,
+    employees,
+    employeeBenefitEnrollments: replaceEmployeeBenefits(
+      state.employeeBenefitEnrollments,
+      state.employmentTypeBenefitDefaults,
+      updated.id,
+      benefitIds,
+      input.employmentType,
+      enrolledSince,
+    ),
+  })
   return updated
 }
 
@@ -318,4 +419,55 @@ export function getSections() {
 
 export function getEmployeeHistoryAll() {
   return state.employeeHistory
+}
+
+export type BenefitDefinitionInput = {
+  name: string
+  type: BenefitType
+  description?: string
+  employerContribution: string
+  status: 'active' | 'inactive'
+}
+
+export function getBenefitDefinitions() {
+  return state.benefitDefinitions
+}
+
+export function getEmploymentTypeBenefitDefaults() {
+  return state.employmentTypeBenefitDefaults
+}
+
+export function getEmployeeBenefitEnrollments(employeeId?: string) {
+  if (!employeeId) return state.employeeBenefitEnrollments
+  return state.employeeBenefitEnrollments.filter((e) => e.employeeId === employeeId)
+}
+
+export function getEmployeeBenefitIds(employeeId: string): string[] {
+  return getEmployeeBenefitEnrollments(employeeId).map((e) => e.benefitId)
+}
+
+export function addBenefitDefinition(input: BenefitDefinitionInput): BenefitDefinition {
+  const row: BenefitDefinition = {
+    id: nextId('ben', state.benefitDefinitions),
+    name: input.name.trim(),
+    type: input.type,
+    description: input.description?.trim() || '—',
+    employerContribution: input.employerContribution.trim(),
+    status: input.status,
+  }
+  commit({ ...state, benefitDefinitions: [...state.benefitDefinitions, row] })
+  return row
+}
+
+export function setEmploymentTypeBenefitDefaults(
+  employmentType: EmploymentType,
+  benefitIds: string[],
+) {
+  commit({
+    ...state,
+    employmentTypeBenefitDefaults: {
+      ...state.employmentTypeBenefitDefaults,
+      [employmentType]: [...new Set(benefitIds)],
+    },
+  })
 }
