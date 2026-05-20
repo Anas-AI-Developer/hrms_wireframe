@@ -102,16 +102,6 @@ export const HR_NAV_GROUPS: NavGroupDef[] = [
   },
 ]
 
-export const PLANNING_NAV_GROUP: NavGroupDef = {
-  label: 'Planning & reference',
-  items: [
-    { to: '/roadmap', label: 'Delivery phases', permission: 'page:roadmap', icon: <IconChart /> },
-    { to: '/modules', label: 'Sprint modules', permission: 'page:modules', icon: <IconChart /> },
-    { to: '/organogram', label: 'HQ organogram', permission: 'page:organogram', icon: <IconBuilding /> },
-    { to: '/master-data', label: 'Client workbook', permission: 'page:master_data', icon: <IconBuilding /> },
-  ],
-}
-
 export const CONFIG_NAV_GROUP: NavGroupDef = {
   label: 'Configuration',
   accent: 'administration',
@@ -141,37 +131,43 @@ export const ESS_NAV: NavItemDef[] = [
   },
   {
     to: '/ess/leave',
-    label: 'My leave',
+    label: 'Leave',
     permission: 'page:leave',
     icon: <IconCalendar />,
   },
   {
+    to: '/ess/requests',
+    label: 'Requests',
+    permission: 'page:ess_requests',
+    icon: <IconBriefcase />,
+  },
+  {
     to: '/ess/attendance',
-    label: 'My attendance',
+    label: 'Attendance',
     permission: 'page:attendance',
     icon: <IconAttendance />,
   },
   {
     to: '/ess/payslip',
-    label: 'My payslip',
+    label: 'Payslip',
     permission: 'page:payslip',
     icon: <IconBriefcase />,
   },
   {
     to: '/ess/performance',
-    label: 'My performance',
+    label: 'Performance',
     permission: 'page:performance',
     icon: <IconChart />,
   },
   {
     to: '/ess/training',
-    label: 'My training',
+    label: 'Training',
     permission: 'page:training',
     icon: <IconCheckCircle />,
   },
   {
     to: '/ess/benefits',
-    label: 'My benefits',
+    label: 'Benefits',
     permission: 'page:benefits',
     icon: <IconUsers />,
   },

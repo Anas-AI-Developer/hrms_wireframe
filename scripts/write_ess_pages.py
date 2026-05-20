@@ -373,7 +373,7 @@ export function EssBenefitsPage() {
   return (
     <motion.div>
       <h2 className="wf-h2">My benefits</h2>
-      <p className="wf-lead">Active enrollments and available organisation plans.</p>
+      <p className="wf-lead">Active enrollments and available organization plans.</p>
       <section className="wf-section">
         <h3 className="wf-h2" style={{ fontSize: '1rem' }}>My enrollments</h3>
         {mine.length === 0 ? <p className="wf-note">No enrollments on file.</p> : (
@@ -390,7 +390,7 @@ export function EssBenefitsPage() {
         )}
       </section>
       <section className="wf-section">
-        <h3 className="wf-h2" style={{ fontSize: '1rem' }}>Organisation plans (reference)</h3>
+        <h3 className="wf-h2" style={{ fontSize: '1rem' }}>Organization plans (reference)</h3>
         <ul className="wf-list">
           {benefitPlans.filter((p) => p.status === 'active').map((p) => (
             <li key={p.id}>{p.name} ({p.type}) — {p.employerContribution}</li>

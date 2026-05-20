@@ -5,7 +5,7 @@ import { DashboardKpiCard } from '../components/dashboard/DashboardKpiCard'
 import { DataListPanel } from '../components/hrms/DataListPanel'
 import { HrmsListShell } from '../components/hrms/HrmsListShell'
 import { RowActionsMenu } from '../components/hrms/RowActionsMenu'
-import { departments, getDepartment, getEmployee } from '../data/mock'
+import { useWireframeData } from '../data/WireframeDataContext'
 import {
   LEAVE_TYPE_LABELS,
   type LeaveTypeId,
@@ -35,6 +35,7 @@ type TabId = 'all' | 'approvals'
 
 export function LeaveManagementPage() {
   const { user, can, visibleEmployees, actorEmployeeId } = useAuth()
+  const { departments, getDepartment, getEmployee } = useWireframeData()
   const { requests, approveRequest, rejectRequest } = useLeaveHub()
   const [searchParams, setSearchParams] = useSearchParams()
   const tab: TabId = searchParams.get('tab') === 'approvals' ? 'approvals' : 'all'

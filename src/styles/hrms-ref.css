@@ -116,12 +116,56 @@
   color: #1e293b;
 }
 
-.hrms-ref-panel-tools {
+.hrms-ref-panel-head--toolbar {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.65rem;
+}
+
+.hrms-ref-panel-head--toolbar .hrms-ref-panel-title {
+  width: 100%;
+}
+
+.hrms-ref-panel-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  min-width: 0;
+}
+
+@media (min-width: 640px) {
+  .hrms-ref-panel-toolbar {
+    flex-wrap: nowrap;
+  }
+}
+
+.hrms-ref-panel-toolbar__left {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.hrms-ref-panel-toolbar__right {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
   gap: 0.5rem;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.hrms-ref-panel-toolbar__right .hrms-ref-search {
+  width: 100%;
+  min-width: 200px;
+  max-width: 300px;
 }
 
 .hrms-ref-select {
@@ -137,6 +181,72 @@
 
 .hrms-ref-date-input {
   min-width: 10.5rem;
+}
+
+.hrms-attendance-kpis {
+  margin-bottom: 1rem;
+}
+
+.hrms-attendance-date-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.hrms-ref-date-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+}
+
+.hrms-ref-date-field__label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.hrms-attendance-date-sep {
+  color: #94a3b8;
+  font-size: 0.875rem;
+  user-select: none;
+}
+
+.hrms-ref-btn-today {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #fff;
+  color: #334155;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.hrms-ref-btn-today:hover {
+  border-color: #c7d2fe;
+  background: #f8fafc;
+  color: #2f4798;
+}
+
+.hrms-ref-btn-today--active {
+  border-color: #4b62be;
+  background: linear-gradient(135deg, #4b62be 0%, #2f4798 100%);
+  color: #fff;
+}
+
+.hrms-ref-btn-today--active:hover {
+  border-color: #2f4798;
+  color: #fff;
 }
 
 .hrms-sr-only {

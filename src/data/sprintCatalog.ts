@@ -20,11 +20,11 @@ export const sprintCatalog: SprintBlock[] = [
     title: 'Sprint 1 — Core foundation',
     weight: '30%',
     goal:
-      'Organisation structure, RBAC, and core employee records before any operational module.',
+      'Organization structure, RBAC, and core employee records before any operational module.',
     modules: [
       {
         id: 's1-org',
-        title: 'Organisation setup',
+        title: 'Organization setup',
         summary: 'Departments, designations (per department), reporting hierarchy via manager_id.',
         wireframeStatus: 'live_stub',
       },

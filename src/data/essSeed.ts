@@ -5,9 +5,10 @@ import { employeeBenefits } from './benefitsMock'
 import type { LeaveRequest } from './leaveMock'
 import { getLeaveBalance, getLeaveRequestsForEmployee, type LeaveBalance } from './leaveMock'
 import type { Payslip } from './payrollMock'
-import { getPayslipForEmployee } from './payrollMock'
+import { getPayslipForEmployee, payslips } from './payrollMock'
 import type { PerformanceGoal } from './performanceMock'
-import { appraisalCycles, performanceGoals } from './performanceMock'
+import { appraisalCycles } from './performanceMock'
+import { getPerformanceGoalsForEmployee } from './performanceStore'
 import type { TrainingEnrollment } from './trainingMock'
 import { trainingCatalog, trainingEnrollments } from './trainingMock'
 
@@ -100,18 +101,41 @@ export function getEssLeaveRequests(employeeId: string): LeaveRequest[] {
   )
 }
 
+function essDemoAttendanceFor(employeeId: string): AttendanceLog[] {
+  return EXTRA_ATTENDANCE.map((l) => ({
+    ...l,
+    id: `${l.id}-${employeeId}`,
+    employeeId,
+  }))
+}
+
 export function getEssAttendance(employeeId: string): AttendanceLog[] {
   const base = getAttendanceForEmployee(employeeId)
-  const extra = EXTRA_ATTENDANCE.filter((l) => l.employeeId === employeeId)
+  const extra =
+    employeeId === ESS_PRIMARY_EMPLOYEE_ID
+      ? EXTRA_ATTENDANCE
+      : essDemoAttendanceFor(employeeId)
   const byDate = new Map<string, AttendanceLog>()
   for (const l of base) byDate.set(l.date, l)
   for (const l of extra) byDate.set(l.date, l)
   return [...byDate.values()].sort((a, b) => b.date.localeCompare(a.date))
 }
 
+function essDemoPayslipFor(employeeId: string): Payslip {
+  return {
+    ...EXTRA_PAYSLIP,
+    id: `ps-${employeeId}-2026-04`,
+    employeeId,
+  }
+}
+
 export function getEssPayslip(employeeId: string): Payslip {
+  const match = payslips.find((p) => p.employeeId === employeeId)
+  if (match) return match
   if (employeeId === ESS_PRIMARY_EMPLOYEE_ID) return EXTRA_PAYSLIP
-  return getPayslipForEmployee(employeeId)
+  const fallback = getPayslipForEmployee(employeeId)
+  if (fallback.employeeId === employeeId) return fallback
+  return essDemoPayslipFor(employeeId)
 }
 
 export function getEssLeaveBalance(employeeId: string): LeaveBalance {
@@ -127,7 +151,7 @@ export function getEssLeaveBalance(employeeId: string): LeaveBalance {
 }
 
 export function getEssGoals(employeeId: string): PerformanceGoal[] {
-  return performanceGoals.filter((g) => g.employeeId === employeeId)
+  return getPerformanceGoalsForEmployee(employeeId)
 }
 
 export function getEssTraining(employeeId: string): TrainingEnrollment[] {

@@ -49,13 +49,13 @@ export const LEADERSHIP_ACCOUNTS: {
     role: 'director',
     username: 'director',
     displayName: 'Demo — Director',
-    description: 'Directorate-level HR and organisation management.',
+    description: 'Directorate-level HR and organization management.',
   },
   {
     role: 'deputy_director',
     username: 'deputy.director',
     displayName: 'Demo — Deputy Director',
-    description: 'Directorate-level HR and organisation management.',
+    description: 'Directorate-level HR and organization management.',
   },
   {
     role: 'assistant_director',

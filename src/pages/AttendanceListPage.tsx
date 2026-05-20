@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import { DashboardKpiCard } from '../components/dashboard/DashboardKpiCard'
 import { AttendanceStatusBadge } from '../components/hrms/AttendanceStatusBadge'
 import { DataListPanel } from '../components/hrms/DataListPanel'
 import { HrmsListShell } from '../components/hrms/HrmsListShell'
@@ -11,10 +12,12 @@ import {
   type AttendanceLog,
   type AttendanceStatus,
   attendanceLogs,
+  WIREFRAME_TODAY,
 } from '../data/attendanceMock'
 import { getEmployee } from '../data/mock'
 import { employmentTypeLabel } from '../data/employmentStats'
 import { useListControls } from '../hooks/useListControls'
+import { isDateInRange } from '../utils/attendanceStats'
 
 type AttendanceStatusFilter = 'all' | AttendanceStatus
 
@@ -24,21 +27,54 @@ function employeeLabel(employeeId: string) {
   return `${emp.firstName} ${emp.lastName} ${emp.employeeNo}`.toLowerCase()
 }
 
+function resolveDateBounds(from: string, to: string, todayOnly: boolean) {
+  if (todayOnly) return { from: WIREFRAME_TODAY, to: WIREFRAME_TODAY }
+  if (from && !to) return { from, to: from }
+  if (!from && to) return { from: to, to }
+  return { from, to }
+}
+
+function attendanceDateFilterLabel(from: string, to: string, todayOnly: boolean): string | null {
+  if (todayOnly) return `Today (${WIREFRAME_TODAY})`
+  if (!from && !to) return null
+  const bounds = resolveDateBounds(from, to, false)
+  if (bounds.from === bounds.to) return bounds.from
+  return `${bounds.from} – ${bounds.to}`
+}
+
 export function AttendanceListPage() {
   const { can, visibleEmployees, user, actorEmployeeId } = useAuth()
   const canImport = can('page:attendance:import')
-  const scopedIds = new Set(visibleEmployees().map((e) => e.id))
-  const scopedLogs = attendanceLogs.filter((l) => scopedIds.has(l.employeeId))
+  const scopedLogs = useMemo(() => {
+    const scopedIds = new Set(visibleEmployees().map((e) => e.id))
+    return attendanceLogs.filter((l) => scopedIds.has(l.employeeId))
+  }, [visibleEmployees])
 
   const [attendanceStatus, setAttendanceStatus] = useState<AttendanceStatusFilter>('all')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
+  const [todayOnly, setTodayOnly] = useState(false)
+
+  const dateFiltered = useMemo(() => {
+    if (!todayOnly && !dateFrom && !dateTo) return scopedLogs
+    const { from, to } = resolveDateBounds(dateFrom, dateTo, todayOnly)
+    return scopedLogs.filter((l) => isDateInRange(l.date, from, to))
+  }, [scopedLogs, todayOnly, dateFrom, dateTo])
 
   const statusFiltered = useMemo(() => {
-    if (attendanceStatus === 'all') return scopedLogs
-    return scopedLogs.filter((l) => l.status === attendanceStatus)
-  }, [scopedLogs, attendanceStatus])
+    if (attendanceStatus === 'all') return dateFiltered
+    return dateFiltered.filter((l) => l.status === attendanceStatus)
+  }, [dateFiltered, attendanceStatus])
 
-  const presentCount = scopedLogs.filter((l) => l.status === 'present').length
-  const lateCount = scopedLogs.filter((l) => l.status === 'late').length
+  const hasDateFilter = todayOnly || Boolean(dateFrom || dateTo)
+
+  const todayLogs = useMemo(
+    () => scopedLogs.filter((l) => l.date === WIREFRAME_TODAY),
+    [scopedLogs],
+  )
+  const presentCount = todayLogs.filter((l) => l.status === 'present').length
+  const lateCount = todayLogs.filter((l) => l.status === 'late').length
+  const todayTotal = todayLogs.length
 
   const list = useListControls(statusFiltered, {
     searchFn: (l, q) => {
@@ -53,23 +89,56 @@ export function AttendanceListPage() {
       )
     },
     sortFns: {
-      date: (a, b) => a.date.localeCompare(b.date),
+      date: (a, b) => {
+        const byDate = a.date.localeCompare(b.date)
+        if (byDate !== 0) return byDate
+        return employeeLabel(a.employeeId).localeCompare(employeeLabel(b.employeeId))
+      },
       employee: (a, b) => employeeLabel(a.employeeId).localeCompare(employeeLabel(b.employeeId)),
       checkIn: (a, b) => a.checkIn.localeCompare(b.checkIn),
       hours: (a, b) => a.hoursWorked - b.hoursWorked,
       status: (a, b) => a.status.localeCompare(b.status),
     },
     defaultSortColumn: 'date',
+    defaultSortDir: 'asc',
     defaultPageSize: 15,
   })
 
+  useEffect(() => {
+    list.setSort('date', hasDateFilter ? 'desc' : 'asc')
+  }, [hasDateFilter, list.setSort])
   const hasActiveFilters =
-    list.hasActiveFilters || attendanceStatus !== 'all'
+    list.hasActiveFilters || attendanceStatus !== 'all' || hasDateFilter
+
+  function applyTodayFilter() {
+    setTodayOnly(true)
+    setDateFrom(WIREFRAME_TODAY)
+    setDateTo(WIREFRAME_TODAY)
+    list.setPage(1)
+  }
+
+  function onDateFromChange(value: string) {
+    setTodayOnly(false)
+    setDateFrom(value)
+    list.setPage(1)
+  }
+
+  function onDateToChange(value: string) {
+    setTodayOnly(false)
+    setDateTo(value)
+    list.setPage(1)
+  }
 
   function resetAllFilters() {
     list.resetFilters()
     setAttendanceStatus('all')
+    setDateFrom('')
+    setDateTo('')
+    setTodayOnly(false)
   }
+
+  const dateFilterLabel = attendanceDateFilterLabel(dateFrom, dateTo, todayOnly)
+  const logsPanelTitle = dateFilterLabel ? `Attendance logs · ${dateFilterLabel}` : 'Attendance logs'
 
   return (
     <HrmsListShell
@@ -82,39 +151,87 @@ export function AttendanceListPage() {
         ) : undefined
       }
     >
-      <section className="hrms-list-summary" aria-label="Attendance summary">
-        <article className="hrms-list-summary__card">
-          <span className="hrms-list-summary__label">Standard day</span>
-          <span className="hrms-list-summary__value">
-            {ATTENDANCE_POLICY.standardHours}h · {ATTENDANCE_POLICY.coreStart}–
-            {ATTENDANCE_POLICY.coreEnd}
-          </span>
-        </article>
-        <article className="hrms-list-summary__card">
-          <span className="hrms-list-summary__label">Present (scope)</span>
-          <span className="hrms-list-summary__value hrms-list-summary__value--stat">{presentCount}</span>
-        </article>
-        <article className="hrms-list-summary__card">
-          <span className="hrms-list-summary__label">Late arrivals</span>
-          <span className="hrms-list-summary__value hrms-list-summary__value--stat">{lateCount}</span>
-        </article>
-        <article className="hrms-list-summary__card">
-          <span className="hrms-list-summary__label">Policy</span>
-          <span className="hrms-list-summary__value">
-            Flexible {ATTENDANCE_POLICY.flexibleTiming ? 'yes' : 'no'} · Shifts{' '}
-            {ATTENDANCE_POLICY.shiftBased ? 'yes' : 'no'}
-          </span>
-        </article>
+      <section className="hrms-kpi-grid hrms-attendance-kpis" aria-label="Attendance summary">
+        <DashboardKpiCard
+          static
+          label="Standard day"
+          value={`${ATTENDANCE_POLICY.standardHours}h`}
+          subtext={`${ATTENDANCE_POLICY.coreStart} – ${ATTENDANCE_POLICY.coreEnd} core hours`}
+          icon={<i className="ri-time-line" />}
+          tone="primary"
+        />
+        <DashboardKpiCard
+          static
+          label="Present today"
+          value={presentCount}
+          subtext={`${todayTotal} log${todayTotal === 1 ? '' : 's'} on ${WIREFRAME_TODAY}`}
+          icon={<i className="ri-user-follow-line" />}
+          tone="success"
+        />
+        <DashboardKpiCard
+          static
+          label="Late arrivals today"
+          value={lateCount}
+          subtext={lateCount > 0 ? 'After core start' : 'No late punches today'}
+          icon={<i className="ri-alarm-warning-line" />}
+          tone="warning"
+        />
+        <DashboardKpiCard
+          static
+          label="Policy"
+          value={ATTENDANCE_POLICY.flexibleTiming ? 'Flexible' : 'Fixed hours'}
+          subtext={`Shifts ${ATTENDANCE_POLICY.shiftBased ? 'enabled' : 'not used'} · demo ${WIREFRAME_TODAY}`}
+          icon={<i className="ri-shield-check-line" />}
+          tone="info"
+        />
       </section>
 
       <DataListPanel
-        title="Attendance logs"
+        title={logsPanelTitle}
         search={list.search}
         onSearchChange={list.setSearch}
         searchPlaceholder="Search by employee, date, or status..."
         showStatusFilter={false}
         hasActiveFilters={hasActiveFilters}
         onResetFilters={resetAllFilters}
+        extraFilters={
+          <div className="hrms-attendance-date-filters">
+            <button
+              type="button"
+              className={`hrms-ref-btn-today${todayOnly ? ' hrms-ref-btn-today--active' : ''}`}
+              onClick={applyTodayFilter}
+              aria-pressed={todayOnly}
+            >
+              <i className="ri-calendar-todo-line" aria-hidden /> Today
+            </button>
+            <label className="hrms-ref-date-field">
+              <span className="hrms-ref-date-field__label">From</span>
+              <input
+                type="date"
+                className="hrms-ref-select hrms-ref-date-input"
+                value={dateFrom}
+                max={dateTo || WIREFRAME_TODAY}
+                onChange={(e) => onDateFromChange(e.target.value)}
+                aria-label="From date"
+              />
+            </label>
+            <span className="hrms-attendance-date-sep" aria-hidden>
+              –
+            </span>
+            <label className="hrms-ref-date-field">
+              <span className="hrms-ref-date-field__label">To</span>
+              <input
+                type="date"
+                className="hrms-ref-select hrms-ref-date-input"
+                value={dateTo}
+                min={dateFrom || undefined}
+                max={WIREFRAME_TODAY}
+                onChange={(e) => onDateToChange(e.target.value)}
+                aria-label="To date"
+              />
+            </label>
+          </div>
+        }
         toolbarExtra={
           <select
             className="hrms-ref-select"
@@ -201,7 +318,16 @@ export function AttendanceListPage() {
           </table>
         </div>
         <p className="hrms-list-footnote">
-          Showing {list.total} log{list.total === 1 ? '' : 's'} in your scope.
+          Showing {list.firstItem}–{list.lastItem} of {list.total} log{list.total === 1 ? '' : 's'}
+          {dateFilterLabel ? (
+            <>
+              {' '}
+              for <strong>{dateFilterLabel}</strong>
+            </>
+          ) : (
+            ' across all dates in your scope'
+          )}
+          .
           {user?.role === 'employee' && actorEmployeeId ? (
             <>
               {' '}

@@ -1,5 +1,5 @@
 import type { EmploymentType } from '../types/hrms'
-import { employees } from './clientDataset'
+import { getEmployees } from './wireframeStore'
 import {
   CLIENT_EMPLOYMENT_TYPE_COUNTS,
   CLIENT_SANCTIONED_STRENGTH_TOTAL,
@@ -8,7 +8,7 @@ import {
 
 export function countByEmploymentType(): Record<EmploymentType, number> {
   const counts = {} as Record<EmploymentType, number>
-  for (const e of employees) {
+  for (const e of getEmployees()) {
     counts[e.employmentType] = (counts[e.employmentType] ?? 0) + 1
   }
   return counts
@@ -31,5 +31,5 @@ export function clientSanctionedTotal(): number {
 }
 
 export function masterListRowTotal(): number {
-  return employees.length
+  return getEmployees().length
 }

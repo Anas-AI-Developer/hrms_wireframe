@@ -64,6 +64,7 @@ const EMPLOYEE_ESS: Permission[] = [
   'training.enroll',
   'page:benefits',
   'benefits.view_self',
+  'page:ess_requests',
 ]
 
 const ACCOUNTS_FINANCE: Permission[] = [

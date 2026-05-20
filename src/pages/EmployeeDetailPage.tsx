@@ -141,7 +141,7 @@ export function EmployeeDetailPage() {
 
           <article className="hrms-ref-panel">
             <header className="hrms-ref-panel-head">
-              <h2 className="hrms-ref-panel-title">Organisation & post</h2>
+              <h2 className="hrms-ref-panel-title">Organization & post</h2>
             </header>
             <div className="hrms-ref-panel-body">
               <dl className="hrms-detail-fields">

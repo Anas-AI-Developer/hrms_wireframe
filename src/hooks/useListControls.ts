@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
 export type SortDir = 'asc' | 'desc' | null
 
@@ -22,13 +22,17 @@ type Options<T> = {
   statusFn?: (item: T, filter: StatusFilter) => boolean
   defaultPageSize?: number
   defaultSortColumn?: string
+  defaultSortDir?: SortDir
+  defaultStatusFilter?: StatusFilter
 }
 
 export function useListControls<T>(items: T[], options: Options<T>) {
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('active')
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>(
+    options.defaultStatusFilter ?? 'active',
+  )
   const [sortColumn, setSortColumn] = useState<string | null>(options.defaultSortColumn ?? null)
-  const [sortDir, setSortDir] = useState<SortDir>(null)
+  const [sortDir, setSortDir] = useState<SortDir>(options.defaultSortDir ?? null)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(options.defaultPageSize ?? 10)
 
@@ -52,11 +56,17 @@ export function useListControls<T>(items: T[], options: Options<T>) {
 
   function resetFilters() {
     setSearch('')
-    setStatusFilter('active')
-    setSortColumn(null)
-    setSortDir(null)
+    setStatusFilter(options.defaultStatusFilter ?? 'active')
+    setSortColumn(options.defaultSortColumn ?? null)
+    setSortDir(options.defaultSortDir ?? null)
     setPage(1)
   }
+
+  const setSort = useCallback((column: string | null, dir: SortDir) => {
+    setSortColumn(column)
+    setSortDir(dir)
+    setPage(1)
+  }, [])
 
   const filtered = useMemo(() => {
     let rows = [...items]
@@ -114,6 +124,7 @@ export function useListControls<T>(items: T[], options: Options<T>) {
     firstItem,
     lastItem,
     resetFilters,
+    setSort,
     hasActiveFilters,
   }
 }

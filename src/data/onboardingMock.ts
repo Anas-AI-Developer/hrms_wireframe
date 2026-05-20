@@ -51,7 +51,7 @@ export const onboardingCases: OnboardingCase[] = [
     department: 'RO Karachi',
     status: 'completed',
     expectedJoinDate: '2026-03-01',
-    employeeId: 'm-103',
+    employeeId: 'm-15',
     tasksCompleted: ONBOARDING_TASKS.length,
     tasksTotal: ONBOARDING_TASKS.length,
   },

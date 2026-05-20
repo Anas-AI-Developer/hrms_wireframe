@@ -1,4 +1,4 @@
-import { employees } from '../data/mock'
+import { getEmployees } from '../data/mock'
 import type { Employee } from '../types/hrms'
 import type { AuthUser, RoleId } from './types'
 
@@ -34,13 +34,14 @@ const EMP_SLUG_TO_TITLE: Record<string, string> = {
 export function resolveActorEmployeeId(user: AuthUser): string | undefined {
   if (user.employeeId) return user.employeeId
   const demo = DEMO_ACTOR_BY_USERNAME[user.username]
-  if (demo && employees.some((e) => e.id === demo)) return demo
+  const roster = getEmployees()
+  if (demo && roster.some((e) => e.id === demo)) return demo
 
   if (user.role === 'employee' && user.username.startsWith('emp.')) {
     const slug = user.username.slice(4)
     const title = EMP_SLUG_TO_TITLE[slug]
     if (title) {
-      const match = employees.find(
+      const match = roster.find(
         (e) =>
           e.status === 'active' &&
           (e.sanctionedPost?.toLowerCase().includes(title.toLowerCase()) ||
@@ -85,5 +86,5 @@ export function filterEmployeesForUser(
   user: AuthUser,
   permissions: { has: (p: import('./types').Permission) => boolean },
 ): Employee[] {
-  return employees.filter((e) => canViewEmployee(user, e, permissions))
+  return getEmployees().filter((e) => canViewEmployee(user, e, permissions))
 }

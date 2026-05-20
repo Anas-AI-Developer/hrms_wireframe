@@ -22,7 +22,7 @@ export const PORTALS: Record<Exclude<PortalId, 'employee'>, PortalDefinition> = 
     id: 'executive',
     title: 'Executive leadership portal',
     subtitle:
-      'Top leadership view — organisation-wide workforce, configuration, and delivery planning (mirrors full HRMS access).',
+      'Top leadership view — organization-wide workforce, configuration, and delivery planning (mirrors full HRMS access).',
     tagline: 'Executive portal',
   },
   directorate: {
@@ -90,13 +90,6 @@ export const PORTAL_HR_LINKS: PortalLink[] = [
   { label: 'Departments', to: '/departments', permission: 'page:departments' },
   { label: 'Designations', to: '/designations', permission: 'page:designations' },
   { label: 'Employees', to: '/employees', permission: 'page:employees' },
-]
-
-export const PORTAL_PLANNING_LINKS: PortalLink[] = [
-  { label: 'Delivery phases', to: '/roadmap', permission: 'page:roadmap' },
-  { label: 'Sprint modules', to: '/modules', permission: 'page:modules' },
-  { label: 'HQ organogram', to: '/organogram', permission: 'page:organogram' },
-  { label: 'Client workbook', to: '/master-data', permission: 'page:master_data' },
 ]
 
 export const PORTAL_ADMIN_LINKS: PortalLink[] = [

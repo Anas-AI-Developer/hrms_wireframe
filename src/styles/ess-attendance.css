@@ -1,0 +1,40 @@
+/* ESS — My attendance (stat cards shared via ess-leave.css) */
+
+.ess-attendance-page__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.ess-attendance-page__head .wf-lead {
+  margin-bottom: 0;
+}
+
+.ess-attendance-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 1.25rem;
+}
+
+@media (max-width: 768px) {
+  .ess-attendance-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ess-attendance-policy {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.ess-attendance-policy i {
+  color: #4b62be;
+}

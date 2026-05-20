@@ -3,7 +3,7 @@ import './pages.css'
 export function OrganogramPage() {
   return (
     <div className="wf-page wf-page--wide">
-      <h1 className="wf-h1">Organisation chart (HQ)</h1>
+      <h1 className="wf-h1">Organization chart (HQ)</h1>
       <p className="wf-lead">
         Official <strong>Organogram_NAVTTC HQs_2026.pdf</strong> embedded for reference. Reporting lines in HRMS
         wireframe data follow the MasterList &quot;Centre / Section&quot; fields until a structured hierarchy is

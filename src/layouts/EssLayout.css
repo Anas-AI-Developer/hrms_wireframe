@@ -1,5 +1,9 @@
+/* ESS shell — full width of main content column (gutters from .hrms-ref-page) */
+
 .ess-shell {
-  max-width: 56rem;
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
 }
 
 .ess-hero {
@@ -7,5 +11,6 @@
 }
 
 .ess-content {
+  width: 100%;
   min-height: 12rem;
 }

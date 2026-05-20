@@ -10,7 +10,9 @@ import { AttendanceReportPage } from './pages/AttendanceReportPage'
 import { BenefitsPage } from './pages/BenefitsPage'
 import { CompliancePage } from './pages/CompliancePage'
 import { DashboardPage } from './pages/DashboardPage'
+import { DepartmentFormPage } from './pages/DepartmentFormPage'
 import { DepartmentListPage } from './pages/DepartmentListPage'
+import { DesignationFormPage } from './pages/DesignationFormPage'
 import { DesignationListPage } from './pages/DesignationListPage'
 import { EmployeeDetailPage } from './pages/EmployeeDetailPage'
 import { EmployeeFormPage } from './pages/EmployeeFormPage'
@@ -23,17 +25,17 @@ import { EssLeavePage } from './pages/ess/EssLeavePage'
 import { EssDashboardPage } from './pages/ess/EssDashboardPage'
 import { EssPayslipPage } from './pages/ess/EssPayslipPage'
 import { EssPerformancePage } from './pages/ess/EssPerformancePage'
+import { EssRequestsPage } from './pages/ess/EssRequestsPage'
 import { EssTrainingPage } from './pages/ess/EssTrainingPage'
+import { RequireEmployeeRole } from './auth/RequireEmployeeRole'
 import { HiringPipelinePage } from './pages/HiringPipelinePage'
 import { JobPostingsListPage } from './pages/JobPostingsListPage'
 import { LeaveApprovalsPage } from './pages/LeaveApprovalsPage'
 import { LeaveManagementPage } from './pages/LeaveManagementPage'
 import { LeaveHubProvider } from './leave/LeaveHubContext'
 import { LoginPage } from './pages/LoginPage'
-import { MasterDataCatalogPage } from './pages/MasterDataCatalogPage'
 import { OnboardingListPage } from './pages/OnboardingListPage'
 import { OnboardingPage } from './pages/OnboardingPage'
-import { OrganogramPage } from './pages/OrganogramPage'
 import { PayrollReportPage } from './pages/PayrollReportPage'
 import { PayrollRunsPage } from './pages/PayrollRunsPage'
 import { PayslipPage } from './pages/PayslipPage'
@@ -41,9 +43,7 @@ import { PerformancePage } from './pages/PerformancePage'
 import { RbacMatrixPage } from './pages/RbacMatrixPage'
 import { RecruitmentPage } from './pages/RecruitmentPage'
 import { ReportsPage } from './pages/ReportsPage'
-import { RoadmapPage } from './pages/RoadmapPage'
 import { ScheduleInterviewPage } from './pages/ScheduleInterviewPage'
-import { SprintModulesPage } from './pages/SprintModulesPage'
 import { SystemProposalPage } from './pages/SystemProposalPage'
 import { TrainingPage } from './pages/TrainingPage'
 import { UserProfilePage } from './pages/UserProfilePage'
@@ -81,6 +81,16 @@ export default function App() {
                   <RequirePermission permission="page:leave">
                     <EssLeavePage />
                   </RequirePermission>
+                }
+              />
+              <Route
+                path="requests"
+                element={
+                  <RequireEmployeeRole>
+                    <RequirePermission permission="page:ess_requests">
+                      <EssRequestsPage />
+                    </RequirePermission>
+                  </RequireEmployeeRole>
                 }
               />
               <Route
@@ -181,10 +191,42 @@ export default function App() {
               }
             />
             <Route
+              path="departments/new"
+              element={
+                <RequirePermission permission="page:departments:write">
+                  <DepartmentFormPage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="departments/:id/edit"
+              element={
+                <RequirePermission permission="page:departments:write">
+                  <DepartmentFormPage />
+                </RequirePermission>
+              }
+            />
+            <Route
               path="designations"
               element={
                 <RequirePermission permission="page:designations">
                   <DesignationListPage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="designations/new"
+              element={
+                <RequirePermission permission="page:designations:write">
+                  <DesignationFormPage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="designations/:id/edit"
+              element={
+                <RequirePermission permission="page:designations:write">
+                  <DesignationFormPage />
                 </RequirePermission>
               }
             />
@@ -357,38 +399,6 @@ export default function App() {
               element={
                 <RequirePermission permission="page:compliance">
                   <CompliancePage />
-                </RequirePermission>
-              }
-            />
-            <Route
-              path="roadmap"
-              element={
-                <RequirePermission permission="page:roadmap">
-                  <RoadmapPage />
-                </RequirePermission>
-              }
-            />
-            <Route
-              path="modules"
-              element={
-                <RequirePermission permission="page:modules">
-                  <SprintModulesPage />
-                </RequirePermission>
-              }
-            />
-            <Route
-              path="organogram"
-              element={
-                <RequirePermission permission="page:organogram">
-                  <OrganogramPage />
-                </RequirePermission>
-              }
-            />
-            <Route
-              path="master-data"
-              element={
-                <RequirePermission permission="page:master_data">
-                  <MasterDataCatalogPage />
                 </RequirePermission>
               }
             />

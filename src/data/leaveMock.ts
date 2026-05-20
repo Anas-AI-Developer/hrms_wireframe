@@ -1,5 +1,5 @@
 import type { Employee } from '../types/hrms'
-import { employees } from './clientDataset'
+import { getEmployees } from './wireframeStore'
 import { addDaysIso, WIREFRAME_TODAY } from '../utils/attendanceStats'
 
 export type LeaveTypeId = 'casual' | 'sick' | 'annual' | 'emergency'
@@ -26,7 +26,7 @@ export const LEAVE_TYPE_LABELS: Record<LeaveTypeId, string> = {
   emergency: 'Emergency',
 }
 
-const roster = employees.filter((e) => e.status === 'active' && e.employmentType !== 'vacant_post')
+const roster = getEmployees().filter((e) => e.status === 'active' && e.employmentType !== 'vacant_post')
 
 function pickStatus(i: number): LeaveRequestStatus {
   if (i % 7 === 0) return 'pending'

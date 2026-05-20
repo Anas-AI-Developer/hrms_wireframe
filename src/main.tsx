@@ -1,16 +1,24 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { AuthProvider } from './auth/AuthContext'
+import { WireframeDataProvider } from './data/WireframeDataContext'
 import './index.css'
 import './styles/hrms-ref.css'
 import './styles/sidebar.css'
 import './styles/dashboard.css'
+import './styles/ess-leave.css'
+import './styles/ess-attendance.css'
+import './styles/ess-payslip.css'
+import './styles/ess-requests.css'
+import './styles/ess-performance.css'
 import App from './App.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AuthProvider>
-      <App />
+      <WireframeDataProvider>
+        <App />
+      </WireframeDataProvider>
     </AuthProvider>
   </StrictMode>,
 )

@@ -5,7 +5,7 @@ import { DashboardCharts } from '../components/dashboard/DashboardCharts'
 import { DashboardKpiCard } from '../components/dashboard/DashboardKpiCard'
 import { PageBreadcrumb } from '../components/hrms/PageBreadcrumb'
 import { StatusBadge } from '../components/hrms/StatusBadge'
-import { departments, employees } from '../data/mock'
+import { useWireframeData } from '../data/WireframeDataContext'
 import { portalForUser } from '../portals/portalConfig'
 import { homePathForRole } from '../portals/homePath'
 import '../styles/dashboard.css'
@@ -21,6 +21,7 @@ function todayLabel(): string {
 
 export function DashboardPage() {
   const { can, visibleEmployees, user } = useAuth()
+  const { departments, employees } = useWireframeData()
 
   if (!user) return null
   if (user.role === 'employee') {
@@ -103,7 +104,7 @@ export function DashboardPage() {
           />
           <DashboardKpiCard
             static
-            label={canPayroll ? 'Payroll sample' : 'Organisation'}
+            label={canPayroll ? 'Payroll sample' : 'Organization'}
             value={canPayroll ? employees.length : departments.length}
             subtext={
               canPayroll ? 'Roster rows for registers' : `${inactive} inactive in scope`

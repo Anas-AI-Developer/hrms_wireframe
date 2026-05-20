@@ -18,6 +18,12 @@ import {
   getEssPayslip,
   getEssTraining,
 } from '../data/essSeed'
+import {
+  addEmployeeRequest as persistEmployeeRequest,
+  getEmployeeRequests,
+  type EmployeeRequest,
+  type NewEmployeeRequestInput,
+} from '../data/employeeRequestsStore'
 import type { LeaveRequest, LeaveTypeId } from '../data/leaveMock'
 import type { TrainingCourse, TrainingEnrollment } from '../data/trainingMock'
 import { trainingCatalog } from '../data/trainingMock'
@@ -49,11 +55,13 @@ type NewLeaveInput = {
 type EssSessionValue = {
   employeeId: string
   leaveRequests: LeaveRequest[]
+  employeeRequests: EmployeeRequest[]
   enrollments: TrainingEnrollment[]
   catalog: TrainingCourse[]
   leaveBalance: ReturnType<typeof getEssLeaveBalance> | undefined
   metrics: EssDashboardMetrics
   addLeaveRequest: (input: NewLeaveInput) => void
+  addEmployeeRequest: (input: NewEmployeeRequestInput) => void
   nominateTraining: (course: TrainingCourse) => { ok: true } | { ok: false; message: string }
   cancelTrainingNomination: (enrollmentId: string) => void
 }
@@ -99,17 +107,20 @@ export function EssSessionProvider({ children }: { children: ReactNode }) {
   const employeeId = actorEmployeeId ?? ''
 
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([])
+  const [employeeRequests, setEmployeeRequests] = useState<EmployeeRequest[]>([])
   const [enrollments, setEnrollments] = useState<TrainingEnrollment[]>([])
   const [catalog, setCatalog] = useState<TrainingCourse[]>([])
 
   useEffect(() => {
     if (!employeeId) {
       setLeaveRequests([])
+      setEmployeeRequests([])
       setEnrollments([])
       setCatalog([...trainingCatalog])
       return
     }
     setLeaveRequests(getEssLeaveRequests(employeeId))
+    setEmployeeRequests(getEmployeeRequests(employeeId))
     setEnrollments(getEssTraining(employeeId))
     setCatalog([...trainingCatalog])
   }, [employeeId])
@@ -136,6 +147,15 @@ export function EssSessionProvider({ children }: { children: ReactNode }) {
         submittedAt: todayIso(),
       }
       setLeaveRequests((prev) => [entry, ...prev])
+    },
+    [employeeId],
+  )
+
+  const addEmployeeRequest = useCallback(
+    (input: NewEmployeeRequestInput) => {
+      if (!employeeId) return
+      const entry = persistEmployeeRequest(employeeId, input)
+      setEmployeeRequests((prev) => [entry, ...prev])
     },
     [employeeId],
   )
@@ -185,22 +205,26 @@ export function EssSessionProvider({ children }: { children: ReactNode }) {
     () => ({
       employeeId,
       leaveRequests,
+      employeeRequests,
       enrollments,
       catalog,
       leaveBalance,
       metrics,
       addLeaveRequest,
+      addEmployeeRequest,
       nominateTraining,
       cancelTrainingNomination,
     }),
     [
       employeeId,
       leaveRequests,
+      employeeRequests,
       enrollments,
       catalog,
       leaveBalance,
       metrics,
       addLeaveRequest,
+      addEmployeeRequest,
       nominateTraining,
       cancelTrainingNomination,
     ],

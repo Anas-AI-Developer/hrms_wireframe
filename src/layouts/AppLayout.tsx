@@ -6,7 +6,6 @@ import {
   CONFIG_NAV_GROUP,
   ESS_NAV,
   HR_NAV_GROUPS,
-  PLANNING_NAV_GROUP,
   type NavGroupDef,
 } from '../components/hrms/navConfig'
 import { SidebarUserMenu } from './SidebarUserMenu'
@@ -33,10 +32,6 @@ export function AppLayout() {
           ...g,
           items: g.items.filter((i) => can(i.permission)),
         })),
-        {
-          ...PLANNING_NAV_GROUP,
-          items: PLANNING_NAV_GROUP.items.filter((i) => can(i.permission)),
-        },
         {
           ...CONFIG_NAV_GROUP,
           items: CONFIG_NAV_GROUP.items.filter((i) => can(i.permission)),

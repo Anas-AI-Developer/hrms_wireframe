@@ -33,7 +33,7 @@ export function EmployeeAnalyticsPage() {
           <div className="wf-card-desc">On leave {onLeave} in scope</div>
         </article>
         <article className="wf-card wf-card--flat">
-          <div className="wf-card-kicker">Organisation — active</div>
+          <div className="wf-card-kicker">Organization — active</div>
           <div className="wf-card-stat">{totals.active}</div>
           <div className="wf-card-desc">Demo aggregate (all centres)</div>
         </article>

@@ -1,14 +1,19 @@
+/**
+ * Org data — live wireframe store (session-persisted). Use useWireframeData() in React pages.
+ */
 export {
-  departments,
-  designations,
-  employees,
-  sections,
-  employeeHistory,
   getDepartment,
   getDesignation,
   getEmployee,
   getSection,
   getEmployeeHistory,
   getDirectReports,
-  workbookSheetNames,
-} from './clientDataset'
+  getDepartments,
+  getDesignations,
+  getEmployees,
+  getSections,
+  getEmployeeHistoryAll,
+  resetWireframeStore,
+} from './wireframeStore'
+
+export { workbookSheetNames } from './workbookSheets'

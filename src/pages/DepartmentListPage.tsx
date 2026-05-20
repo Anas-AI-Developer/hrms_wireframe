@@ -1,16 +1,18 @@
+import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { DataListPanel } from '../components/hrms/DataListPanel'
 import { HrmsListShell } from '../components/hrms/HrmsListShell'
 import { RowActionsMenu } from '../components/hrms/RowActionsMenu'
 import { SortableTh } from '../components/hrms/SortableTh'
 import { StatusBadge } from '../components/hrms/StatusBadge'
-import { departments } from '../data/mock'
+import { useWireframeData } from '../data/WireframeDataContext'
 import { useListControls } from '../hooks/useListControls'
 import type { Department } from '../types/hrms'
 import { formatListDate } from '../utils/formatDate'
 
 export function DepartmentListPage() {
   const { can } = useAuth()
+  const { departments, deleteDepartment } = useWireframeData()
   const canWrite = can('page:departments:write')
 
   const list = useListControls(departments, {
@@ -31,13 +33,9 @@ export function DepartmentListPage() {
       current="Departments"
       actions={
         canWrite ? (
-          <button
-            type="button"
-            className="hrms-btn-primary"
-            onClick={() => alert('Wireframe: create department — matches reference form (not persisted).')}
-          >
+          <Link to="/departments/new" className="hrms-btn-primary">
             <i className="ri-add-line" aria-hidden /> New Department
-          </button>
+          </Link>
         ) : undefined
       }
     >
@@ -103,7 +101,12 @@ export function DepartmentListPage() {
                 </tr>
               ) : (
                 list.pageRows.map((d) => (
-                  <DeptRow key={d.id} dept={d} canWrite={canWrite} />
+                  <DeptRow
+                    key={d.id}
+                    dept={d}
+                    canWrite={canWrite}
+                    onDelete={() => deleteDepartment(d.id)}
+                  />
                 ))
               )}
             </tbody>
@@ -114,7 +117,15 @@ export function DepartmentListPage() {
   )
 }
 
-function DeptRow({ dept, canWrite }: { dept: Department; canWrite: boolean }) {
+function DeptRow({
+  dept,
+  canWrite,
+  onDelete,
+}: {
+  dept: Department
+  canWrite: boolean
+  onDelete: () => void
+}) {
   return (
     <tr>
       <td className="font-medium">{dept.name}</td>
@@ -131,17 +142,13 @@ function DeptRow({ dept, canWrite }: { dept: Department; canWrite: boolean }) {
           actions={[
             ...(canWrite
               ? [
-                  {
-                    label: 'Edit',
-                    onClick: () => alert(`Wireframe: edit ${dept.name}`),
-                  },
+                  { label: 'Edit', href: `/departments/${dept.id}/edit` },
                   {
                     label: 'Delete',
                     danger: true,
-                    onClick: () =>
-                      alert(
-                        'Wireframe: marks department inactive (same as reference delete behaviour).',
-                      ),
+                    onClick: () => {
+                      if (window.confirm(`Mark "${dept.name}" inactive?`)) onDelete()
+                    },
                   },
                 ]
               : [{ label: 'View', onClick: () => {} }]),

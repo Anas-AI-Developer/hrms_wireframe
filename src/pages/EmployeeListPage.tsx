@@ -6,7 +6,7 @@ import { HrmsListShell } from '../components/hrms/HrmsListShell'
 import { RowActionsMenu } from '../components/hrms/RowActionsMenu'
 import { SortableTh } from '../components/hrms/SortableTh'
 import { StatusBadge } from '../components/hrms/StatusBadge'
-import { departments, designations, employees, getDepartment, getDesignation } from '../data/mock'
+import { useWireframeData } from '../data/WireframeDataContext'
 import { useListControls } from '../hooks/useListControls'
 import type { Employee } from '../types/hrms'
 import { formatListDate } from '../utils/formatDate'
@@ -22,6 +22,7 @@ const EMPLOYEE_STATUS_OPTIONS = [
 
 export function EmployeeListPage() {
   const { can, visibleEmployees } = useAuth()
+  const { departments, designations, employees, getDepartment, getDesignation } = useWireframeData()
   const canWrite = can('page:employees:write')
   const [searchParams] = useSearchParams()
   const initialDept = searchParams.get('dept') ?? ALL
@@ -196,7 +197,7 @@ export function EmployeeListPage() {
           </table>
         </div>
         <p className="wf-note" style={{ marginTop: '0.75rem', marginBottom: 0 }}>
-          Showing scoped roster ({scopedSource.length} of {employees.length} MasterList sample rows).
+          Showing scoped roster ({scopedSource.length} of {employees.length} demo employees).
         </p>
       </DataListPanel>
     </HrmsListShell>
@@ -204,6 +205,7 @@ export function EmployeeListPage() {
 }
 
 function EmployeeRow({ employee: e, canWrite }: { employee: Employee; canWrite: boolean }) {
+  const { getDepartment, getDesignation } = useWireframeData()
   const dept = getDepartment(e.departmentId)
   const des = getDesignation(e.designationId)
   return (

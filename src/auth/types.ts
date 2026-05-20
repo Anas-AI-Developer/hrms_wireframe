@@ -55,6 +55,7 @@ export type Permission =
   | 'page:benefits'
   | 'page:benefits:manage'
   | 'benefits.view_self'
+  | 'page:ess_requests'
   | 'page:compliance'
   | 'page:compliance:manage'
   | 'page:reports:attendance'

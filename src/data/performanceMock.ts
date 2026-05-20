@@ -14,6 +14,8 @@ export type PerformanceGoal = {
   target: string
   selfRating?: string
   managerRating?: string
+  managerComment?: string
+  cycleId?: string
 }
 
 export const appraisalCycles: AppraisalCycle[] = [
@@ -26,7 +28,7 @@ export const performanceGoals: PerformanceGoal[] = [
     id: 'pg-1',
     employeeId: 'm-1',
     employeeName: 'Muhammad Aamir Jan',
-    goalTitle: 'Organisation-wide HRMS rollout',
+    goalTitle: 'Organization-wide HRMS rollout',
     target: 'Phase 1 live by Q2',
     selfRating: '4/5',
     managerRating: '5/5',
@@ -48,5 +50,36 @@ export const performanceGoals: PerformanceGoal[] = [
     target: 'Monthly import on time',
     selfRating: '3/5',
     managerRating: undefined,
+  },
+  {
+    id: 'pg-m21-1',
+    employeeId: 'm-21',
+    employeeName: 'Amar Yasir',
+    goalTitle: 'Office correspondence & file management',
+    target: 'Same-day dispatch of routine letters',
+    selfRating: '4/5',
+    managerRating: '4/5',
+    managerComment: 'Reliable DMO desk coverage and timely filing.',
+    cycleId: 'ap-2026',
+  },
+  {
+    id: 'pg-m21-2',
+    employeeId: 'm-21',
+    employeeName: 'Amar Yasir',
+    goalTitle: 'Meeting support & minute-taking',
+    target: 'Accurate minutes within 48 hours',
+    selfRating: undefined,
+    managerRating: undefined,
+    cycleId: 'ap-2026',
+  },
+  {
+    id: 'pg-m21-3',
+    employeeId: 'm-21',
+    employeeName: 'Amar Yasir',
+    goalTitle: 'Inventory of office supplies',
+    target: 'Monthly stock report to supervisor',
+    selfRating: '3/5',
+    managerRating: undefined,
+    cycleId: 'ap-2026',
   },
 ]

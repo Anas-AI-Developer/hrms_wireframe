@@ -1,15 +1,17 @@
+import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { DataListPanel } from '../components/hrms/DataListPanel'
 import { HrmsListShell } from '../components/hrms/HrmsListShell'
 import { RowActionsMenu } from '../components/hrms/RowActionsMenu'
 import { SortableTh } from '../components/hrms/SortableTh'
 import { StatusBadge } from '../components/hrms/StatusBadge'
-import { designations, getDepartment } from '../data/mock'
+import { useWireframeData } from '../data/WireframeDataContext'
 import { useListControls } from '../hooks/useListControls'
 import { formatListDate } from '../utils/formatDate'
 
 export function DesignationListPage() {
   const { can } = useAuth()
+  const { designations, getDepartment, deleteDesignation } = useWireframeData()
   const canWrite = can('page:designations:write')
 
   const list = useListControls(designations, {
@@ -39,13 +41,9 @@ export function DesignationListPage() {
       current="Designations"
       actions={
         canWrite ? (
-          <button
-            type="button"
-            className="hrms-btn-primary"
-            onClick={() => alert('Wireframe: create designation (not persisted).')}
-          >
+          <Link to="/designations/new" className="hrms-btn-primary">
             <i className="ri-add-line" aria-hidden /> New Designation
-          </button>
+          </Link>
         ) : undefined
       }
     >
@@ -106,8 +104,16 @@ export function DesignationListPage() {
                           actions={[
                             ...(canWrite
                               ? [
-                                  { label: 'Edit', onClick: () => alert(`Edit ${g.title}`) },
-                                  { label: 'Delete', danger: true, onClick: () => alert('Mark inactive') },
+                                  { label: 'Edit', href: `/designations/${g.id}/edit` },
+                                  {
+                                    label: 'Delete',
+                                    danger: true,
+                                    onClick: () => {
+                                      if (window.confirm(`Mark "${g.title}" inactive?`)) {
+                                        deleteDesignation(g.id)
+                                      }
+                                    },
+                                  },
                                 ]
                               : [{ label: 'View', onClick: () => {} }]),
                           ]}

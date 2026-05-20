@@ -1,4 +1,4 @@
-import { employees } from './clientDataset'
+import { getEmployees } from './wireframeStore'
 import { addDaysIso, WIREFRAME_TODAY } from '../utils/attendanceStats'
 
 export type AttendanceStatus = 'present' | 'absent' | 'late' | 'on_leave' | 'half_day'
@@ -18,7 +18,9 @@ export type AttendanceLog = {
 
 const WORK_DAY_HOURS = 8
 
-const roster = employees.filter((e) => e.status === 'active' && e.employmentType !== 'vacant_post').slice(0, 40)
+const roster = getEmployees()
+  .filter((e) => e.status === 'active' && e.employmentType !== 'vacant_post')
+  .slice(0, 40)
 
 function pickStatus(employeeIndex: number, dayOffset: number): AttendanceStatus {
   const h = (employeeIndex * 7 + dayOffset * 13) % 100

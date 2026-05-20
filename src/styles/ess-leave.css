@@ -1,0 +1,308 @@
+/* ESS — shared page layout (My leave, My attendance, etc.) */
+
+.ess-page,
+.ess-leave-page,
+.ess-attendance-page,
+.ess-payslip-page {
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
+}
+
+/* ESS — My leave */
+
+.ess-leave-page__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.ess-leave-page__head .wf-lead {
+  margin-bottom: 0;
+}
+
+.ess-leave-balance-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 1.25rem;
+}
+
+@media (max-width: 900px) {
+  .ess-leave-balance-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .ess-leave-balance-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ess-leave-balance-card {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(15, 23, 41, 0.05);
+  min-width: 0;
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.ess-leave-balance-card:hover {
+  border-color: #c7d2fe;
+  box-shadow: 0 4px 12px rgba(47, 71, 152, 0.08);
+}
+
+.ess-leave-balance-card__icon {
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 1.1rem;
+}
+
+.ess-leave-balance-card__icon--primary {
+  background: rgba(75, 98, 190, 0.12);
+  color: #2f4798;
+}
+
+.ess-leave-balance-card__icon--success {
+  background: rgba(16, 185, 129, 0.12);
+  color: #047857;
+}
+
+.ess-leave-balance-card__icon--warning {
+  background: rgba(245, 158, 11, 0.14);
+  color: #b45309;
+}
+
+.ess-leave-balance-card__icon--info {
+  background: rgba(14, 165, 233, 0.12);
+  color: #0369a1;
+}
+
+.ess-leave-balance-card__meta {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.ess-leave-balance-card__label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.ess-leave-balance-card__value {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.ess-leave-balance-card__sub {
+  font-size: 0.7rem;
+  color: #64748b;
+}
+
+.ess-leave-toast {
+  margin: 0 0 1rem;
+  padding: 0.65rem 0.9rem;
+  font-size: 0.875rem;
+  color: #065f46;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 8px;
+}
+
+/* Modal */
+.hrms-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.hrms-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(15, 23, 42, 0.45);
+  cursor: pointer;
+}
+
+.hrms-modal__dialog {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-height: min(90vh, 720px);
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow:
+    0 20px 50px rgba(15, 23, 42, 0.18),
+    0 0 0 1px rgba(226, 232, 240, 0.8);
+  overflow: hidden;
+}
+
+.hrms-modal__dialog--md {
+  max-width: 28rem;
+}
+
+.hrms-modal__dialog--lg {
+  max-width: 32rem;
+}
+
+.hrms-modal__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.15rem 1.25rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.hrms-modal__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.hrms-modal__desc {
+  margin: 0.35rem 0 0;
+  font-size: 0.8125rem;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+.hrms-modal__close {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #64748b;
+  cursor: pointer;
+  font-size: 1.15rem;
+}
+
+.hrms-modal__close:hover {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.hrms-modal__body {
+  padding: 1.15rem 1.25rem;
+  overflow-y: auto;
+}
+
+.hrms-modal__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0.85rem 1.25rem;
+  border-top: 1px solid #f1f5f9;
+  background: #fafbfc;
+}
+
+.hrms-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.hrms-modal-form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+@media (max-width: 480px) {
+  .hrms-modal-form__row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.hrms-modal-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.hrms-modal-form__field label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #475569;
+}
+
+.hrms-modal-form__field input,
+.hrms-modal-form__field select,
+.hrms-modal-form__field textarea {
+  width: 100%;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.875rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  color: #334155;
+  box-sizing: border-box;
+}
+
+.hrms-modal-form__field input:focus,
+.hrms-modal-form__field select:focus,
+.hrms-modal-form__field textarea:focus {
+  outline: none;
+  border-color: #4b62be;
+  box-shadow: 0 0 0 3px rgba(75, 98, 190, 0.15);
+}
+
+.hrms-modal-form__field textarea {
+  min-height: 4.5rem;
+  resize: vertical;
+}
+
+.hrms-modal-form__hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.hrms-modal-form__days {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.65rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #2f4798;
+  background: rgba(75, 98, 190, 0.08);
+  border-radius: 8px;
+}

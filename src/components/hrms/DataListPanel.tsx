@@ -51,42 +51,46 @@ export function DataListPanel({
 }: Props) {
   return (
     <article className="hrms-ref-panel">
-      <header className="hrms-ref-panel-head">
+      <header className="hrms-ref-panel-head hrms-ref-panel-head--toolbar">
         <h2 className="hrms-ref-panel-title">{title}</h2>
-        <div className="hrms-ref-panel-tools">
-          {extraFilters}
-          {showStatusFilter && onStatusFilterChange ? (
-            <select
-              id="hrms-status-filter"
-              className="hrms-ref-select"
-              value={statusFilter}
-              onChange={(e) => onStatusFilterChange(e.target.value as StatusFilter)}
-              aria-label="Status filter"
-            >
-              {(statusOptions ?? [
-                { value: 'active', label: 'Active' },
-                { value: 'inactive', label: 'Inactive' },
-                { value: 'all', label: 'All' },
-              ]).map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          ) : null}
-          <input
-            type="search"
-            className="hrms-ref-search"
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder={searchPlaceholder}
-          />
-          {toolbarExtra}
-          {hasActiveFilters && onResetFilters ? (
-            <button type="button" className="hrms-ref-btn-secondary" onClick={onResetFilters}>
-              <i className="ri-refresh-line" aria-hidden /> Reset filters
-            </button>
-          ) : null}
+        <div className="hrms-ref-panel-toolbar">
+          <div className="hrms-ref-panel-toolbar__left">
+            {extraFilters}
+            {showStatusFilter && onStatusFilterChange ? (
+              <select
+                id="hrms-status-filter"
+                className="hrms-ref-select"
+                value={statusFilter}
+                onChange={(e) => onStatusFilterChange(e.target.value as StatusFilter)}
+                aria-label="Status filter"
+              >
+                {(statusOptions ?? [
+                  { value: 'active', label: 'Active' },
+                  { value: 'inactive', label: 'Inactive' },
+                  { value: 'all', label: 'All' },
+                ]).map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            ) : null}
+            {toolbarExtra}
+            {hasActiveFilters && onResetFilters ? (
+              <button type="button" className="hrms-ref-btn-secondary" onClick={onResetFilters}>
+                <i className="ri-refresh-line" aria-hidden /> Reset filters
+              </button>
+            ) : null}
+          </div>
+          <div className="hrms-ref-panel-toolbar__right">
+            <input
+              type="search"
+              className="hrms-ref-search"
+              value={search}
+              onChange={(e) => onSearchChange(e.target.value)}
+              placeholder={searchPlaceholder}
+            />
+          </div>
         </div>
       </header>
       <div className="hrms-ref-panel-body">

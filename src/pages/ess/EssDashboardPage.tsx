@@ -23,7 +23,7 @@ function formatPkr(n: number) {
 
 export function EssDashboardPage() {
   const { user, can } = useAuth()
-  const { employeeId, metrics, leaveRequests } = useEssSession()
+  const { employeeId, metrics, leaveRequests, employeeRequests } = useEssSession()
   const profile = employeeId ? getEmployee(employeeId) : undefined
 
   if (!profile) {
@@ -118,6 +118,18 @@ export function EssDashboardPage() {
               icon={<i className="ri-heart-pulse-line" />}
               tone="success"
             />
+          ) : null}
+          {can('page:ess_requests') ? (
+            <Link to="/ess/requests" className="hrms-kpi-card-link">
+              <DashboardKpiCard
+                static
+                label="My requests"
+                value={employeeRequests.length}
+                subtext="Subject · details · dates"
+                icon={<i className="ri-file-list-3-line" />}
+                tone="primary"
+              />
+            </Link>
           ) : null}
         </section>
 
