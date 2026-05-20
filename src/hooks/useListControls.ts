@@ -56,7 +56,7 @@ export function useListControls<T>(items: T[], options: Options<T>) {
 
   function resetFilters() {
     setSearch('')
-    setStatusFilter(options.defaultStatusFilter ?? 'active')
+    setStatusFilter(options.defaultStatusFilter ?? 'all')
     setSortColumn(options.defaultSortColumn ?? null)
     setSortDir(options.defaultSortDir ?? null)
     setPage(1)
@@ -94,8 +94,9 @@ export function useListControls<T>(items: T[], options: Options<T>) {
   const firstItem = total === 0 ? 0 : (safePage - 1) * pageSize + 1
   const lastItem = Math.min(safePage * pageSize, total)
 
+  const defaultStatus = options.defaultStatusFilter ?? 'active'
   const hasActiveFilters =
-    search.trim() !== '' || statusFilter !== 'active' || sortColumn !== null
+    search.trim() !== '' || statusFilter !== defaultStatus || sortColumn !== null
 
   return {
     search,

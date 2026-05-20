@@ -459,6 +459,84 @@
   background: #f8fafc;
   color: #475569;
   cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.hrms-ref-btn-secondary:hover:not(:disabled) {
+  background: #fff;
+  border-color: #cbd5e1;
+  color: #2f4798;
+  box-shadow: 0 1px 3px rgba(15, 23, 41, 0.06);
+}
+
+/* Compact table / row actions (performance, cycles, etc.) */
+.hrms-btn-table {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.42rem 0.85rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.2;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease,
+    filter 0.15s ease;
+}
+
+.hrms-btn-table i {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.hrms-btn-table--rate {
+  color: #fff;
+  background: linear-gradient(135deg, #4b62be 0%, #2f4798 100%);
+  border: 0;
+  box-shadow: 0 2px 6px rgba(47, 71, 152, 0.25);
+}
+
+.hrms-btn-table--rate:hover:not(:disabled) {
+  filter: brightness(1.05);
+  box-shadow: 0 3px 10px rgba(47, 71, 152, 0.32);
+}
+
+.hrms-btn-table--edit {
+  color: #2f4798;
+  background: linear-gradient(180deg, #fff 0%, #f0f4ff 100%);
+  border-color: rgba(75, 98, 190, 0.45);
+  box-shadow: 0 1px 3px rgba(47, 71, 152, 0.08);
+}
+
+.hrms-btn-table--edit:hover:not(:disabled) {
+  background: linear-gradient(180deg, #fff 0%, #e8eeff 100%);
+  border-color: #4b62be;
+  box-shadow: 0 2px 6px rgba(47, 71, 152, 0.12);
+}
+
+.hrms-btn-table--configure {
+  color: #334155;
+  background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
+  border-color: #cbd5e1;
+  box-shadow: 0 1px 2px rgba(15, 23, 41, 0.04);
+}
+
+.hrms-btn-table--configure:hover:not(:disabled) {
+  color: #2f4798;
+  border-color: #94a3b8;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(15, 23, 41, 0.08);
 }
 
 .hrms-ref-panel-body {

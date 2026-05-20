@@ -69,17 +69,24 @@
 .hrms-benefits-defaults__row-body {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 .hrms-benefits-defaults__row-name {
+  display: block;
   font-size: 0.875rem;
   font-weight: 600;
   color: #0f172a;
+  line-height: 1.35;
 }
 
 .hrms-benefits-defaults__row-meta {
+  display: block;
   font-size: 0.75rem;
   color: #64748b;
+  line-height: 1.4;
 }
 
 .hrms-benefits-add-form {

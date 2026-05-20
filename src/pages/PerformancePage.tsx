@@ -25,14 +25,6 @@ export function PerformancePage() {
   const canAppraise = can('performance.appraise')
   const isEmployee = user?.role === 'employee'
 
-  if (isEmployee) {
-    return <Navigate to="/ess/performance" replace />
-  }
-
-  if (!can('page:performance:manage') && !can('performance.appraise')) {
-    return <Navigate to="/dashboard" replace />
-  }
-
   const allGoals = usePerformanceGoals()
   const openCycle = appraisalCycles.find((c) => c.status === 'open') ?? appraisalCycles[0]
 
@@ -60,6 +52,14 @@ export function PerformancePage() {
   const [savedMsg, setSavedMsg] = useState<string | null>(null)
 
   const teamOptions = visibleEmployees().filter((e) => e.status === 'active')
+
+  if (isEmployee) {
+    return <Navigate to="/ess/performance" replace />
+  }
+
+  if (!can('page:performance:manage') && !can('performance.appraise')) {
+    return <Navigate to="/dashboard" replace />
+  }
 
   function openRate(goal: PerformanceGoal) {
     setRateGoal(goal)
@@ -99,12 +99,7 @@ export function PerformancePage() {
   return (
     <HrmsListShell current="Performance management">
       <header className="wf-page-head" style={{ marginBottom: '1rem' }}>
-        <div>
-          <h1 className="wf-h1">Performance management</h1>
-          <p className="wf-lead" style={{ marginBottom: 0 }}>
-            Annual cycle: HR opens appraisal → employee self-assessment → manager rating → HR sign-off.
-          </p>
-        </div>
+        <h1 className="wf-h1">Performance management</h1>
       </header>
 
       {savedMsg ? (
@@ -149,7 +144,12 @@ export function PerformancePage() {
                       </span>
                     </td>
                     <td>
-                      <button type="button" className="wf-link-quiet" onClick={() => alert('Wireframe: open cycle')}>
+                      <button
+                        type="button"
+                        className="hrms-btn-table hrms-btn-table--configure"
+                        onClick={() => alert('Wireframe: open cycle')}
+                      >
+                        <i className="ri-settings-3-line" aria-hidden />
                         Configure
                       </button>
                     </td>
@@ -163,15 +163,10 @@ export function PerformancePage() {
 
       {canAppraise && !isEmployee ? (
         <section className="wf-section">
-          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: '0.75rem', marginBottom: '0.75rem' }}>
-            <div>
-              <h2 className="wf-h2" style={{ marginBottom: '0.25rem' }}>
-                Team appraisals (manager)
-              </h2>
-              <p className="wf-card-desc" style={{ margin: 0 }}>
-                Assign goals and submit ratings. Employees see updates on ESS → Performance.
-              </p>
-            </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+            <h2 className="wf-h2" style={{ margin: 0 }}>
+              Team appraisals (manager)
+            </h2>
             <button type="button" className="hrms-btn-primary" onClick={() => setAddOpen(true)}>
               <i className="ri-add-line" aria-hidden /> Assign goal
             </button>
@@ -206,7 +201,19 @@ export function PerformancePage() {
                       <td>{g.selfRating ?? '—'}</td>
                       <td>{g.managerRating ?? '—'}</td>
                       <td>
-                        <button type="button" className="wf-link-quiet" onClick={() => openRate(g)}>
+                        <button
+                          type="button"
+                          className={
+                            g.managerRating
+                              ? 'hrms-btn-table hrms-btn-table--edit'
+                              : 'hrms-btn-table hrms-btn-table--rate'
+                          }
+                          onClick={() => openRate(g)}
+                        >
+                          <i
+                            className={g.managerRating ? 'ri-edit-2-line' : 'ri-star-line'}
+                            aria-hidden
+                          />
                           {g.managerRating ? 'Edit rating' : 'Rate'}
                         </button>
                       </td>
@@ -222,9 +229,6 @@ export function PerformancePage() {
       {isEmployee || can('performance.self_review') ? (
         <section className="wf-section">
           <h2 className="wf-h2">My goals & self-assessment</h2>
-          <p className="wf-card-desc">
-            Use <Link to="/ess/performance">ESS → Performance</Link> for the full employee view.
-          </p>
           {myGoals.length === 0 ? (
             <p className="wf-note">No goals linked to your account.</p>
           ) : (

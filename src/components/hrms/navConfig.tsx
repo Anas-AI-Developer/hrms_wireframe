@@ -68,7 +68,7 @@ export const HR_NAV_GROUPS: NavGroupDef[] = [
       },
       {
         to: '/attendance',
-        label: 'Attendance register',
+        label: 'Attendance',
         permission: 'page:attendance',
         icon: <IconAttendance />,
       },

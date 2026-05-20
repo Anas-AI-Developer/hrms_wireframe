@@ -65,13 +65,7 @@ export function BenefitsPage() {
   return (
     <HrmsListShell current="Benefits">
       <header className="wf-page-head" style={{ marginBottom: '1.25rem' }}>
-        <div>
-          <h1 className="wf-h1">Benefits</h1>
-          <p className="wf-lead" style={{ marginBottom: 0 }}>
-            Define the benefit catalog and default packages by employment type. New employees receive
-            standard benefits automatically; HR can add extras on the employee form.
-          </p>
-        </div>
+        <h1 className="wf-h1">Benefits</h1>
       </header>
 
       {savedMsg ? (

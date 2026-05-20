@@ -54,7 +54,7 @@ function GoalCard({
           </p>
         </div>
         {!goal.selfRating ? (
-          <button type="button" className="hrms-ref-btn-secondary" onClick={() => onSelfRate(goal)}>
+          <button type="button" className="hrms-btn-table hrms-btn-table--rate" onClick={() => onSelfRate(goal)}>
             <i className="ri-edit-line" aria-hidden /> Self-assess
           </button>
         ) : null}

@@ -1,6 +1,7 @@
 import { buildEssEmployeeRequests } from './essDemoData'
 import type { EmployeeRequestTypeId } from './employeeRequestTypes'
 import { defaultSubjectForRequestType } from './employeeRequestTypes'
+import { getEmployees } from './mock'
 
 export type EmployeeRequestStatus =
   | 'submitted'
@@ -40,9 +41,32 @@ type RequestStore = Record<string, EmployeeRequest[]>
 
 const listeners = new Set<() => void>()
 
+/** Stable array for useSyncExternalStore — replaced only when store changes. */
+let allRequestsSnapshot: EmployeeRequest[] = []
+
+function rebuildAllRequestsSnapshot(): EmployeeRequest[] {
+  const store = readStore()
+  const all: EmployeeRequest[] = []
+  for (const emp of getEmployees()) {
+    const persisted = store[emp.id] ?? []
+    all.push(...mergeDemoRows(emp.id, persisted))
+  }
+  allRequestsSnapshot = all.sort((a, b) => b.submittedAt.localeCompare(a.submittedAt))
+  return allRequestsSnapshot
+}
+
+/** Cached global list (same reference until subscribe fires). */
+export function getEmployeeRequestsSnapshot(): EmployeeRequest[] {
+  return allRequestsSnapshot
+}
+
 function emit() {
+  rebuildAllRequestsSnapshot()
   listeners.forEach((fn) => fn())
 }
+
+// Prime snapshot on module load so first getSnapshot is stable.
+rebuildAllRequestsSnapshot()
 
 export function subscribeEmployeeRequests(listener: () => void) {
   listeners.add(listener)
@@ -109,12 +133,22 @@ function writeStore(store: RequestStore) {
   emit()
 }
 
+function normalizeRequest(row: EmployeeRequest): EmployeeRequest {
+  if (row.requestType) return row
+  return {
+    ...row,
+    requestType: inferTypeFromSubject(row.subject),
+  }
+}
+
 function mergeDemoRows(employeeId: string, persisted: EmployeeRequest[]): EmployeeRequest[] {
   const demo = buildEssEmployeeRequests(employeeId)
   const seen = new Set(persisted.map((r) => r.id))
-  return [...persisted, ...demo.filter((d) => !seen.has(d.id))].sort((a, b) =>
-    b.submittedAt.localeCompare(a.submittedAt),
-  )
+  const merged = [
+    ...persisted.map(normalizeRequest),
+    ...demo.filter((d) => !seen.has(d.id)),
+  ]
+  return merged.sort((a, b) => b.submittedAt.localeCompare(a.submittedAt))
 }
 
 export function getEmployeeRequests(employeeId: string): EmployeeRequest[] {
@@ -125,13 +159,8 @@ export function getEmployeeRequests(employeeId: string): EmployeeRequest[] {
 
 /** All requests for employees in scope (persisted + demo seed). */
 export function getAllEmployeeRequests(scopedEmployeeIds: Set<string>): EmployeeRequest[] {
-  const store = readStore()
-  const all: EmployeeRequest[] = []
-  for (const id of scopedEmployeeIds) {
-    const persisted = store[id] ?? []
-    all.push(...mergeDemoRows(id, persisted))
-  }
-  return all.sort((a, b) => b.submittedAt.localeCompare(a.submittedAt))
+  if (scopedEmployeeIds.size === 0) return []
+  return getEmployeeRequestsSnapshot().filter((r) => scopedEmployeeIds.has(r.employeeId))
 }
 
 export function addEmployeeRequest(

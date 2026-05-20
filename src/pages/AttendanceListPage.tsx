@@ -43,7 +43,7 @@ function attendanceDateFilterLabel(from: string, to: string, todayOnly: boolean)
 }
 
 export function AttendanceListPage() {
-  const { can, visibleEmployees, user, actorEmployeeId } = useAuth()
+  const { can, visibleEmployees } = useAuth()
   const canImport = can('page:attendance:import')
   const scopedLogs = useMemo(() => {
     const scopedIds = new Set(visibleEmployees().map((e) => e.id))
@@ -316,24 +316,6 @@ export function AttendanceListPage() {
             </tbody>
           </table>
         </div>
-        <p className="hrms-list-footnote">
-          Showing {list.firstItem}–{list.lastItem} of {list.total} log{list.total === 1 ? '' : 's'}
-          {dateFilterLabel ? (
-            <>
-              {' '}
-              for <strong>{dateFilterLabel}</strong>
-            </>
-          ) : (
-            ' across all dates in your scope'
-          )}
-          .
-          {user?.role === 'employee' && actorEmployeeId ? (
-            <>
-              {' '}
-              <Link to={`/employees/${actorEmployeeId}`}>View your employee profile</Link>
-            </>
-          ) : null}
-        </p>
       </DataListPanel>
     </HrmsListShell>
   )

@@ -1,4 +1,4 @@
-import { useMemo, useState, useSyncExternalStore } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { DashboardKpiCard } from '../components/dashboard/DashboardKpiCard'
@@ -11,14 +11,13 @@ import {
 } from '../data/employeeRequestTypes'
 import {
   EMPLOYEE_REQUEST_STATUS_LABELS,
-  getAllEmployeeRequests,
   isRequestPending,
-  subscribeEmployeeRequests,
   updateEmployeeRequestStatus,
   type EmployeeRequest,
   type EmployeeRequestStatus,
 } from '../data/employeeRequestsStore'
 import { useWireframeData } from '../data/WireframeDataContext'
+import { useEmployeeRequestsSnapshot } from '../hooks/useEmployeeRequestsSnapshot'
 import { useListControls, type StatusFilter } from '../hooks/useListControls'
 import '../styles/dashboard.css'
 import '../styles/ess-requests.css'
@@ -48,43 +47,35 @@ export function EmployeeRequestsManagementPage() {
   const [typeFilter, setTypeFilter] = useState(ALL)
   const [message, setMessage] = useState<string | null>(null)
 
-  const roster = visibleEmployees()
+  const roster = useMemo(() => visibleEmployees(), [visibleEmployees])
   const scopedIds = useMemo(() => new Set(roster.map((e) => e.id)), [roster])
-
-  const requests = useSyncExternalStore(
-    subscribeEmployeeRequests,
-    () => getAllEmployeeRequests(scopedIds),
-    () => getAllEmployeeRequests(scopedIds),
-  )
-
-  if (user?.role === 'employee') {
-    return <Navigate to="/ess/requests" replace />
-  }
-
-  if (!can('page:ess_requests:manage')) {
-    return <Navigate to="/dashboard" replace />
-  }
+  const requests = useEmployeeRequestsSnapshot(scopedIds)
 
   const filteredByType = useMemo(() => {
     if (typeFilter === ALL) return requests
     return requests.filter((r) => r.requestType === typeFilter)
   }, [requests, typeFilter])
 
-  const pendingCount = requests.filter((r) => isRequestPending(r.status)).length
-  const approvedCount = requests.filter(
-    (r) => r.status === 'approved' || r.status === 'acknowledged',
-  ).length
+  const pendingCount = useMemo(
+    () => requests.filter((r) => isRequestPending(r.status)).length,
+    [requests],
+  )
+  const approvedCount = useMemo(
+    () => requests.filter((r) => r.status === 'approved' || r.status === 'acknowledged').length,
+    [requests],
+  )
 
   const list = useListControls(filteredByType, {
     searchFn: (r, q) => {
       const emp = getEmployee(r.employeeId)
       const name = emp ? `${emp.firstName} ${emp.lastName}`.toLowerCase() : ''
+      const typeLabel = r.requestType ? employeeRequestTypeLabel(r.requestType) : ''
       return (
         name.includes(q) ||
         (emp?.employeeNo.toLowerCase().includes(q) ?? false) ||
-        employeeRequestTypeLabel(r.requestType).toLowerCase().includes(q) ||
-        r.subject.toLowerCase().includes(q) ||
-        r.details.toLowerCase().includes(q) ||
+        typeLabel.toLowerCase().includes(q) ||
+        (r.subject ?? '').toLowerCase().includes(q) ||
+        (r.details ?? '').toLowerCase().includes(q) ||
         r.status.includes(q)
       )
     },
@@ -96,13 +87,21 @@ export function EmployeeRequestsManagementPage() {
         const eb = getEmployee(b.employeeId)
         return `${ea?.lastName ?? ''}`.localeCompare(`${eb?.lastName ?? ''}`)
       },
-      type: (a, b) => a.requestType.localeCompare(b.requestType),
+      type: (a, b) => (a.requestType ?? '').localeCompare(b.requestType ?? ''),
     },
     defaultSortColumn: 'submitted',
     defaultSortDir: 'desc',
     defaultStatusFilter: 'all',
     defaultPageSize: 15,
   })
+
+  if (user?.role === 'employee') {
+    return <Navigate to="/ess/requests" replace />
+  }
+
+  if (!can('page:ess_requests:manage')) {
+    return <Navigate to="/dashboard" replace />
+  }
 
   function act(id: string, status: EmployeeRequestStatus, label: string) {
     const updated = updateEmployeeRequestStatus(id, status)
@@ -252,7 +251,7 @@ export function EmployeeRequestsManagementPage() {
                           '—'
                         )}
                       </td>
-                      <td>{employeeRequestTypeLabel(r.requestType)}</td>
+                      <td>{r.requestType ? employeeRequestTypeLabel(r.requestType) : r.subject}</td>
                       <td className="ess-requests-details-cell" title={r.details}>
                         <span className="font-medium">{r.subject}</span>
                         <br />
@@ -264,7 +263,7 @@ export function EmployeeRequestsManagementPage() {
                       <td>{r.toDate}</td>
                       <td>
                         <span className={`ess-requests-status ess-requests-status--${statusClass}`}>
-                          {EMPLOYEE_REQUEST_STATUS_LABELS[r.status]}
+                          {EMPLOYEE_REQUEST_STATUS_LABELS[r.status] ?? r.status}
                         </span>
                         {r.hrNote ? (
                           <div className="hrms-table-subtext" title={r.hrNote}>
@@ -308,10 +307,6 @@ export function EmployeeRequestsManagementPage() {
             </tbody>
           </table>
         </div>
-        <p className="hrms-list-footnote">
-          Employees submit from <Link to="/ess/requests">Self-service → Requests</Link>. Only requests
-          saved in this browser session can be approved here (seed demo rows are read-only).
-        </p>
       </DataListPanel>
     </HrmsListShell>
   )
