@@ -80,9 +80,15 @@ export const HR_NAV_GROUPS: NavGroupDef[] = [
       },
       {
         to: '/employee-requests',
-        label: 'Employee requests',
+        label: 'Request management',
         permission: 'page:ess_requests:manage',
-        icon: <IconBriefcase />,
+        icon: <IconInbox />,
+      },
+      {
+        to: '/performance',
+        label: 'Performance management',
+        permission: 'page:performance:manage',
+        icon: <IconChart />,
       },
       {
         to: '/benefits',

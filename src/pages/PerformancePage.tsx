@@ -1,6 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import { HrmsListShell } from '../components/hrms/HrmsListShell'
 import {
   CompactFormField,
   CompactFormInputWrap,
@@ -23,6 +24,14 @@ export function PerformancePage() {
   const canManage = can('page:performance:manage')
   const canAppraise = can('performance.appraise')
   const isEmployee = user?.role === 'employee'
+
+  if (isEmployee) {
+    return <Navigate to="/ess/performance" replace />
+  }
+
+  if (!can('page:performance:manage') && !can('performance.appraise')) {
+    return <Navigate to="/dashboard" replace />
+  }
 
   const allGoals = usePerformanceGoals()
   const openCycle = appraisalCycles.find((c) => c.status === 'open') ?? appraisalCycles[0]
@@ -88,11 +97,15 @@ export function PerformancePage() {
   }
 
   return (
-    <div className="wf-page wf-page--wide">
-      <h1 className="wf-h1">Performance</h1>
-      <p className="wf-lead">
-        Annual cycle: HR opens appraisal → employee self-assessment → manager rating → HR sign-off.
-      </p>
+    <HrmsListShell current="Performance management">
+      <header className="wf-page-head" style={{ marginBottom: '1rem' }}>
+        <div>
+          <h1 className="wf-h1">Performance management</h1>
+          <p className="wf-lead" style={{ marginBottom: 0 }}>
+            Annual cycle: HR opens appraisal → employee self-assessment → manager rating → HR sign-off.
+          </p>
+        </div>
+      </header>
 
       {savedMsg ? (
         <p className="wf-note" style={{ marginBottom: '1rem', borderColor: '#86efac', background: '#f0fdf4' }}>
@@ -370,7 +383,7 @@ export function PerformancePage() {
           </CompactFormField>
         </CompactFormModal>
       </HrmsModal>
-    </div>
+    </HrmsListShell>
   )
 }
 

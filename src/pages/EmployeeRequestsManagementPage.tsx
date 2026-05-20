@@ -116,10 +116,10 @@ export function EmployeeRequestsManagementPage() {
   }
 
   return (
-    <HrmsListShell current="Employee requests">
+    <HrmsListShell current="Request management">
       <header className="wf-page-head" style={{ marginBottom: '1rem' }}>
         <div>
-          <h1 className="wf-h1">Employee requests</h1>
+          <h1 className="wf-h1">Request management</h1>
           <p className="wf-lead" style={{ marginBottom: 0 }}>
             Review submissions from self-service (marriage, Hajj, certificates, and other types). Approve,
             reject, or cancel pending items.

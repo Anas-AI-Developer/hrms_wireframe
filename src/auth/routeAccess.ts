@@ -63,7 +63,7 @@ export function permissionForPath(pathname: string): Permission | null {
   if (path === '/reports') return 'page:reports'
 
   if (path === '/proposal') return 'page:proposal'
-  if (path === '/performance') return 'page:performance'
+  if (path === '/performance') return 'page:performance:manage'
   if (path === '/training') return 'page:training'
   if (path === '/benefits') return 'page:benefits'
   if (path === '/compliance') return 'page:compliance'

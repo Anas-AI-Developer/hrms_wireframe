@@ -172,7 +172,7 @@ export function EmployeeFormPage() {
       dashboardHref="/employees"
     >
       <CompactFormPage wide>
-        <CompactFormCard icon="ri-user-add-line" title={heading}>
+        <CompactFormCard icon="ri-user-add-line" title={heading} description={sub}>
           <form onSubmit={onSubmit}>
             {error ? <CompactFormAlert>{error}</CompactFormAlert> : null}
 

@@ -388,7 +388,7 @@ export default function App() {
             <Route
               path="performance"
               element={
-                <RequirePermission permission="page:performance">
+                <RequirePermission permission="page:performance:manage">
                   <PerformancePage />
                 </RequirePermission>
               }
