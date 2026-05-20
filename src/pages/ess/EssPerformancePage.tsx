@@ -1,4 +1,9 @@
 import { useMemo, useState, type FormEvent } from 'react'
+import {
+  CompactFormField,
+  CompactFormInputWrap,
+  CompactFormModal,
+} from '../../components/hrms/HrmsCompactForm'
 import { HrmsModal } from '../../components/hrms/HrmsModal'
 import { useAuth } from '../../auth/AuthContext'
 import { getEssOpenCycle } from '../../data/essSeed'
@@ -219,22 +224,23 @@ export function EssPerformancePage() {
           </>
         }
       >
-        <form id="ess-self-rating-form" className="hrms-modal-form" onSubmit={submitSelf}>
-          <div className="hrms-modal-form__field">
-            <label htmlFor="ess-self-rating">Your rating</label>
-            <select
-              id="ess-self-rating"
-              value={selfRating}
-              onChange={(e) => setSelfRating(e.target.value)}
-            >
-              {PERFORMANCE_RATINGS.map((r) => (
-                <option key={r} value={r}>
-                  {r}
-                </option>
-              ))}
-            </select>
-          </div>
-        </form>
+        <CompactFormModal id="ess-self-rating-form" onSubmit={submitSelf}>
+          <CompactFormField htmlFor="ess-self-rating" label="Your rating">
+            <CompactFormInputWrap icon="ri-star-line">
+              <select
+                id="ess-self-rating"
+                value={selfRating}
+                onChange={(e) => setSelfRating(e.target.value)}
+              >
+                {PERFORMANCE_RATINGS.map((r) => (
+                  <option key={r} value={r}>
+                    {r}
+                  </option>
+                ))}
+              </select>
+            </CompactFormInputWrap>
+          </CompactFormField>
+        </CompactFormModal>
       </HrmsModal>
     </div>
   )

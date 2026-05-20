@@ -12,6 +12,8 @@ type Props = {
   tone?: Tone
   /** When true, card is display-only (no link, no hover lift). */
   static?: boolean
+  /** Compact padding and typography for dashboard top row. */
+  compact?: boolean
   to?: string
   linkLabel?: string
 }
@@ -24,6 +26,7 @@ export function DashboardKpiCard({
   icon,
   tone = 'primary',
   static: isStatic = false,
+  compact = false,
   to,
   linkLabel,
 }: Props) {
@@ -31,7 +34,7 @@ export function DashboardKpiCard({
 
   return (
     <article
-      className={`hrms-kpi-card hrms-kpi-card--${tone}${isStatic ? ' hrms-kpi-card--static' : ''}`}
+      className={`hrms-kpi-card hrms-kpi-card--${tone}${isStatic ? ' hrms-kpi-card--static' : ''}${compact ? ' hrms-kpi-card--compact' : ''}`}
     >
       <div className="hrms-kpi-card__body">
         <div className="hrms-kpi-card__top">
@@ -54,3 +57,4 @@ export function DashboardKpiCard({
     </article>
   )
 }
+

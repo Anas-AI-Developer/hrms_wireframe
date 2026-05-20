@@ -73,7 +73,9 @@ export const designations: Designation[] = [
   { id: 'g14', title: 'Sanitary Worker', grade: 'BPS 1', departmentId: 'c5', status: 'active', createdAt: '2026-01-16T09:00:00.000Z' },
 ]
 
-const employeesDraft: Employee[] = [
+type EmployeeSeed = Omit<Employee, 'endDate'>
+
+const employeesDraft: EmployeeSeed[] = [
   {
     id: 'm-1',
     employeeNo: 'EMP-0001',
@@ -669,7 +671,21 @@ const employeesDraft: Employee[] = [
   },
 ]
 
-export const employees: Employee[] = assignManagers(employeesDraft)
+/** Demo end dates for fixed-term / separated staff; permanent active posts use "—". */
+const EMPLOYEE_END_DATES: Partial<Record<string, string>> = {
+  'm-12': '2026-01-31',
+  'm-15': '2026-06-30',
+  'm-17': '2025-12-31',
+  'm-18': '2026-03-31',
+  'm-19': '2024-11-30',
+}
+
+export const employees: Employee[] = assignManagers(
+  employeesDraft.map((e) => ({
+    ...e,
+    endDate: EMPLOYEE_END_DATES[e.id] ?? '—',
+  })),
+)
 
 export const employeeHistory: EmployeeHistoryEvent[] = [
   {

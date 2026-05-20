@@ -1,4 +1,12 @@
 import { useMemo, useState, type FormEvent } from 'react'
+import {
+  CompactFormAlert,
+  CompactFormField,
+  CompactFormGrid,
+  CompactFormInputWrap,
+  CompactFormModal,
+  CompactFormRequired,
+} from '../../components/hrms/HrmsCompactForm'
 import { HrmsModal } from '../../components/hrms/HrmsModal'
 import { useEssSession } from '../../ess/EssSessionContext'
 import { WIREFRAME_TODAY } from '../../utils/attendanceStats'
@@ -151,66 +159,90 @@ export function EssRequestsPage() {
           </>
         }
       >
-        <form id="ess-employee-request-form" className="hrms-modal-form" onSubmit={submit}>
-          {formError ? <p className="hrms-ref-form-alert hrms-ref-form-alert--warn">{formError}</p> : null}
-          <div className="hrms-modal-form__field">
-            <label htmlFor="ess-req-subject">
-              Subject <span className="hrms-ref-required">*</span>
-            </label>
-            <input
-              id="ess-req-subject"
-              type="text"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              placeholder="e.g. Equipment repair, duty travel, document update"
-              maxLength={120}
-              required
-            />
-          </div>
-          <div className="hrms-modal-form__row">
-            <div className="hrms-modal-form__field">
-              <label htmlFor="ess-req-from">
-                From date <span className="hrms-ref-required">*</span>
-              </label>
+        <CompactFormModal id="ess-employee-request-form" onSubmit={submit}>
+          {formError ? <CompactFormAlert>{formError}</CompactFormAlert> : null}
+          <CompactFormField
+            htmlFor="ess-req-subject"
+            label={
+              <>
+                Subject <CompactFormRequired />
+              </>
+            }
+          >
+            <CompactFormInputWrap icon="ri-text">
               <input
-                id="ess-req-from"
-                type="date"
-                value={fromDate}
-                onChange={(e) => {
-                  setFromDate(e.target.value)
-                  if (e.target.value > toDate) setToDate(e.target.value)
-                }}
+                id="ess-req-subject"
+                type="text"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                placeholder="e.g. Equipment repair, duty travel, document update"
+                maxLength={120}
                 required
               />
-            </div>
-            <div className="hrms-modal-form__field">
-              <label htmlFor="ess-req-to">
-                End date <span className="hrms-ref-required">*</span>
-              </label>
-              <input
-                id="ess-req-to"
-                type="date"
-                value={toDate}
-                min={fromDate}
-                onChange={(e) => setToDate(e.target.value)}
+            </CompactFormInputWrap>
+          </CompactFormField>
+          <CompactFormGrid split>
+            <CompactFormField
+              htmlFor="ess-req-from"
+              label={
+                <>
+                  From date <CompactFormRequired />
+                </>
+              }
+            >
+              <CompactFormInputWrap icon="ri-calendar-line">
+                <input
+                  id="ess-req-from"
+                  type="date"
+                  value={fromDate}
+                  onChange={(e) => {
+                    setFromDate(e.target.value)
+                    if (e.target.value > toDate) setToDate(e.target.value)
+                  }}
+                  required
+                />
+              </CompactFormInputWrap>
+            </CompactFormField>
+            <CompactFormField
+              htmlFor="ess-req-to"
+              label={
+                <>
+                  End date <CompactFormRequired />
+                </>
+              }
+            >
+              <CompactFormInputWrap icon="ri-calendar-line">
+                <input
+                  id="ess-req-to"
+                  type="date"
+                  value={toDate}
+                  min={fromDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                  required
+                />
+              </CompactFormInputWrap>
+            </CompactFormField>
+          </CompactFormGrid>
+          <CompactFormField
+            htmlFor="ess-req-details"
+            label={
+              <>
+                Details <CompactFormRequired />
+              </>
+            }
+          >
+            <CompactFormInputWrap icon="ri-file-text-line">
+              <textarea
+                id="ess-req-details"
+                value={details}
+                onChange={(e) => setDetails(e.target.value)}
+                placeholder="Describe what you need, relevant context, and any reference numbers…"
+                rows={5}
                 required
               />
-            </div>
-          </div>
-          <div className="hrms-modal-form__field">
-            <label htmlFor="ess-req-details">
-              Details <span className="hrms-ref-required">*</span>
-            </label>
-            <textarea
-              id="ess-req-details"
-              value={details}
-              onChange={(e) => setDetails(e.target.value)}
-              placeholder="Describe what you need, relevant context, and any reference numbers…"
-              rows={5}
-              required
-            />
-          </div>
-        </form>
+            </CompactFormInputWrap>
+          </CompactFormField>
+        </CompactFormModal>
       </HrmsModal>
     </div>
   )

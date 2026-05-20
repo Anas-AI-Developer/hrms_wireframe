@@ -44,3 +44,4 @@ export function QuickAccessGrid({ title = 'Quick access', items }: Props) {
     </section>
   )
 }
+

@@ -134,6 +134,7 @@ export function EmployeeDetailPage() {
                 </DetailField>
                 <DetailField label="Phone">{e.phone || '—'}</DetailField>
                 <DetailField label="Join date">{e.joinDate}</DetailField>
+                <DetailField label="End date">{e.endDate}</DetailField>
                 <DetailField label="Mode of appointment">{e.modeOfAppointment ?? '—'}</DetailField>
               </dl>
             </div>

@@ -69,3 +69,4 @@ export const DASHBOARD_QUICK_HR: QuickAccessItem[] = [
     description: 'Checklist & docs',
   },
 ]
+

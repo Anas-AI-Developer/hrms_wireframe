@@ -148,7 +148,7 @@ export function DashboardCharts({
     <section className="hrms-dash-charts" aria-label="Analytics overview">
       <article className="hrms-ref-panel hrms-dash-chart-panel">
         <header className="hrms-ref-panel-head">
-          <h2 className="hrms-ref-panel-title">Workforce status</h2>
+          <h2 className="hrms-ref-panel-title">Employee status</h2>
         </header>
         <div className="hrms-ref-panel-body">
           <StatusDonut active={active} onLeave={onLeave} inactive={inactive} />
@@ -195,3 +195,4 @@ export function DashboardCharts({
     </section>
   )
 }
+

@@ -1,0 +1,439 @@
+/* Compact create/edit forms (designations, departments, etc.) */
+
+.hrms-compact-form-page {
+  max-width: 42rem;
+  margin: 0 auto;
+}
+
+.hrms-compact-form-page--wide {
+  max-width: 52rem;
+}
+
+.hrms-profile-layout .hrms-compact-form-page {
+  max-width: none;
+  margin: 0;
+}
+
+.hrms-profile-layout section + section {
+  margin-top: 1.25rem;
+}
+
+.hrms-compact-form-page--highlight-wrap .hrms-compact-form-card {
+  box-shadow:
+    0 0 0 2px rgba(75, 98, 190, 0.28),
+    0 8px 24px rgba(75, 98, 190, 0.1);
+}
+
+.hrms-compact-form-section + .hrms-compact-form-section {
+  margin-top: 1.35rem;
+}
+
+.hrms-compact-form-card {
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.hrms-compact-form-card__hero {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.35rem 1.5rem 1.25rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 55%, #f8fafc 100%);
+  border-bottom: 1px solid #e8edf5;
+}
+
+.hrms-compact-form-card__icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 10px;
+  background: linear-gradient(145deg, #4b62be 0%, #3d52a0 100%);
+  color: #fff;
+  font-size: 1.35rem;
+  box-shadow: 0 4px 12px rgba(75, 98, 190, 0.35);
+}
+
+.hrms-compact-form-card__title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+
+.hrms-compact-form-card__desc {
+  margin: 0.35rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: #64748b;
+  max-width: 28rem;
+}
+
+.hrms-compact-form-card__body {
+  padding: 1.35rem 1.5rem 1.5rem;
+}
+
+.hrms-compact-form-section {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.hrms-compact-form-section__label {
+  display: block;
+  margin: 0 0 1rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.hrms-compact-form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.1rem;
+}
+
+@media (min-width: 560px) {
+  .hrms-compact-form-grid--split {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.hrms-compact-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0;
+}
+
+.hrms-compact-form-field--full {
+  grid-column: 1 / -1;
+}
+
+.hrms-compact-form-field__label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.hrms-compact-form-field__label .hrms-ref-required {
+  color: #dc2626;
+  font-weight: 500;
+}
+
+.hrms-compact-form-field__hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+.hrms-compact-form-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.hrms-compact-form-input-wrap > i {
+  position: absolute;
+  left: 0.75rem;
+  font-size: 1.05rem;
+  color: #94a3b8;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.hrms-compact-form-input-wrap--plain input,
+.hrms-compact-form-input-wrap--plain select,
+.hrms-compact-form-input-wrap--plain textarea {
+  padding-left: 0.75rem;
+}
+
+.hrms-compact-form-input-wrap input,
+.hrms-compact-form-input-wrap select,
+.hrms-compact-form-input-wrap textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.6rem 0.75rem 0.6rem 2.35rem;
+  font: inherit;
+  font-size: 0.875rem;
+  color: #1e293b;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.hrms-compact-form-input-wrap input:hover,
+.hrms-compact-form-input-wrap select:hover,
+.hrms-compact-form-input-wrap textarea:hover {
+  border-color: #cbd5e1;
+  background: #fff;
+}
+
+.hrms-compact-form-input-wrap input:focus,
+.hrms-compact-form-input-wrap select:focus,
+.hrms-compact-form-input-wrap textarea:focus {
+  outline: none;
+  border-color: #4b62be;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(75, 98, 190, 0.14);
+}
+
+.hrms-compact-form-input-wrap input::placeholder {
+  color: #94a3b8;
+}
+
+.hrms-compact-form-status {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.hrms-compact-form-status__option {
+  flex: 1;
+  min-width: 7rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #64748b;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.hrms-compact-form-status__option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.hrms-compact-form-status__option:has(input:checked) {
+  color: #1e3a8a;
+  background: #eef2ff;
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 2px rgba(75, 98, 190, 0.12);
+}
+
+.hrms-compact-form-status__option:has(input:focus-visible) {
+  outline: 2px solid #4b62be;
+  outline-offset: 2px;
+}
+
+.hrms-compact-form-status__dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.35;
+}
+
+.hrms-compact-form-status__option:has(input:checked) .hrms-compact-form-status__dot {
+  opacity: 1;
+  background: #22c55e;
+}
+
+.hrms-compact-form-status__option:has(input[value='inactive']:checked) .hrms-compact-form-status__dot {
+  background: #94a3b8;
+}
+
+.hrms-compact-form-status__option:has(input[value='on_leave']:checked) .hrms-compact-form-status__dot {
+  background: #f59e0b;
+}
+
+.hrms-compact-form-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0 0 1.1rem;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: #b42318;
+  background: #fef3f2;
+  border: 1px solid #fecdca;
+  border-radius: 8px;
+}
+
+.hrms-compact-form-alert i {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  margin-top: 0.05rem;
+}
+
+.hrms-compact-form-alert--ok {
+  color: #166534;
+  background: #ecfdf3;
+  border-color: #bbf7d0;
+}
+
+.hrms-compact-form-input-wrap textarea {
+  min-height: 5rem;
+  resize: vertical;
+  align-self: stretch;
+}
+
+.hrms-compact-form-input-wrap {
+  align-items: stretch;
+}
+
+.hrms-compact-form-input-wrap > i {
+  top: 0.65rem;
+}
+
+/* Modal dialogs — same field styling, no card shell */
+.hrms-compact-form-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.hrms-compact-form-modal .hrms-compact-form-grid--split {
+  gap: 1.1rem;
+}
+
+.hrms-compact-form-callout {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0.45rem 0.65rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #2f4798;
+  background: rgba(75, 98, 190, 0.08);
+  border-radius: 8px;
+}
+
+/* Legacy alias — modals still using hrms-modal-form */
+.hrms-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.hrms-modal-form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.1rem;
+}
+
+@media (max-width: 480px) {
+  .hrms-modal-form__row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.hrms-modal-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0;
+}
+
+.hrms-modal-form__field > label,
+.hrms-modal-form__field label:first-child {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.hrms-modal-form__field .hrms-compact-form-input-wrap,
+.hrms-modal-form__field > input,
+.hrms-modal-form__field > select,
+.hrms-modal-form__field > textarea {
+  width: 100%;
+}
+
+.hrms-modal-form__field > input:not([class]),
+.hrms-modal-form__field > select:not([class]),
+.hrms-modal-form__field > textarea:not([class]) {
+  box-sizing: border-box;
+  padding: 0.6rem 0.75rem;
+  font: inherit;
+  font-size: 0.875rem;
+  color: #1e293b;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.hrms-modal-form__field > input:not([class]):focus,
+.hrms-modal-form__field > select:not([class]):focus,
+.hrms-modal-form__field > textarea:not([class]):focus {
+  outline: none;
+  border-color: #4b62be;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(75, 98, 190, 0.14);
+}
+
+.hrms-modal-form__field > textarea:not([class]) {
+  min-height: 5rem;
+  resize: vertical;
+}
+
+.hrms-modal-form__hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+.hrms-modal-form__days,
+.hrms-compact-form-callout {
+  align-self: flex-start;
+}
+
+.hrms-compact-form-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  margin-top: 1.35rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.hrms-compact-form-footer .hrms-ref-btn-secondary {
+  padding: 0.55rem 1rem;
+  font-size: 0.875rem;
+  border-radius: 8px;
+}
+
+.hrms-compact-form-footer .hrms-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1.15rem;
+  font-size: 0.875rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(75, 98, 190, 0.25);
+}
+
+.hrms-compact-form-footer .hrms-btn-primary:hover {
+  box-shadow: 0 4px 12px rgba(75, 98, 190, 0.32);
+}

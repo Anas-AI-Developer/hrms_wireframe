@@ -1,6 +1,16 @@
 import { type FormEvent, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import {
+  CompactFormCard,
+  CompactFormField,
+  CompactFormFooter,
+  CompactFormGrid,
+  CompactFormInputWrap,
+  CompactFormPage,
+  CompactFormRequired,
+  CompactFormSection,
+} from '../components/hrms/HrmsCompactForm'
 import { DataListPanel } from '../components/hrms/DataListPanel'
 import { HrmsListShell } from '../components/hrms/HrmsListShell'
 import { LeaveStatusBadge } from '../components/hrms/LeaveStatusBadge'
@@ -146,56 +156,77 @@ export function LeaveRequestsPage() {
       </section>
 
       {canRequest && balance ? (
-        <article className="hrms-ref-panel hrms-leave-request-panel">
-          <header className="hrms-ref-panel-head">
-            <div>
-              <h2 className="hrms-ref-panel-title">New leave request</h2>
-              <p className="hrms-ref-panel-desc">
-                Casual, sick, annual, and emergency leave — subject to balance and policy.
-              </p>
-            </div>
-          </header>
-          <div className="hrms-ref-panel-body">
-            <form className="hrms-ref-form-grid" onSubmit={submitMock}>
-              <label className="hrms-ref-field hrms-ref-field--half">
-                <span className="hrms-ref-field-label">
-                  Leave type <span className="hrms-ref-required">*</span>
-                </span>
-                <select
-                  value={draftType}
-                  onChange={(ev) => setDraftType(ev.target.value as LeaveTypeId)}
-                >
-                  {(Object.keys(LEAVE_TYPE_LABELS) as LeaveTypeId[]).map((t) => (
-                    <option key={t} value={t}>
-                      {LEAVE_TYPE_LABELS[t]}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="hrms-ref-field hrms-ref-field--half">
-                <span className="hrms-ref-field-label">
-                  From <span className="hrms-ref-required">*</span>
-                </span>
-                <input type="date" name="fromDate" defaultValue="2026-05-01" required />
-              </label>
-              <label className="hrms-ref-field hrms-ref-field--half">
-                <span className="hrms-ref-field-label">
-                  To <span className="hrms-ref-required">*</span>
-                </span>
-                <input type="date" name="toDate" defaultValue="2026-05-02" required />
-              </label>
-              <label className="hrms-ref-field hrms-ref-field--half">
-                <span className="hrms-ref-field-label">Reason</span>
-                <input type="text" name="reason" placeholder="Optional short note" />
-              </label>
-              <div className="hrms-ref-form-footer">
-                <button type="submit" className="hrms-btn-primary">
-                  Submit request
-                </button>
-              </div>
-            </form>
-          </div>
-        </article>
+        <div className="hrms-leave-request-panel" style={{ marginBottom: '1.25rem' }}>
+          <CompactFormPage>
+            <CompactFormCard
+              icon="ri-calendar-check-line"
+              title="New leave request"
+              description="Casual, sick, annual, and emergency leave — subject to balance and policy."
+            >
+              <form onSubmit={submitMock}>
+                <CompactFormSection legend="Request details">
+                  <CompactFormGrid>
+                    <CompactFormField
+                      label={
+                        <>
+                          Leave type <CompactFormRequired />
+                        </>
+                      }
+                    >
+                      <CompactFormInputWrap icon="ri-calendar-event-line">
+                        <select
+                          value={draftType}
+                          onChange={(ev) => setDraftType(ev.target.value as LeaveTypeId)}
+                        >
+                          {(Object.keys(LEAVE_TYPE_LABELS) as LeaveTypeId[]).map((t) => (
+                            <option key={t} value={t}>
+                              {LEAVE_TYPE_LABELS[t]}
+                            </option>
+                          ))}
+                        </select>
+                      </CompactFormInputWrap>
+                    </CompactFormField>
+                    <CompactFormGrid split>
+                      <CompactFormField
+                        label={
+                          <>
+                            From <CompactFormRequired />
+                          </>
+                        }
+                      >
+                        <CompactFormInputWrap icon="ri-calendar-line">
+                          <input type="date" name="fromDate" defaultValue="2026-05-01" required />
+                        </CompactFormInputWrap>
+                      </CompactFormField>
+                      <CompactFormField
+                        label={
+                          <>
+                            To <CompactFormRequired />
+                          </>
+                        }
+                      >
+                        <CompactFormInputWrap icon="ri-calendar-line">
+                          <input type="date" name="toDate" defaultValue="2026-05-02" required />
+                        </CompactFormInputWrap>
+                      </CompactFormField>
+                    </CompactFormGrid>
+                    <CompactFormField label="Reason">
+                      <CompactFormInputWrap icon="ri-chat-3-line">
+                        <input type="text" name="reason" placeholder="Optional short note" />
+                      </CompactFormInputWrap>
+                    </CompactFormField>
+                  </CompactFormGrid>
+                </CompactFormSection>
+                <CompactFormFooter>
+                  <button type="submit" className="hrms-btn-primary">
+                    <i className="ri-send-plane-line" aria-hidden />
+                    Submit request
+                  </button>
+                </CompactFormFooter>
+              </form>
+            </CompactFormCard>
+          </CompactFormPage>
+        </div>
       ) : null}
 
       <DataListPanel

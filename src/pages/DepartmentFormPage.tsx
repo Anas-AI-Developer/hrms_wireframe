@@ -1,5 +1,17 @@
 import { type FormEvent, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import {
+  CompactFormAlert,
+  CompactFormCard,
+  CompactFormField,
+  CompactFormFooter,
+  CompactFormGrid,
+  CompactFormInputWrap,
+  CompactFormPage,
+  CompactFormRequired,
+  CompactFormSection,
+  CompactFormStatus,
+} from '../components/hrms/HrmsCompactForm'
 import { HrmsListShell } from '../components/hrms/HrmsListShell'
 import { useWireframeData } from '../data/WireframeDataContext'
 import type { RecordStatus } from '../types/hrms'
@@ -38,52 +50,92 @@ export function DepartmentFormPage() {
     navigate('/departments')
   }
 
+  const heading = isEdit ? 'Edit department' : 'Create department'
+  const sub = isEdit
+    ? 'Update centre name, code, head, or status.'
+    : 'Register an organization unit (centre) for roster and reporting.'
+
   return (
     <HrmsListShell
       current={isEdit ? 'Edit department' : 'New department'}
       dashboardHref="/departments"
     >
-      <article className="hrms-ref-panel" style={{ maxWidth: '40rem' }}>
-        <header className="hrms-ref-panel-head">
-          <h2 className="hrms-ref-panel-title">{isEdit ? 'Edit department' : 'Create department'}</h2>
-        </header>
-        <div className="hrms-ref-panel-body">
-          <form className="hrms-ref-form-grid" onSubmit={onSubmit}>
-            {error ? <p className="hrms-ref-form-alert hrms-ref-form-alert--warn">{error}</p> : null}
-            <label className="hrms-ref-field hrms-ref-field--full">
-              <span className="hrms-ref-field-label">
-                Name <span className="hrms-ref-required">*</span>
-              </span>
-              <input value={name} onChange={(e) => setName(e.target.value)} required />
-            </label>
-            <label className="hrms-ref-field">
-              <span className="hrms-ref-field-label">
-                Code <span className="hrms-ref-required">*</span>
-              </span>
-              <input value={code} onChange={(e) => setCode(e.target.value)} required />
-            </label>
-            <label className="hrms-ref-field">
-              <span className="hrms-ref-field-label">Status</span>
-              <select value={status} onChange={(e) => setStatus(e.target.value as RecordStatus)}>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </label>
-            <label className="hrms-ref-field hrms-ref-field--full">
-              <span className="hrms-ref-field-label">Head name</span>
-              <input value={headName} onChange={(e) => setHeadName(e.target.value)} placeholder="—" />
-            </label>
-            <div className="hrms-ref-form-footer hrms-ref-field--full">
+      <CompactFormPage>
+        <CompactFormCard icon="ri-building-4-line" title={heading} description={sub}>
+          <form onSubmit={onSubmit}>
+            {error ? <CompactFormAlert>{error}</CompactFormAlert> : null}
+            <CompactFormSection legend="Centre details">
+              <CompactFormGrid>
+                <CompactFormField
+                  full
+                  label={
+                    <>
+                      Name <CompactFormRequired />
+                    </>
+                  }
+                >
+                  <CompactFormInputWrap icon="ri-building-line">
+                    <input
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="e.g. Regional Centre Lahore"
+                      required
+                      autoFocus
+                    />
+                  </CompactFormInputWrap>
+                </CompactFormField>
+                <CompactFormGrid split>
+                  <CompactFormField
+                    label={
+                      <>
+                        Code <CompactFormRequired />
+                      </>
+                    }
+                  >
+                    <CompactFormInputWrap icon="ri-hashtag">
+                      <input
+                        value={code}
+                        onChange={(e) => setCode(e.target.value)}
+                        placeholder="RCL"
+                        required
+                      />
+                    </CompactFormInputWrap>
+                  </CompactFormField>
+                  <CompactFormField label="Status">
+                    <CompactFormStatus
+                      name="department-status"
+                      value={status}
+                      onChange={setStatus}
+                      options={[
+                        { value: 'active', label: 'Active' },
+                        { value: 'inactive', label: 'Inactive' },
+                      ]}
+                    />
+                  </CompactFormField>
+                </CompactFormGrid>
+                <CompactFormField full label="Head name" hint="Optional — shown on org charts and reports.">
+                  <CompactFormInputWrap icon="ri-user-line">
+                    <input
+                      value={headName}
+                      onChange={(e) => setHeadName(e.target.value)}
+                      placeholder="—"
+                    />
+                  </CompactFormInputWrap>
+                </CompactFormField>
+              </CompactFormGrid>
+            </CompactFormSection>
+            <CompactFormFooter>
               <Link to="/departments" className="hrms-ref-btn-secondary">
                 Cancel
               </Link>
               <button type="submit" className="hrms-btn-primary">
+                <i className={isEdit ? 'ri-save-line' : 'ri-add-line'} aria-hidden />
                 {isEdit ? 'Save changes' : 'Create department'}
               </button>
-            </div>
+            </CompactFormFooter>
           </form>
-        </div>
-      </article>
+        </CompactFormCard>
+      </CompactFormPage>
     </HrmsListShell>
   )
 }

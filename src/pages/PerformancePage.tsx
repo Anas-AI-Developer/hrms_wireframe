@@ -1,6 +1,12 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import {
+  CompactFormField,
+  CompactFormInputWrap,
+  CompactFormModal,
+  CompactFormRequired,
+} from '../components/hrms/HrmsCompactForm'
 import { HrmsModal } from '../components/hrms/HrmsModal'
 import { appraisalCycles } from '../data/performanceMock'
 import type { PerformanceGoal } from '../data/performanceMock'
@@ -256,32 +262,34 @@ export function PerformancePage() {
           </>
         }
       >
-        <form id="mgr-performance-rate-form" className="hrms-modal-form" onSubmit={submitRate}>
-          <div className="hrms-modal-form__field">
-            <label htmlFor="mgr-rating">Rating</label>
-            <select
-              id="mgr-rating"
-              value={managerRating}
-              onChange={(e) => setManagerRating(e.target.value)}
-            >
-              {PERFORMANCE_RATINGS.map((r) => (
-                <option key={r} value={r}>
-                  {r}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="hrms-modal-form__field">
-            <label htmlFor="mgr-comment">Feedback (optional)</label>
-            <textarea
-              id="mgr-comment"
-              value={managerComment}
-              onChange={(e) => setManagerComment(e.target.value)}
-              placeholder="Comments visible to the employee on their performance page…"
-              rows={4}
-            />
-          </div>
-        </form>
+        <CompactFormModal id="mgr-performance-rate-form" onSubmit={submitRate}>
+          <CompactFormField htmlFor="mgr-rating" label="Rating">
+            <CompactFormInputWrap icon="ri-star-line">
+              <select
+                id="mgr-rating"
+                value={managerRating}
+                onChange={(e) => setManagerRating(e.target.value)}
+              >
+                {PERFORMANCE_RATINGS.map((r) => (
+                  <option key={r} value={r}>
+                    {r}
+                  </option>
+                ))}
+              </select>
+            </CompactFormInputWrap>
+          </CompactFormField>
+          <CompactFormField htmlFor="mgr-comment" label="Feedback (optional)">
+            <CompactFormInputWrap icon="ri-chat-3-line">
+              <textarea
+                id="mgr-comment"
+                value={managerComment}
+                onChange={(e) => setManagerComment(e.target.value)}
+                placeholder="Comments visible to the employee on their performance page…"
+                rows={4}
+              />
+            </CompactFormInputWrap>
+          </CompactFormField>
+        </CompactFormModal>
       </HrmsModal>
 
       <HrmsModal
@@ -301,42 +309,66 @@ export function PerformancePage() {
           </>
         }
       >
-        <form id="mgr-add-goal-form" className="hrms-modal-form" onSubmit={submitAddGoal}>
-          <div className="hrms-modal-form__field">
-            <label htmlFor="mgr-goal-employee">Employee</label>
-            <select
-              id="mgr-goal-employee"
-              value={addEmployeeId}
-              onChange={(e) => setAddEmployeeId(e.target.value)}
-              required
-            >
-              <option value="">Select employee…</option>
-              {teamOptions.map((e) => (
-                <option key={e.id} value={e.id}>
-                  {e.firstName} {e.lastName} ({e.employeeNo})
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="hrms-modal-form__field">
-            <label htmlFor="mgr-goal-title">Goal</label>
-            <input
-              id="mgr-goal-title"
-              value={addTitle}
-              onChange={(e) => setAddTitle(e.target.value)}
-              required
-            />
-          </div>
-          <div className="hrms-modal-form__field">
-            <label htmlFor="mgr-goal-target">Target / measure</label>
-            <input
-              id="mgr-goal-target"
-              value={addTarget}
-              onChange={(e) => setAddTarget(e.target.value)}
-              required
-            />
-          </div>
-        </form>
+        <CompactFormModal id="mgr-add-goal-form" onSubmit={submitAddGoal}>
+          <CompactFormField
+            htmlFor="mgr-goal-employee"
+            label={
+              <>
+                Employee <CompactFormRequired />
+              </>
+            }
+          >
+            <CompactFormInputWrap icon="ri-user-line">
+              <select
+                id="mgr-goal-employee"
+                value={addEmployeeId}
+                onChange={(e) => setAddEmployeeId(e.target.value)}
+                required
+              >
+                <option value="">Select employee…</option>
+                {teamOptions.map((e) => (
+                  <option key={e.id} value={e.id}>
+                    {e.firstName} {e.lastName} ({e.employeeNo})
+                  </option>
+                ))}
+              </select>
+            </CompactFormInputWrap>
+          </CompactFormField>
+          <CompactFormField
+            htmlFor="mgr-goal-title"
+            label={
+              <>
+                Goal <CompactFormRequired />
+              </>
+            }
+          >
+            <CompactFormInputWrap icon="ri-flag-line">
+              <input
+                id="mgr-goal-title"
+                value={addTitle}
+                onChange={(e) => setAddTitle(e.target.value)}
+                required
+              />
+            </CompactFormInputWrap>
+          </CompactFormField>
+          <CompactFormField
+            htmlFor="mgr-goal-target"
+            label={
+              <>
+                Target / measure <CompactFormRequired />
+              </>
+            }
+          >
+            <CompactFormInputWrap icon="ri-focus-3-line">
+              <input
+                id="mgr-goal-target"
+                value={addTarget}
+                onChange={(e) => setAddTarget(e.target.value)}
+                required
+              />
+            </CompactFormInputWrap>
+          </CompactFormField>
+        </CompactFormModal>
       </HrmsModal>
     </div>
   )

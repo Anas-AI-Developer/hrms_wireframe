@@ -1,5 +1,17 @@
 import { type FormEvent, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import {
+  CompactFormAlert,
+  CompactFormCard,
+  CompactFormField,
+  CompactFormFooter,
+  CompactFormGrid,
+  CompactFormInputWrap,
+  CompactFormPage,
+  CompactFormRequired,
+  CompactFormSection,
+  CompactFormStatus,
+} from '../components/hrms/HrmsCompactForm'
 import { HrmsListShell } from '../components/hrms/HrmsListShell'
 import { EMPLOYMENT_TYPES_FILTERABLE } from '../data/employmentTypes'
 import { employmentTypeLabel } from '../data/employmentStats'
@@ -43,6 +55,9 @@ export function EmployeeFormPage() {
   const [joinDate, setJoinDate] = useState(
     existing?.joinDate && existing.joinDate !== '—' ? existing.joinDate : '',
   )
+  const [endDate, setEndDate] = useState(
+    existing?.endDate && existing.endDate !== '—' ? existing.endDate : '',
+  )
   const [error, setError] = useState<string | null>(null)
 
   const managerOptions = employees.filter(
@@ -74,6 +89,7 @@ export function EmployeeFormPage() {
       employmentType,
       status,
       joinDate: joinDate || '—',
+      endDate: endDate || '—',
     }
     if (isEdit && id) {
       updateEmployee(id, input)
@@ -84,122 +100,195 @@ export function EmployeeFormPage() {
     navigate(`/employees/${created.id}`)
   }
 
+  const heading = isEdit ? 'Edit employee' : 'Create employee'
+  const sub = isEdit
+    ? 'Update roster details. Changes are saved for this browser session.'
+    : `New code ${nextCode}. Saved to the wireframe roster for this session.`
+
   return (
     <HrmsListShell
       current={isEdit ? `Edit · ${existing?.employeeNo}` : 'New employee'}
       dashboardHref="/employees"
     >
-      <article className="hrms-ref-panel">
-        <header className="hrms-ref-panel-head">
-          <h2 className="hrms-ref-panel-title">{isEdit ? 'Edit employee' : 'Create employee'}</h2>
-          <p className="hrms-ref-panel-desc">
-            {isEdit
-              ? 'Update roster details. Changes are saved for this browser session.'
-              : `New code: ${nextCode}. Saved to the wireframe roster for this session.`}
-          </p>
-        </header>
-        <div className="hrms-ref-panel-body">
-          <form className="hrms-ref-form-grid" onSubmit={onSubmit}>
-            {error ? <p className="hrms-ref-form-alert hrms-ref-form-alert--warn">{error}</p> : null}
-            <label className="hrms-ref-field">
-              <span className="hrms-ref-field-label">
-                First name <span className="hrms-ref-required">*</span>
-              </span>
-              <input value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
-            </label>
-            <label className="hrms-ref-field">
-              <span className="hrms-ref-field-label">
-                Last name <span className="hrms-ref-required">*</span>
-              </span>
-              <input value={lastName} onChange={(e) => setLastName(e.target.value)} required />
-            </label>
-            <label className="hrms-ref-field hrms-ref-field--full">
-              <span className="hrms-ref-field-label">
-                Email <span className="hrms-ref-required">*</span>
-              </span>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </label>
-            <label className="hrms-ref-field">
-              <span className="hrms-ref-field-label">Employee code</span>
-              <input
-                value={isEdit ? employeeNo : nextCode}
-                readOnly={!isEdit}
-                onChange={(e) => setEmployeeNo(e.target.value)}
-              />
-            </label>
-            <label className="hrms-ref-field">
-              <span className="hrms-ref-field-label">Employment type</span>
-              <select
-                value={employmentType}
-                onChange={(e) => setEmploymentType(e.target.value as EmploymentType)}
-              >
-                {EMPLOYMENT_TYPES_FILTERABLE.map((t) => (
-                  <option key={t} value={t}>
-                    {employmentTypeLabel(t)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="hrms-ref-field">
-              <span className="hrms-ref-field-label">Department (centre)</span>
-              <select
-                value={departmentId}
-                onChange={(e) => {
-                  setDepartmentId(e.target.value)
-                  setDesignationId('')
-                }}
-              >
-                {departments
-                  .filter((d) => d.status === 'active')
-                  .map((d) => (
-                    <option key={d.id} value={d.id}>
-                      {d.name}
-                    </option>
-                  ))}
-              </select>
-            </label>
-            <label className="hrms-ref-field">
-              <span className="hrms-ref-field-label">Designation</span>
-              <select
-                value={designationId}
-                onChange={(e) => setDesignationId(e.target.value)}
-              >
-                {designationOptions.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.title} ({g.grade})
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="hrms-ref-field">
-              <span className="hrms-ref-field-label">Reporting manager</span>
-              <select value={managerId} onChange={(e) => setManagerId(e.target.value)}>
-                <option value="">— None —</option>
-                {managerOptions.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.firstName} {m.lastName} · {m.sanctionedPost}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="hrms-ref-field">
-              <span className="hrms-ref-field-label">Status</span>
-              <select value={status} onChange={(e) => setStatus(e.target.value as EmployeeStatus)}>
-                <option value="active">Active</option>
-                <option value="on_leave">On leave</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </label>
-            <label className="hrms-ref-field">
-              <span className="hrms-ref-field-label">Join date</span>
-              <input type="date" value={joinDate} onChange={(e) => setJoinDate(e.target.value)} />
-            </label>
-            <div className="hrms-ref-form-footer hrms-ref-field--full">
+      <CompactFormPage wide>
+        <CompactFormCard icon="ri-user-add-line" title={heading} description={sub}>
+          <form onSubmit={onSubmit}>
+            {error ? <CompactFormAlert>{error}</CompactFormAlert> : null}
+
+            <CompactFormSection legend="Personal">
+              <CompactFormGrid>
+                <CompactFormGrid split>
+                  <CompactFormField
+                    label={
+                      <>
+                        First name <CompactFormRequired />
+                      </>
+                    }
+                  >
+                    <CompactFormInputWrap icon="ri-user-line">
+                      <input
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        required
+                        autoFocus
+                      />
+                    </CompactFormInputWrap>
+                  </CompactFormField>
+                  <CompactFormField
+                    label={
+                      <>
+                        Last name <CompactFormRequired />
+                      </>
+                    }
+                  >
+                    <CompactFormInputWrap icon="ri-user-line">
+                      <input
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        required
+                      />
+                    </CompactFormInputWrap>
+                  </CompactFormField>
+                </CompactFormGrid>
+                <CompactFormField
+                  full
+                  label={
+                    <>
+                      Email <CompactFormRequired />
+                    </>
+                  }
+                >
+                  <CompactFormInputWrap icon="ri-mail-line">
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </CompactFormInputWrap>
+                </CompactFormField>
+              </CompactFormGrid>
+            </CompactFormSection>
+
+            <CompactFormSection legend="Assignment">
+              <CompactFormGrid>
+                <CompactFormGrid split>
+                  <CompactFormField label="Employment type">
+                    <CompactFormInputWrap icon="ri-file-list-3-line">
+                      <select
+                        value={employmentType}
+                        onChange={(e) => setEmploymentType(e.target.value as EmploymentType)}
+                      >
+                        {EMPLOYMENT_TYPES_FILTERABLE.map((t) => (
+                          <option key={t} value={t}>
+                            {employmentTypeLabel(t)}
+                          </option>
+                        ))}
+                      </select>
+                    </CompactFormInputWrap>
+                  </CompactFormField>
+                  <CompactFormField label="Department (centre)">
+                    <CompactFormInputWrap icon="ri-building-line">
+                      <select
+                        value={departmentId}
+                        onChange={(e) => {
+                          setDepartmentId(e.target.value)
+                          setDesignationId('')
+                        }}
+                      >
+                        {departments
+                          .filter((d) => d.status === 'active')
+                          .map((d) => (
+                            <option key={d.id} value={d.id}>
+                              {d.name}
+                            </option>
+                          ))}
+                      </select>
+                    </CompactFormInputWrap>
+                  </CompactFormField>
+                </CompactFormGrid>
+                <CompactFormGrid split>
+                  <CompactFormField label="Designation">
+                    <CompactFormInputWrap icon="ri-briefcase-line">
+                      <select
+                        value={designationId}
+                        onChange={(e) => setDesignationId(e.target.value)}
+                      >
+                        {designationOptions.map((g) => (
+                          <option key={g.id} value={g.id}>
+                            {g.title} ({g.grade})
+                          </option>
+                        ))}
+                      </select>
+                    </CompactFormInputWrap>
+                  </CompactFormField>
+                  <CompactFormField label="Reporting manager">
+                    <CompactFormInputWrap icon="ri-team-line">
+                      <select value={managerId} onChange={(e) => setManagerId(e.target.value)}>
+                        <option value="">— None —</option>
+                        {managerOptions.map((m) => (
+                          <option key={m.id} value={m.id}>
+                            {m.firstName} {m.lastName} · {m.sanctionedPost}
+                          </option>
+                        ))}
+                      </select>
+                    </CompactFormInputWrap>
+                  </CompactFormField>
+                </CompactFormGrid>
+              </CompactFormGrid>
+            </CompactFormSection>
+
+            <CompactFormSection legend="Record">
+              <CompactFormGrid>
+                <CompactFormGrid split>
+                  <CompactFormField label="Employee code">
+                    <CompactFormInputWrap icon="ri-barcode-line">
+                      <input
+                        value={isEdit ? employeeNo : nextCode}
+                        readOnly={!isEdit}
+                        onChange={(e) => setEmployeeNo(e.target.value)}
+                      />
+                    </CompactFormInputWrap>
+                  </CompactFormField>
+                  <CompactFormField label="Join date">
+                    <CompactFormInputWrap icon="ri-calendar-line">
+                      <input
+                        type="date"
+                        value={joinDate}
+                        onChange={(e) => setJoinDate(e.target.value)}
+                      />
+                    </CompactFormInputWrap>
+                  </CompactFormField>
+                  <CompactFormField
+                    label="End date"
+                    hint="Leave blank for open-ended appointments."
+                  >
+                    <CompactFormInputWrap icon="ri-calendar-close-line">
+                      <input
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                      />
+                    </CompactFormInputWrap>
+                  </CompactFormField>
+                </CompactFormGrid>
+                <CompactFormField label="Status">
+                  <CompactFormStatus
+                    name="employee-status"
+                    value={status}
+                    onChange={setStatus}
+                    ariaLabel="Employee status"
+                    options={[
+                      { value: 'active', label: 'Active' },
+                      { value: 'on_leave', label: 'On leave' },
+                      { value: 'inactive', label: 'Inactive' },
+                    ]}
+                  />
+                </CompactFormField>
+              </CompactFormGrid>
+            </CompactFormSection>
+
+            <CompactFormFooter>
               <Link
                 to={existing ? `/employees/${existing.id}` : '/employees'}
                 className="hrms-ref-btn-secondary"
@@ -207,12 +296,13 @@ export function EmployeeFormPage() {
                 Cancel
               </Link>
               <button type="submit" className="hrms-btn-primary">
+                <i className={isEdit ? 'ri-save-line' : 'ri-add-line'} aria-hidden />
                 {isEdit ? 'Save changes' : 'Create employee'}
               </button>
-            </div>
+            </CompactFormFooter>
           </form>
-        </div>
-      </article>
+        </CompactFormCard>
+      </CompactFormPage>
     </HrmsListShell>
   )
 }

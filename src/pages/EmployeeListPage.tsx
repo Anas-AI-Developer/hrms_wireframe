@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { DataListPanel } from '../components/hrms/DataListPanel'
@@ -6,10 +6,18 @@ import { HrmsListShell } from '../components/hrms/HrmsListShell'
 import { RowActionsMenu } from '../components/hrms/RowActionsMenu'
 import { SortableTh } from '../components/hrms/SortableTh'
 import { StatusBadge } from '../components/hrms/StatusBadge'
+import {
+  DASHBOARD_JOB_FILTER_PARAM,
+  DASHBOARD_JOB_FILTERS,
+  employmentLabelForEmployee,
+  jobFilterLabel,
+  matchesJobTypeFilter,
+  type DashboardJobFilter,
+} from '../data/dashboardEmployment'
 import { useWireframeData } from '../data/WireframeDataContext'
 import { useListControls } from '../hooks/useListControls'
 import type { Employee } from '../types/hrms'
-import { formatListDate } from '../utils/formatDate'
+import { formatEmployeeDate } from '../utils/formatDate'
 
 const ALL = 'all'
 
@@ -24,11 +32,22 @@ export function EmployeeListPage() {
   const { can, visibleEmployees } = useAuth()
   const { departments, designations, employees, getDepartment, getDesignation } = useWireframeData()
   const canWrite = can('page:employees:write')
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const initialDept = searchParams.get('dept') ?? ALL
+  const initialJob = searchParams.get(DASHBOARD_JOB_FILTER_PARAM) ?? ALL
 
   const [departmentFilter, setDepartmentFilter] = useState(initialDept)
   const [designationFilter, setDesignationFilter] = useState(ALL)
+  const [jobTypeFilter, setJobTypeFilter] = useState(initialJob)
+
+  useEffect(() => {
+    setDepartmentFilter(searchParams.get('dept') ?? ALL)
+    setJobTypeFilter(searchParams.get(DASHBOARD_JOB_FILTER_PARAM) ?? ALL)
+  }, [searchParams])
+
+  const jobFilterValid =
+    jobTypeFilter === ALL ||
+    DASHBOARD_JOB_FILTERS.some((f) => f.id === jobTypeFilter)
 
   const source = visibleEmployees()
 
@@ -37,7 +56,7 @@ export function EmployeeListPage() {
     return departments
       .filter((d) => ids.has(d.id))
       .sort((a, b) => a.name.localeCompare(b.name))
-  }, [source])
+  }, [source, departments])
 
   const designationOptions = useMemo(() => {
     const rows =
@@ -54,9 +73,16 @@ export function EmployeeListPage() {
     return source.filter((e) => {
       if (departmentFilter !== ALL && e.departmentId !== departmentFilter) return false
       if (designationFilter !== ALL && e.designationId !== designationFilter) return false
+      if (
+        jobFilterValid &&
+        jobTypeFilter !== ALL &&
+        !matchesJobTypeFilter(e, jobTypeFilter as DashboardJobFilter)
+      ) {
+        return false
+      }
       return true
     })
-  }, [source, departmentFilter, designationFilter])
+  }, [source, departmentFilter, designationFilter, jobTypeFilter, jobFilterValid])
 
   const list = useListControls(scopedSource, {
     searchFn: (e, q) => {
@@ -86,16 +112,35 @@ export function EmployeeListPage() {
       post: (a, b) => (a.sanctionedPost ?? '').localeCompare(b.sanctionedPost ?? ''),
       status: (a, b) => a.status.localeCompare(b.status),
       joinDate: (a, b) => a.joinDate.localeCompare(b.joinDate),
+      endDate: (a, b) => a.endDate.localeCompare(b.endDate),
     },
   })
 
-  const hasExtraFilters = departmentFilter !== ALL || designationFilter !== ALL
+  const hasExtraFilters =
+    departmentFilter !== ALL || designationFilter !== ALL || (jobFilterValid && jobTypeFilter !== ALL)
   const hasActiveFilters = list.hasActiveFilters || hasExtraFilters
+  const showJobTypeColumn = jobFilterValid && jobTypeFilter !== ALL
+
+  const listTitle =
+    showJobTypeColumn
+      ? `Employees — ${jobFilterLabel(jobTypeFilter as DashboardJobFilter)}`
+      : 'Employees list'
 
   function resetAllFilters() {
     list.resetFilters()
     setDepartmentFilter(ALL)
     setDesignationFilter(ALL)
+    setJobTypeFilter(ALL)
+    setSearchParams({})
+  }
+
+  function onJobTypeFilterChange(value: string) {
+    setJobTypeFilter(value)
+    list.setPage(1)
+    const next = new URLSearchParams(searchParams)
+    if (value === ALL) next.delete(DASHBOARD_JOB_FILTER_PARAM)
+    else next.set(DASHBOARD_JOB_FILTER_PARAM, value)
+    setSearchParams(next)
   }
 
   function onDepartmentFilterChange(value: string) {
@@ -116,7 +161,7 @@ export function EmployeeListPage() {
       }
     >
       <DataListPanel
-        title="Employees list"
+        title={listTitle}
         search={list.search}
         onSearchChange={list.setSearch}
         searchPlaceholder="Search by name, code, centre, post, or designation..."
@@ -157,6 +202,20 @@ export function EmployeeListPage() {
                 </option>
               ))}
             </select>
+            <select
+              id="hrms-job-type-filter"
+              className="hrms-ref-select"
+              value={jobTypeFilter}
+              onChange={(e) => onJobTypeFilterChange(e.target.value)}
+              aria-label="Job type filter"
+            >
+              <option value={ALL}>All job types</option>
+              {DASHBOARD_JOB_FILTERS.map((j) => (
+                <option key={j.id} value={j.id}>
+                  {j.label}
+                </option>
+              ))}
+            </select>
           </>
         }
         hasActiveFilters={hasActiveFilters}
@@ -178,20 +237,29 @@ export function EmployeeListPage() {
                 <SortableTh label="Name" column="name" sortColumn={list.sortColumn} sortDir={list.sortDir} onSort={list.toggleSort} />
                 <SortableTh label="Centre" column="centre" sortColumn={list.sortColumn} sortDir={list.sortDir} onSort={list.toggleSort} />
                 <SortableTh label="Post" column="post" sortColumn={list.sortColumn} sortDir={list.sortDir} onSort={list.toggleSort} />
+                {showJobTypeColumn ? <th>Job type</th> : null}
                 <SortableTh label="Status" column="status" sortColumn={list.sortColumn} sortDir={list.sortDir} onSort={list.toggleSort} />
                 <SortableTh label="Joined" column="joinDate" sortColumn={list.sortColumn} sortDir={list.sortDir} onSort={list.toggleSort} />
+                <SortableTh label="End date" column="endDate" sortColumn={list.sortColumn} sortDir={list.sortDir} onSort={list.toggleSort} />
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {list.pageRows.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="hrms-empty">
+                  <td colSpan={showJobTypeColumn ? 9 : 8} className="hrms-empty">
                     No employees found.
                   </td>
                 </tr>
               ) : (
-                list.pageRows.map((e) => <EmployeeRow key={e.id} employee={e} canWrite={canWrite} />)
+                list.pageRows.map((e) => (
+                  <EmployeeRow
+                    key={e.id}
+                    employee={e}
+                    canWrite={canWrite}
+                    showJobType={showJobTypeColumn}
+                  />
+                ))
               )}
             </tbody>
           </table>
@@ -204,7 +272,15 @@ export function EmployeeListPage() {
   )
 }
 
-function EmployeeRow({ employee: e, canWrite }: { employee: Employee; canWrite: boolean }) {
+function EmployeeRow({
+  employee: e,
+  canWrite,
+  showJobType,
+}: {
+  employee: Employee
+  canWrite: boolean
+  showJobType: boolean
+}) {
   const { getDepartment, getDesignation } = useWireframeData()
   const dept = getDepartment(e.departmentId)
   const des = getDesignation(e.designationId)
@@ -220,11 +296,15 @@ function EmployeeRow({ employee: e, canWrite }: { employee: Employee; canWrite: 
       </td>
       <td>{dept?.name ?? '—'}</td>
       <td>{e.sanctionedPost ?? des?.title ?? '—'}</td>
+      {showJobType ? <td>{employmentLabelForEmployee(e)}</td> : null}
       <td>
         <StatusBadge status={e.status} />
       </td>
       <td className="text-sm" style={{ color: '#64748b' }}>
-        {e.joinDate !== '—' ? e.joinDate : formatListDate('')}
+        {formatEmployeeDate(e.joinDate)}
+      </td>
+      <td className="text-sm" style={{ color: '#64748b' }}>
+        {formatEmployeeDate(e.endDate)}
       </td>
       <td>
         <RowActionsMenu

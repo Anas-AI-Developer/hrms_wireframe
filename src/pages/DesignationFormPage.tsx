@@ -1,5 +1,17 @@
 import { type FormEvent, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import {
+  CompactFormAlert,
+  CompactFormCard,
+  CompactFormField,
+  CompactFormFooter,
+  CompactFormGrid,
+  CompactFormInputWrap,
+  CompactFormPage,
+  CompactFormRequired,
+  CompactFormSection,
+  CompactFormStatus,
+} from '../components/hrms/HrmsCompactForm'
 import { HrmsListShell } from '../components/hrms/HrmsListShell'
 import { useWireframeData } from '../data/WireframeDataContext'
 import type { RecordStatus } from '../types/hrms'
@@ -7,27 +19,27 @@ import type { RecordStatus } from '../types/hrms'
 export function DesignationFormPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { departments, getDesignation, addDesignation, updateDesignation } = useWireframeData()
+  const { getDesignation, addDesignation, updateDesignation } = useWireframeData()
   const existing = id ? getDesignation(id) : undefined
   const isEdit = Boolean(existing)
 
   const [title, setTitle] = useState(existing?.title ?? '')
   const [grade, setGrade] = useState(existing?.grade ?? '')
-  const [departmentId, setDepartmentId] = useState(
-    existing?.departmentId ?? departments[0]?.id ?? '',
-  )
   const [status, setStatus] = useState<RecordStatus>(existing?.status ?? 'active')
   const [error, setError] = useState<string | null>(null)
 
-  const activeDepartments = departments.filter((d) => d.status === 'active')
-
   function onSubmit(ev: FormEvent) {
     ev.preventDefault()
-    if (!title.trim() || !grade.trim() || !departmentId) {
-      setError('Title, grade, and centre are required.')
+    if (!title.trim() || !grade.trim()) {
+      setError('Title and grade are required.')
       return
     }
-    const input = { title, grade, departmentId, status }
+    const input = {
+      title,
+      grade,
+      departmentId: existing?.departmentId ?? '',
+      status,
+    }
     if (isEdit && id) {
       updateDesignation(id, input)
       navigate('/designations')
@@ -37,65 +49,87 @@ export function DesignationFormPage() {
     navigate('/designations')
   }
 
+  const heading = isEdit ? 'Edit designation' : 'Create designation'
+  const sub = isEdit
+    ? 'Update the post title, pay scale, or availability for this designation.'
+    : 'Add a post title and BPS grade. Designations are organization-wide and can be assigned to employees.'
+
   return (
     <HrmsListShell
       current={isEdit ? 'Edit designation' : 'New designation'}
       dashboardHref="/designations"
     >
-      <article className="hrms-ref-panel" style={{ maxWidth: '40rem' }}>
-        <header className="hrms-ref-panel-head">
-          <h2 className="hrms-ref-panel-title">{isEdit ? 'Edit designation' : 'Create designation'}</h2>
-        </header>
-        <div className="hrms-ref-panel-body">
-          <form className="hrms-ref-form-grid" onSubmit={onSubmit}>
-            {error ? <p className="hrms-ref-form-alert hrms-ref-form-alert--warn">{error}</p> : null}
-            <label className="hrms-ref-field hrms-ref-field--full">
-              <span className="hrms-ref-field-label">
-                Title <span className="hrms-ref-required">*</span>
-              </span>
-              <input value={title} onChange={(e) => setTitle(e.target.value)} required />
-            </label>
-            <label className="hrms-ref-field">
-              <span className="hrms-ref-field-label">
-                Grade / BPS <span className="hrms-ref-required">*</span>
-              </span>
-              <input
-                value={grade}
-                onChange={(e) => setGrade(e.target.value)}
-                placeholder="BPS 17"
-                required
-              />
-            </label>
-            <label className="hrms-ref-field">
-              <span className="hrms-ref-field-label">
-                Centre <span className="hrms-ref-required">*</span>
-              </span>
-              <select value={departmentId} onChange={(e) => setDepartmentId(e.target.value)} required>
-                {activeDepartments.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="hrms-ref-field">
-              <span className="hrms-ref-field-label">Status</span>
-              <select value={status} onChange={(e) => setStatus(e.target.value as RecordStatus)}>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </label>
-            <div className="hrms-ref-form-footer hrms-ref-field--full">
+      <CompactFormPage>
+        <CompactFormCard icon="ri-briefcase-4-line" title={heading} description={sub}>
+          <form onSubmit={onSubmit}>
+            {error ? <CompactFormAlert>{error}</CompactFormAlert> : null}
+            <CompactFormSection legend="Designation details">
+              <CompactFormGrid>
+                <CompactFormField
+                  full
+                  label={
+                    <>
+                      Title <CompactFormRequired />
+                    </>
+                  }
+                  hint="Official post name as used on orders and payroll."
+                >
+                  <CompactFormInputWrap icon="ri-text">
+                    <input
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder="e.g. Deputy Director"
+                      required
+                      autoFocus
+                    />
+                  </CompactFormInputWrap>
+                </CompactFormField>
+                <CompactFormGrid split>
+                  <CompactFormField
+                    label={
+                      <>
+                        Grade / BPS <CompactFormRequired />
+                      </>
+                    }
+                  >
+                    <CompactFormInputWrap icon="ri-bar-chart-horizontal-line">
+                      <input
+                        value={grade}
+                        onChange={(e) => setGrade(e.target.value)}
+                        placeholder="BPS 17"
+                        required
+                      />
+                    </CompactFormInputWrap>
+                  </CompactFormField>
+                  <CompactFormField
+                    label="Status"
+                    hint="Inactive posts are hidden from new assignments."
+                  >
+                    <CompactFormStatus
+                      name="designation-status"
+                      value={status}
+                      onChange={setStatus}
+                      options={[
+                        { value: 'active', label: 'Active' },
+                        { value: 'inactive', label: 'Inactive' },
+                      ]}
+                    />
+                  </CompactFormField>
+                </CompactFormGrid>
+              </CompactFormGrid>
+            </CompactFormSection>
+            <CompactFormFooter>
               <Link to="/designations" className="hrms-ref-btn-secondary">
                 Cancel
               </Link>
               <button type="submit" className="hrms-btn-primary">
+                <i className={isEdit ? 'ri-save-line' : 'ri-add-line'} aria-hidden />
                 {isEdit ? 'Save changes' : 'Create designation'}
               </button>
-            </div>
+            </CompactFormFooter>
           </form>
-        </div>
-      </article>
+        </CompactFormCard>
+      </CompactFormPage>
     </HrmsListShell>
   )
 }

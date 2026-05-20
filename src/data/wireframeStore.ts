@@ -196,6 +196,7 @@ export type EmployeeInput = {
   employmentType: EmploymentType
   status: EmployeeStatus
   joinDate: string
+  endDate?: string
   sanctionedPost?: string
   workingAs?: string
 }
@@ -220,6 +221,7 @@ export function addEmployee(input: EmployeeInput): Employee {
     employmentType: input.employmentType,
     status: input.status,
     joinDate: input.joinDate || '—',
+    endDate: input.endDate?.trim() || '—',
     location: dept?.name ?? '—',
     masterSerial: maxSerial,
     section: 'General',
@@ -258,6 +260,7 @@ export function updateEmployee(id: string, input: EmployeeInput): Employee | und
       employmentType: input.employmentType,
       status: input.status,
       joinDate: input.joinDate || e.joinDate,
+      endDate: input.endDate !== undefined ? input.endDate.trim() || '—' : e.endDate,
       location: dept?.name ?? e.location,
       sanctionedPost: post ?? e.sanctionedPost,
       workingAs: input.workingAs?.trim() || post || e.workingAs,

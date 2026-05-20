@@ -1,10 +1,15 @@
 import { Link, Navigate } from 'react-router-dom'
+import { useMemo } from 'react'
 import { useAuth } from '../auth/AuthContext'
 import { userRoleLabel } from '../auth/roleLabels'
 import { DashboardCharts } from '../components/dashboard/DashboardCharts'
+import { DashboardContractsSection } from '../components/dashboard/DashboardContractsSection'
+import { DashboardJobTypesSection } from '../components/dashboard/DashboardJobTypesSection'
 import { DashboardKpiCard } from '../components/dashboard/DashboardKpiCard'
+import { EmployeeDataCard } from '../components/dashboard/EmployeeDataCard'
 import { PageBreadcrumb } from '../components/hrms/PageBreadcrumb'
 import { StatusBadge } from '../components/hrms/StatusBadge'
+import { isFilledEmployee } from '../data/dashboardEmployment'
 import { useWireframeData } from '../data/WireframeDataContext'
 import { portalForUser } from '../portals/portalConfig'
 import { homePathForRole } from '../portals/homePath'
@@ -21,7 +26,7 @@ function todayLabel(): string {
 
 export function DashboardPage() {
   const { can, visibleEmployees, user } = useAuth()
-  const { departments, employees } = useWireframeData()
+  const { departments, getDepartment } = useWireframeData()
 
   if (!user) return null
   if (user.role === 'employee') {
@@ -33,10 +38,15 @@ export function DashboardPage() {
   const canPayroll = can('payroll.view')
   const canReports = can('page:reports:attendance')
   const scoped = visibleEmployees()
+  const filled = useMemo(() => scoped.filter(isFilledEmployee), [scoped])
   const active = scoped.filter((e) => e.status === 'active').length
   const onLeave = scoped.filter((e) => e.status === 'on_leave').length
   const inactive = scoped.filter((e) => e.status === 'inactive').length
-  const fillRate = scoped.length > 0 ? Math.round((active / scoped.length) * 100) : 0
+
+  const centreName = useMemo(
+    () => (departmentId: string) => getDepartment(departmentId)?.name ?? '—',
+    [getDepartment],
+  )
 
   return (
     <div className="hrms-ref-page hrms-dash-page">
@@ -50,7 +60,7 @@ export function DashboardPage() {
             <h1 className="hrms-dash-welcome__title">Dashboard</h1>
             <p className="hrms-dash-welcome__lead">
               Welcome back, <strong>{user.displayName}</strong> —{' '}
-              {userRoleLabel(user.role, user.designation)}. Workforce overview and analytics for your
+              {userRoleLabel(user.role, user.designation)}. Employee overview and analytics for your
               scope.
             </p>
           </div>
@@ -61,58 +71,49 @@ export function DashboardPage() {
       </header>
 
       <div className="hrms-dash-stack">
-        <section className="hrms-kpi-grid" aria-label="Key metrics">
-          <DashboardKpiCard
-            static
-            label="Workforce (your scope)"
-            value={scoped.length}
-            subtext={`${departments.length} centres in sample data`}
-            icon={<i className="ri-team-line" />}
-            tone="primary"
-            footnote={
-              <span>
-                <span className="hrms-trend-up">{fillRate}% active</span>
-                <span className="hrms-trend-muted"> · in scope (wireframe)</span>
-              </span>
-            }
-          />
-          <DashboardKpiCard
-            static
-            label="Active staff"
-            value={active}
-            subtext="Filled posts in scope"
-            icon={<i className="ri-user-follow-line" />}
-            tone="success"
-            footnote={<span className="hrms-trend-muted">Status: active</span>}
-          />
-          <DashboardKpiCard
-            static
-            label="On leave"
-            value={onLeave}
-            subtext="Approved / current leave"
-            icon={<i className="ri-calendar-check-line" />}
-            tone="warning"
-            footnote={
-              can('page:leave') ? (
-                <Link to="/leave" className="hrms-kpi-card__link" style={{ marginTop: 0 }}>
-                  Leave requests →
-                </Link>
-              ) : (
-                <span className="hrms-trend-muted">Leave module</span>
-              )
-            }
-          />
-          <DashboardKpiCard
-            static
-            label={canPayroll ? 'Payroll sample' : 'Organization'}
-            value={canPayroll ? employees.length : departments.length}
-            subtext={
-              canPayroll ? 'Roster rows for registers' : `${inactive} inactive in scope`
-            }
-            icon={<i className={canPayroll ? 'ri-money-dollar-circle-line' : 'ri-building-4-line'} />}
-            tone="info"
-          />
+        <section className="hrms-dash-top" aria-label="Key metrics">
+          <EmployeeDataCard employees={scoped} canViewList={canEmployees} />
+          <div className="hrms-dash-top__kpis">
+            <DashboardKpiCard
+              static
+              compact
+              label="Active staff"
+              value={active}
+              subtext="In scope"
+              icon={<i className="ri-user-follow-line" />}
+              tone="success"
+            />
+            <DashboardKpiCard
+              static
+              compact
+              label="On leave"
+              value={onLeave}
+              subtext="Current"
+              icon={<i className="ri-calendar-check-line" />}
+              tone="warning"
+              footnote={
+                can('page:leave') ? (
+                  <Link to="/leave" className="hrms-kpi-card__link">
+                    Leave →
+                  </Link>
+                ) : undefined
+              }
+            />
+            <DashboardKpiCard
+              static
+              compact
+              label={canPayroll ? 'Payroll' : 'Centres'}
+              value={canPayroll ? filled.length : departments.length}
+              subtext={canPayroll ? 'Roster rows' : `${inactive} inactive`}
+              icon={<i className={canPayroll ? 'ri-money-dollar-circle-line' : 'ri-building-4-line'} />}
+              tone="info"
+            />
+          </div>
         </section>
+
+        <DashboardJobTypesSection employees={scoped} canViewList={canEmployees} />
+
+        <DashboardContractsSection employees={scoped} centreName={centreName} />
 
         <DashboardCharts
           scoped={scoped}

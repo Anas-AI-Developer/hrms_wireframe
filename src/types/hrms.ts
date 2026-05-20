@@ -61,6 +61,8 @@ export type Employee = {
   employmentType: EmploymentType
   status: EmployeeStatus
   joinDate: string
+  /** Contract / separation end; "—" when open-ended or not applicable. */
+  endDate: string
   location: string
   masterSerial?: number
   section?: string

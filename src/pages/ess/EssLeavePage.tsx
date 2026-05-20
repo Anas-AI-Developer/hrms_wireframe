@@ -1,4 +1,12 @@
 import { useMemo, useState, type FormEvent } from 'react'
+import {
+  CompactFormCallout,
+  CompactFormField,
+  CompactFormGrid,
+  CompactFormInputWrap,
+  CompactFormModal,
+  CompactFormRequired,
+} from '../../components/hrms/HrmsCompactForm'
 import { HrmsModal } from '../../components/hrms/HrmsModal'
 import { LeaveStatusBadge } from '../../components/hrms/LeaveStatusBadge'
 import { useEssSession } from '../../ess/EssSessionContext'
@@ -167,68 +175,93 @@ export function EssLeavePage() {
           </>
         }
       >
-        <form id="ess-leave-request-form" className="hrms-modal-form" onSubmit={submit}>
-          <div className="hrms-modal-form__field">
-            <label htmlFor="ess-leave-type">Leave type</label>
-            <select
-              id="ess-leave-type"
-              value={draftType}
-              onChange={(ev) => setDraftType(ev.target.value as LeaveTypeId)}
+        <CompactFormModal id="ess-leave-request-form" onSubmit={submit}>
+          <CompactFormField htmlFor="ess-leave-type" label="Leave type">
+            <CompactFormInputWrap icon="ri-calendar-event-line">
+              <select
+                id="ess-leave-type"
+                value={draftType}
+                onChange={(ev) => setDraftType(ev.target.value as LeaveTypeId)}
+              >
+                {(Object.keys(LEAVE_TYPE_LABELS) as LeaveTypeId[]).map((t) => (
+                  <option key={t} value={t}>
+                    {LEAVE_TYPE_LABELS[t]}
+                    {leaveBalance ? ` · ${leaveBalance[t]} days left` : ''}
+                  </option>
+                ))}
+              </select>
+            </CompactFormInputWrap>
+          </CompactFormField>
+          <CompactFormGrid split>
+            <CompactFormField
+              htmlFor="ess-leave-from"
+              label={
+                <>
+                  From <CompactFormRequired />
+                </>
+              }
             >
-              {(Object.keys(LEAVE_TYPE_LABELS) as LeaveTypeId[]).map((t) => (
-                <option key={t} value={t}>
-                  {LEAVE_TYPE_LABELS[t]}
-                  {leaveBalance ? ` · ${leaveBalance[t]} days left` : ''}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="hrms-modal-form__row">
-            <div className="hrms-modal-form__field">
-              <label htmlFor="ess-leave-from">From</label>
-              <input
-                id="ess-leave-from"
-                type="date"
-                value={fromDate}
-                min={WIREFRAME_TODAY}
-                onChange={(e) => {
-                  setFromDate(e.target.value)
-                  if (e.target.value > toDate) setToDate(e.target.value)
-                }}
+              <CompactFormInputWrap icon="ri-calendar-line">
+                <input
+                  id="ess-leave-from"
+                  type="date"
+                  value={fromDate}
+                  min={WIREFRAME_TODAY}
+                  onChange={(e) => {
+                    setFromDate(e.target.value)
+                    if (e.target.value > toDate) setToDate(e.target.value)
+                  }}
+                  required
+                />
+              </CompactFormInputWrap>
+            </CompactFormField>
+            <CompactFormField
+              htmlFor="ess-leave-to"
+              label={
+                <>
+                  To <CompactFormRequired />
+                </>
+              }
+            >
+              <CompactFormInputWrap icon="ri-calendar-line">
+                <input
+                  id="ess-leave-to"
+                  type="date"
+                  value={toDate}
+                  min={fromDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                  required
+                />
+              </CompactFormInputWrap>
+            </CompactFormField>
+          </CompactFormGrid>
+          <CompactFormCallout>
+            <i className="ri-calendar-2-line" aria-hidden /> {draftDays} day
+            {draftDays === 1 ? '' : 's'} requested
+          </CompactFormCallout>
+          <CompactFormField
+            htmlFor="ess-leave-reason"
+            label={
+              <>
+                Reason <CompactFormRequired />
+              </>
+            }
+          >
+            <CompactFormInputWrap icon="ri-chat-3-line">
+              <textarea
+                id="ess-leave-reason"
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="Brief reason for your manager…"
                 required
               />
-            </div>
-            <div className="hrms-modal-form__field">
-              <label htmlFor="ess-leave-to">To</label>
-              <input
-                id="ess-leave-to"
-                type="date"
-                value={toDate}
-                min={fromDate}
-                onChange={(e) => setToDate(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-          <p className="hrms-modal-form__days" aria-live="polite">
-            <i className="ri-calendar-2-line" aria-hidden />
-            {draftDays} day{draftDays === 1 ? '' : 's'} requested
-          </p>
-          <div className="hrms-modal-form__field">
-            <label htmlFor="ess-leave-reason">Reason</label>
-            <textarea
-              id="ess-leave-reason"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder="Brief reason for your manager…"
-              required
-            />
-          </div>
-          <p className="hrms-modal-form__hint">
+            </CompactFormInputWrap>
+          </CompactFormField>
+          <p className="hrms-compact-form-field__hint" style={{ margin: 0 }}>
             Requests are routed to your line manager, then HR. You will see status updates in the table
             below.
           </p>
-        </form>
+        </CompactFormModal>
       </HrmsModal>
     </div>
   )

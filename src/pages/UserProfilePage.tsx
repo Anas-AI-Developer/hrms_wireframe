@@ -1,15 +1,19 @@
-import {
-  type FormEvent,
-  type ReactNode,
-  type Ref,
-  useEffect,
-  useRef,
-  useState,
-} from 'react'
+import { type FormEvent, type ReactNode, type Ref, useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import type { ProfileSection } from '../layouts/SidebarUserMenu'
 import { useAuth } from '../auth/AuthContext'
 import { userRoleLabel } from '../auth/roleLabels'
+import {
+  CompactFormAlert,
+  CompactFormCard,
+  CompactFormField,
+  CompactFormFooter,
+  CompactFormGrid,
+  CompactFormInputWrap,
+  CompactFormPage,
+  CompactFormRequired,
+  CompactFormSection,
+} from '../components/hrms/HrmsCompactForm'
 import { getEmployee } from '../data/mock'
 import './pages.css'
 
@@ -22,26 +26,6 @@ function parseSection(raw: string | null): ProfileSection | null {
   return null
 }
 
-type RefFieldProps = {
-  label: string
-  htmlFor: string
-  required?: boolean
-  half?: boolean
-  children: ReactNode
-}
-
-function RefField({ label, htmlFor, required, half, children }: RefFieldProps) {
-  return (
-    <label className={`hrms-ref-field${half ? ' hrms-ref-field--half' : ''}`} htmlFor={htmlFor}>
-      <span className="hrms-ref-field-label">
-        {label}
-        {required ? <span className="hrms-ref-required"> *</span> : null}
-      </span>
-      {children}
-    </label>
-  )
-}
-
 type ProfilePanelProps = {
   id: string
   title: string
@@ -51,7 +35,7 @@ type ProfilePanelProps = {
   children: ReactNode
 }
 
-function ProfilePanel({ id, title, description, highlight, panelRef, children }: ProfilePanelProps) {
+function ProfileOverviewPanel({ id, title, highlight, panelRef, children }: ProfilePanelProps) {
   return (
     <section
       ref={panelRef}
@@ -59,10 +43,7 @@ function ProfilePanel({ id, title, description, highlight, panelRef, children }:
       className={`hrms-ref-panel${highlight ? ' hrms-ref-panel--highlight' : ''}`}
     >
       <header className="hrms-ref-panel-head">
-        <div>
-          <h2 className="hrms-ref-panel-title">{title}</h2>
-          {description ? <p className="hrms-ref-panel-desc">{description}</p> : null}
-        </div>
+        <h2 className="hrms-ref-panel-title">{title}</h2>
       </header>
       <div className="hrms-ref-panel-body">{children}</div>
     </section>
@@ -167,7 +148,7 @@ export function UserProfilePage() {
       </div>
 
       <div className="hrms-profile-layout">
-        <ProfilePanel id="account-overview" title="Account overview">
+        <ProfileOverviewPanel id="account-overview" title="Account overview">
           <dl className="hrms-profile-meta-grid">
             <div className="hrms-profile-meta-item">
               <dt>Username</dt>
@@ -206,125 +187,188 @@ export function UserProfilePage() {
               </>
             ) : null}
           </dl>
-        </ProfilePanel>
+        </ProfileOverviewPanel>
 
         {showProfileForm ? (
-          <ProfilePanel
+          <section
+            ref={profileSectionRef}
             id="profile-details"
-            title="Profile details"
-            description="How your name and contact details appear in HRMS."
-            highlight={activeSection === 'details'}
-            panelRef={profileSectionRef}
+            className={activeSection === 'details' ? 'hrms-compact-form-page--highlight-wrap' : undefined}
           >
-            <form className="hrms-ref-form-grid" onSubmit={onProfileSubmit}>
-              <RefField label="Display name" htmlFor="profile-displayName" required>
-                <input
-                  id="profile-displayName"
-                  name="displayName"
-                  value={displayName}
-                  onChange={(ev) => setDisplayName(ev.target.value)}
-                  autoComplete="name"
-                  required
-                />
-              </RefField>
-              <RefField label="Email" htmlFor="profile-email" required half>
-                <input
-                  id="profile-email"
-                  type="email"
-                  name="email"
-                  value={email}
-                  onChange={(ev) => setEmail(ev.target.value)}
-                  autoComplete="email"
-                  required
-                />
-              </RefField>
-              <RefField label="Phone" htmlFor="profile-phone" half>
-                <input
-                  id="profile-phone"
-                  type="tel"
-                  name="phone"
-                  value={phone}
-                  onChange={(ev) => setPhone(ev.target.value)}
-                  autoComplete="tel"
-                  placeholder="Optional"
-                />
-              </RefField>
-              {profileError ? (
-                <p className="hrms-ref-form-alert hrms-ref-form-alert--warn" role="alert">
-                  {profileError}
-                </p>
-              ) : null}
-              {profileMessage ? (
-                <p className="hrms-ref-form-alert hrms-ref-form-alert--ok">{profileMessage}</p>
-              ) : null}
-              <div className="hrms-ref-form-footer">
-                <button type="submit" className="hrms-btn-primary">
-                  Save profile
-                </button>
-              </div>
-            </form>
-          </ProfilePanel>
+            <CompactFormPage>
+              <CompactFormCard
+                icon="ri-user-settings-line"
+                title="Profile details"
+                description="How your name and contact details appear in HRMS."
+              >
+                <form onSubmit={onProfileSubmit}>
+                  {profileError ? <CompactFormAlert>{profileError}</CompactFormAlert> : null}
+                  {profileMessage ? (
+                    <CompactFormAlert variant="ok">{profileMessage}</CompactFormAlert>
+                  ) : null}
+                  <CompactFormSection legend="Contact">
+                    <CompactFormGrid>
+                      <CompactFormField
+                        full
+                        htmlFor="profile-displayName"
+                        label={
+                          <>
+                            Display name <CompactFormRequired />
+                          </>
+                        }
+                      >
+                        <CompactFormInputWrap icon="ri-user-line">
+                          <input
+                            id="profile-displayName"
+                            name="displayName"
+                            value={displayName}
+                            onChange={(ev) => setDisplayName(ev.target.value)}
+                            autoComplete="name"
+                            required
+                          />
+                        </CompactFormInputWrap>
+                      </CompactFormField>
+                      <CompactFormGrid split>
+                        <CompactFormField
+                          htmlFor="profile-email"
+                          label={
+                            <>
+                              Email <CompactFormRequired />
+                            </>
+                          }
+                        >
+                          <CompactFormInputWrap icon="ri-mail-line">
+                            <input
+                              id="profile-email"
+                              type="email"
+                              name="email"
+                              value={email}
+                              onChange={(ev) => setEmail(ev.target.value)}
+                              autoComplete="email"
+                              required
+                            />
+                          </CompactFormInputWrap>
+                        </CompactFormField>
+                        <CompactFormField htmlFor="profile-phone" label="Phone">
+                          <CompactFormInputWrap icon="ri-phone-line">
+                            <input
+                              id="profile-phone"
+                              type="tel"
+                              name="phone"
+                              value={phone}
+                              onChange={(ev) => setPhone(ev.target.value)}
+                              autoComplete="tel"
+                              placeholder="Optional"
+                            />
+                          </CompactFormInputWrap>
+                        </CompactFormField>
+                      </CompactFormGrid>
+                    </CompactFormGrid>
+                  </CompactFormSection>
+                  <CompactFormFooter>
+                    <button type="submit" className="hrms-btn-primary">
+                      <i className="ri-save-line" aria-hidden />
+                      Save profile
+                    </button>
+                  </CompactFormFooter>
+                </form>
+              </CompactFormCard>
+            </CompactFormPage>
+          </section>
         ) : null}
 
         {showPasswordForm ? (
-          <ProfilePanel
-            id="change-password"
-            title="Change password"
-            description="Use a strong password you do not use elsewhere."
-            highlight={activeSection === 'password'}
-            panelRef={passwordSectionRef}
-          >
-            <form className="hrms-ref-form-grid" onSubmit={onPasswordSubmit}>
-              <RefField label="Current password" htmlFor="password-current" required>
-                <input
-                  id="password-current"
-                  type="password"
-                  name="currentPassword"
-                  value={currentPassword}
-                  onChange={(ev) => setCurrentPassword(ev.target.value)}
-                  autoComplete="current-password"
-                  required
-                />
-              </RefField>
-              <RefField label="New password" htmlFor="password-new" required half>
-                <input
-                  id="password-new"
-                  type="password"
-                  name="newPassword"
-                  value={newPassword}
-                  onChange={(ev) => setNewPassword(ev.target.value)}
-                  autoComplete="new-password"
-                  minLength={8}
-                  required
-                />
-              </RefField>
-              <RefField label="Confirm new password" htmlFor="password-confirm" required half>
-                <input
-                  id="password-confirm"
-                  type="password"
-                  name="confirmPassword"
-                  value={confirmPassword}
-                  onChange={(ev) => setConfirmPassword(ev.target.value)}
-                  autoComplete="new-password"
-                  minLength={8}
-                  required
-                />
-              </RefField>
-              {passwordError ? (
-                <p className="hrms-ref-form-alert hrms-ref-form-alert--warn" role="alert">
-                  {passwordError}
-                </p>
-              ) : null}
-              {passwordMessage ? (
-                <p className="hrms-ref-form-alert hrms-ref-form-alert--ok">{passwordMessage}</p>
-              ) : null}
-              <div className="hrms-ref-form-footer">
-                <button type="submit" className="hrms-btn-primary">
-                  Update password
-                </button>
-              </div>
-            </form>
-          </ProfilePanel>
+          <section ref={passwordSectionRef} id="change-password">
+            <CompactFormPage>
+              <CompactFormCard
+                icon="ri-lock-password-line"
+                title="Change password"
+                description="Use a strong password you do not use elsewhere."
+              >
+                <form onSubmit={onPasswordSubmit}>
+                  {passwordError ? <CompactFormAlert>{passwordError}</CompactFormAlert> : null}
+                  {passwordMessage ? (
+                    <CompactFormAlert variant="ok">{passwordMessage}</CompactFormAlert>
+                  ) : null}
+                  <CompactFormSection legend="Credentials">
+                    <CompactFormGrid>
+                      <CompactFormField
+                        full
+                        htmlFor="password-current"
+                        label={
+                          <>
+                            Current password <CompactFormRequired />
+                          </>
+                        }
+                      >
+                        <CompactFormInputWrap icon="ri-lock-line">
+                          <input
+                            id="password-current"
+                            type="password"
+                            name="currentPassword"
+                            value={currentPassword}
+                            onChange={(ev) => setCurrentPassword(ev.target.value)}
+                            autoComplete="current-password"
+                            required
+                          />
+                        </CompactFormInputWrap>
+                      </CompactFormField>
+                      <CompactFormGrid split>
+                        <CompactFormField
+                          htmlFor="password-new"
+                          label={
+                            <>
+                              New password <CompactFormRequired />
+                            </>
+                          }
+                        >
+                          <CompactFormInputWrap icon="ri-key-line">
+                            <input
+                              id="password-new"
+                              type="password"
+                              name="newPassword"
+                              value={newPassword}
+                              onChange={(ev) => setNewPassword(ev.target.value)}
+                              autoComplete="new-password"
+                              minLength={8}
+                              required
+                            />
+                          </CompactFormInputWrap>
+                        </CompactFormField>
+                        <CompactFormField
+                          htmlFor="password-confirm"
+                          label={
+                            <>
+                              Confirm new password <CompactFormRequired />
+                            </>
+                          }
+                        >
+                          <CompactFormInputWrap icon="ri-key-2-line">
+                            <input
+                              id="password-confirm"
+                              type="password"
+                              name="confirmPassword"
+                              value={confirmPassword}
+                              onChange={(ev) => setConfirmPassword(ev.target.value)}
+                              autoComplete="new-password"
+                              minLength={8}
+                              required
+                            />
+                          </CompactFormInputWrap>
+                        </CompactFormField>
+                      </CompactFormGrid>
+                    </CompactFormGrid>
+                  </CompactFormSection>
+                  <CompactFormFooter>
+                    <button type="submit" className="hrms-btn-primary">
+                      <i className="ri-shield-check-line" aria-hidden />
+                      Update password
+                    </button>
+                  </CompactFormFooter>
+                </form>
+              </CompactFormCard>
+            </CompactFormPage>
+          </section>
         ) : null}
       </div>
     </div>
