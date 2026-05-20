@@ -176,6 +176,16 @@
   outline: none;
 }
 
+a.wf-user-menu-option {
+  text-decoration: none;
+}
+
+.wf-user-menu-option--active {
+  background: rgba(75, 98, 190, 0.12);
+  color: #2f4798;
+  font-weight: 600;
+}
+
 .wf-user-menu-option--danger {
   color: #b42318;
 }

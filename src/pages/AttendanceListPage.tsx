@@ -54,7 +54,6 @@ export function AttendanceListPage() {
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [todayOnly, setTodayOnly] = useState(false)
-
   const dateFiltered = useMemo(() => {
     if (!todayOnly && !dateFrom && !dateTo) return scopedLogs
     const { from, to } = resolveDateBounds(dateFrom, dateTo, todayOnly)
@@ -375,7 +374,12 @@ function AttendanceRow({ log: l }: { log: AttendanceLog }) {
         {emp ? (
           <RowActionsMenu
             id={l.id}
-            actions={[{ label: 'View employee', href: `/employees/${emp.id}` }]}
+            actions={[
+              {
+                label: 'View attendance',
+                href: `/attendance/employee/${emp.id}?date=${encodeURIComponent(l.date)}`,
+              },
+            ]}
           />
         ) : (
           '—'

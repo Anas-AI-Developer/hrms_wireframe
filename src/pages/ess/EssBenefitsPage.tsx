@@ -1,11 +1,14 @@
 import { useAuth } from '../../auth/AuthContext'
-import { benefitPlans } from '../../data/benefitsMock'
+import { BENEFIT_TYPE_LABELS } from '../../data/benefitsData'
 import { getEssBenefits } from '../../data/essSeed'
+import { useWireframeData } from '../../data/WireframeDataContext'
 import '../pages.css'
 
 export function EssBenefitsPage() {
   const { actorEmployeeId } = useAuth()
+  const { benefitDefinitions } = useWireframeData()
   const mine = actorEmployeeId ? getEssBenefits(actorEmployeeId) : []
+  const catalog = benefitDefinitions.filter((p) => p.status === 'active')
 
   return (
     <div>
@@ -29,8 +32,10 @@ export function EssBenefitsPage() {
       <section className="wf-section">
         <h3 className="wf-h2" style={{ fontSize: '1rem' }}>Organization plans (reference)</h3>
         <ul className="wf-list">
-          {benefitPlans.filter((p) => p.status === 'active').map((p) => (
-            <li key={p.id}>{p.name} ({p.type}) — {p.employerContribution}</li>
+          {catalog.map((p) => (
+            <li key={p.id}>
+              {p.name} ({BENEFIT_TYPE_LABELS[p.type]}) — {p.employerContribution}
+            </li>
           ))}
         </ul>
       </section>

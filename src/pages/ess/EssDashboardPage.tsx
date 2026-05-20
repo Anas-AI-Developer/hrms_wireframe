@@ -30,7 +30,9 @@ export function EssDashboardPage() {
     return (
       <div className="hrms-dash-page">
         <p className="wf-note wf-note--warn">
-          No employee record linked. Try <strong>emp.deo</strong> / password <strong>11223344</strong>.
+          No employee record linked to this login. Use any demo employee account (e.g.{' '}
+          <strong>emp.chowkidar</strong> or <strong>emp.deo</strong>) with password{' '}
+          <strong>11223344</strong>, then refresh the page.
         </p>
       </div>
     )

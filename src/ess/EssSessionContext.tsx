@@ -21,6 +21,7 @@ import {
 import {
   addEmployeeRequest as persistEmployeeRequest,
   getEmployeeRequests,
+  subscribeEmployeeRequests,
   type EmployeeRequest,
   type NewEmployeeRequestInput,
 } from '../data/employeeRequestsStore'
@@ -119,10 +120,17 @@ export function EssSessionProvider({ children }: { children: ReactNode }) {
       setCatalog([...trainingCatalog])
       return
     }
-    setLeaveRequests(getEssLeaveRequests(employeeId))
-    setEmployeeRequests(getEmployeeRequests(employeeId))
-    setEnrollments(getEssTraining(employeeId))
-    setCatalog([...trainingCatalog])
+    function refresh() {
+      setLeaveRequests(getEssLeaveRequests(employeeId))
+      setEmployeeRequests(getEmployeeRequests(employeeId))
+      setEnrollments(getEssTraining(employeeId))
+      setCatalog([...trainingCatalog])
+    }
+    refresh()
+    const unsub = subscribeEmployeeRequests(refresh)
+    return () => {
+      unsub()
+    }
   }, [employeeId])
 
   const leaveBalance = employeeId ? getEssLeaveBalance(employeeId) : undefined

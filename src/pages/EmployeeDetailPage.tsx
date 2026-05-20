@@ -1,6 +1,9 @@
 import type { ReactNode } from 'react'
+import { useMemo } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import { BENEFIT_TYPE_LABELS } from '../data/benefitsData'
+import { useWireframeData } from '../data/WireframeDataContext'
 import { StatusBadge } from '../components/hrms/StatusBadge'
 import { RowActionsMenu } from '../components/hrms/RowActionsMenu'
 import { homePathForRole } from '../portals/homePath'
@@ -31,7 +34,16 @@ export function EmployeeDetailPage() {
   const { user, can, canViewEmployee } = useAuth()
   const canWrite = can('page:employees:write')
   const { id } = useParams<{ id: string }>()
+  const { benefitDefinitions, employeeBenefitEnrollments } = useWireframeData()
   const e = id ? getEmployee(id) : undefined
+
+  const enrollments = useMemo(
+    () =>
+      id
+        ? employeeBenefitEnrollments.filter((en) => en.employeeId === id && en.status === 'active')
+        : [],
+    [employeeBenefitEnrollments, id],
+  )
 
   if (!e) {
     return (
@@ -181,6 +193,47 @@ export function EmployeeDetailPage() {
                 <DetailField label="Tenure in NAVTTC">{e.tenureInNavttc ?? '—'}</DetailField>
                 <DetailField label="Domicile">{e.domicile ?? '—'}</DetailField>
               </dl>
+            </div>
+          </article>
+
+          <article className="hrms-ref-panel">
+            <header className="hrms-ref-panel-head">
+              <h2 className="hrms-ref-panel-title">Benefits ({enrollments.length})</h2>
+              <p className="hrms-ref-panel-desc">
+                Standard package by employment type plus any additional enrollments
+              </p>
+            </header>
+            <div className="hrms-ref-panel-body">
+              {enrollments.length === 0 ? (
+                <p className="hrms-list-footnote">No benefits assigned yet.</p>
+              ) : (
+                <ul className="hrms-emp-benefits__list">
+                  {enrollments.map((en) => {
+                    const def = benefitDefinitions.find((d) => d.id === en.benefitId)
+                    if (!def) return null
+                    return (
+                      <li key={en.id}>
+                        <span
+                          className={`hrms-benefit-chip hrms-benefit-chip--${en.source === 'default' ? 'standard' : 'extra'} is-on`}
+                        >
+                          <span className="hrms-benefit-chip__body">
+                            <span className="hrms-benefit-chip__name">{def.name}</span>
+                            <span className="hrms-benefit-chip__meta">
+                              {BENEFIT_TYPE_LABELS[def.type]} · {def.employerContribution}
+                              {en.source === 'additional' ? ' · Additional' : ' · Standard'}
+                            </span>
+                          </span>
+                        </span>
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
+              {can('page:benefits') ? (
+                <p className="hrms-list-footnote" style={{ marginTop: '0.75rem' }}>
+                  <Link to="/benefits">Manage benefit catalog & defaults</Link>
+                </p>
+              ) : null}
             </div>
           </article>
         </div>

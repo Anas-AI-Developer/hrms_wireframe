@@ -12,8 +12,17 @@ export type EmploymentType =
   | 'vacant_post'
   | 'unknown'
 
+/** NAVTTC office / regional location (parent of departments). */
+export type NavttcOffice = {
+  id: string
+  name: string
+  code: string
+  status: RecordStatus
+}
+
 export type Department = {
   id: string
+  officeId: string
   name: string
   code: string
   headName: string

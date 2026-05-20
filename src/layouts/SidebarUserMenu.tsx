@@ -1,7 +1,8 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { userRoleLabel } from '../auth/roleLabels'
+import { selfServiceNavForRole } from '../components/hrms/navConfig'
 import { IconLock, IconLogout, IconUserCircle } from '../components/hrms/icons'
 import type { AuthUser } from '../auth/types'
 
@@ -33,14 +34,51 @@ function MenuOption({ icon, label, onClick, variant = 'default' }: MenuOptionPro
   )
 }
 
+function MenuNavOption({
+  icon,
+  label,
+  to,
+  onNavigate,
+}: {
+  icon: ReactNode
+  label: string
+  to: string
+  onNavigate: () => void
+}) {
+  return (
+    <NavLink
+      to={to}
+      role="menuitem"
+      className={({ isActive }) =>
+        `wf-user-menu-option${isActive ? ' wf-user-menu-option--active' : ''}`
+      }
+      onClick={onNavigate}
+    >
+      {icon}
+      <span>{label}</span>
+    </NavLink>
+  )
+}
+
+function pathMatchesNav(current: string, to: string): boolean {
+  if (to === '/ess') return current === '/ess' || current === '/ess/'
+  return current === to || current.startsWith(`${to}/`)
+}
+
 export function SidebarUserMenu({ user, initials }: SidebarUserMenuProps) {
   const menuId = useId()
   const rootRef = useRef<HTMLDivElement>(null)
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
-  const { logout } = useAuth()
+  const { logout, can } = useAuth()
   const onProfilePage = location.pathname === '/profile'
+  const isEmployee = user.role === 'employee'
+  const selfServiceItems = isEmployee ? [] : selfServiceNavForRole(user.role, can)
+  const onSelfServicePage = selfServiceItems.some((item) =>
+    pathMatchesNav(location.pathname, item.to),
+  )
+  const showSelfServiceInMenu = !isEmployee && selfServiceItems.length > 0
 
   useEffect(() => {
     if (!open) return
@@ -63,6 +101,10 @@ export function SidebarUserMenu({ user, initials }: SidebarUserMenuProps) {
     navigate(`/profile?section=${section}`)
   }
 
+  function closeAndNavigate() {
+    setOpen(false)
+  }
+
   function onSignOut() {
     setOpen(false)
     logout()
@@ -73,7 +115,7 @@ export function SidebarUserMenu({ user, initials }: SidebarUserMenuProps) {
     <div className="wf-user-menu" ref={rootRef}>
       <button
         type="button"
-        className={`wf-user-chip wf-user-chip--trigger${open || onProfilePage ? ' is-open' : ''}`}
+        className={`wf-user-chip wf-user-chip--trigger${open || onProfilePage || onSelfServicePage ? ' is-open' : ''}`}
         aria-expanded={open}
         aria-haspopup="menu"
         aria-controls={menuId}
@@ -102,6 +144,23 @@ export function SidebarUserMenu({ user, initials }: SidebarUserMenuProps) {
             label="Change password"
             onClick={() => choose('password')}
           />
+
+          {showSelfServiceInMenu ? (
+            <>
+              <div className="wf-user-menu-divider" role="separator" />
+              <p className="wf-user-menu-panel__label">Self-service</p>
+              {selfServiceItems.map((item) => (
+                <MenuNavOption
+                  key={item.to}
+                  icon={item.icon}
+                  label={item.label}
+                  to={item.to}
+                  onNavigate={closeAndNavigate}
+                />
+              ))}
+            </>
+          ) : null}
+
           <div className="wf-user-menu-divider" role="separator" />
           <MenuOption icon={<IconLogout />} label="Sign out" onClick={onSignOut} variant="danger" />
         </div>

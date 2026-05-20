@@ -54,6 +54,21 @@
   color: #475569;
 }
 
+.ess-requests-status--approved {
+  background: rgba(34, 197, 94, 0.12);
+  color: #15803d;
+}
+
+.ess-requests-status--rejected {
+  background: rgba(239, 68, 68, 0.12);
+  color: #b91c1c;
+}
+
+.ess-requests-status--cancelled {
+  background: rgba(100, 116, 139, 0.15);
+  color: #475569;
+}
+
 .ess-requests-details-cell {
   max-width: 16rem;
   white-space: nowrap;

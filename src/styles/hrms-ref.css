@@ -214,6 +214,143 @@
   user-select: none;
 }
 
+/* Attendance history modal (HR list → View attendance) */
+.hrms-attendance-history {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.hrms-attendance-history__summary {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+@media (min-width: 520px) {
+  .hrms-attendance-history__summary {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.hrms-attendance-history__stat {
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.hrms-attendance-history__stat-label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  margin-bottom: 0.2rem;
+}
+
+.hrms-attendance-history__stat-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.hrms-attendance-history__filters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.hrms-attendance-history__filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.hrms-attendance-history__filter-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.hrms-attendance-history__presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.hrms-attendance-history__presets button {
+  padding: 0.35rem 0.65rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #475569;
+  cursor: pointer;
+}
+
+.hrms-attendance-history__presets button.is-active {
+  border-color: #2f4798;
+  background: #eef2ff;
+  color: #2f4798;
+}
+
+.hrms-attendance-history__filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.hrms-attendance-history__select-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0;
+  min-width: 9rem;
+}
+
+.hrms-attendance-history__search {
+  flex: 1;
+  min-width: 12rem;
+}
+
+.hrms-attendance-history__table {
+  max-height: 16rem;
+  overflow: auto;
+}
+
+.hrms-attendance-history__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.hrms-attendance-history__pager {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.hrms-attendance-history__profile-link {
+  font-size: 0.875rem;
+  color: #2f4798;
+  text-decoration: none;
+  margin-left: auto;
+}
+
+.hrms-attendance-history__profile-link:hover {
+  text-decoration: underline;
+}
+
 .hrms-ref-btn-today {
   display: inline-flex;
   align-items: center;

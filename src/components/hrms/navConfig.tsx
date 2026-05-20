@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
-import type { Permission } from '../../auth/types'
+import type { Permission, RoleId } from '../../auth/types'
+import { payslipPathForRole } from '../../portals/homePath'
 import {
   IconAttendance,
   IconBriefcase,
@@ -8,6 +9,9 @@ import {
   IconChart,
   IconCheckCircle,
   IconDashboard,
+  IconGift,
+  IconInbox,
+  IconReceipt,
   IconSettings,
   IconUsers,
 } from './icons'
@@ -64,15 +68,27 @@ export const HR_NAV_GROUPS: NavGroupDef[] = [
       },
       {
         to: '/attendance',
-        label: 'Attendance',
+        label: 'Attendance register',
         permission: 'page:attendance',
         icon: <IconAttendance />,
       },
       {
         to: '/leave',
-        label: 'Leave Management',
+        label: 'Leave management',
         permission: 'page:leave',
         icon: <IconCalendar />,
+      },
+      {
+        to: '/employee-requests',
+        label: 'Employee requests',
+        permission: 'page:ess_requests:manage',
+        icon: <IconBriefcase />,
+      },
+      {
+        to: '/benefits',
+        label: 'Benefits setup',
+        permission: 'page:benefits:manage',
+        icon: <IconGift />,
       },
       {
         to: '/jobs',
@@ -121,14 +137,8 @@ export const CONFIG_NAV_GROUP: NavGroupDef = {
   ],
 }
 
-export const ESS_NAV: NavItemDef[] = [
-  {
-    to: '/ess',
-    label: 'Dashboard',
-    permission: 'page:dashboard',
-    icon: <IconDashboard />,
-    end: true,
-  },
+/** Personal ESS links — sidebar for employees; account menu for HR / leadership. */
+export const SELF_SERVICE_NAV: NavItemDef[] = [
   {
     to: '/ess/leave',
     label: 'Leave',
@@ -139,7 +149,7 @@ export const ESS_NAV: NavItemDef[] = [
     to: '/ess/requests',
     label: 'Requests',
     permission: 'page:ess_requests',
-    icon: <IconBriefcase />,
+    icon: <IconInbox />,
   },
   {
     to: '/ess/attendance',
@@ -151,7 +161,7 @@ export const ESS_NAV: NavItemDef[] = [
     to: '/ess/payslip',
     label: 'Payslip',
     permission: 'page:payslip',
-    icon: <IconBriefcase />,
+    icon: <IconReceipt />,
   },
   {
     to: '/ess/performance',
@@ -171,4 +181,25 @@ export const ESS_NAV: NavItemDef[] = [
     permission: 'page:benefits',
     icon: <IconUsers />,
   },
+]
+
+export function selfServiceNavForRole(
+  role: RoleId,
+  can: (permission: Permission) => boolean,
+): NavItemDef[] {
+  return SELF_SERVICE_NAV.map((item) => ({
+    ...item,
+    to: item.label === 'Payslip' ? payslipPathForRole(role) : item.to,
+  })).filter((item) => can(item.permission))
+}
+
+export const ESS_NAV: NavItemDef[] = [
+  {
+    to: '/ess',
+    label: 'Dashboard',
+    permission: 'page:dashboard',
+    icon: <IconDashboard />,
+    end: true,
+  },
+  ...SELF_SERVICE_NAV,
 ]
