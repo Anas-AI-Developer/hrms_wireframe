@@ -140,6 +140,18 @@ export const CONFIG_NAV_GROUP: NavGroupDef = {
       permission: 'page:rbac',
       icon: <IconUsers />,
     },
+    {
+      to: '/organogram',
+      label: 'Organogram (PDF)',
+      permission: 'page:organogram',
+      icon: <IconChart />,
+    },
+    {
+      to: '/organogram/mapping',
+      label: 'Organogram mapping',
+      permission: 'page:organogram',
+      icon: <IconChart />,
+    },
   ],
 }
 

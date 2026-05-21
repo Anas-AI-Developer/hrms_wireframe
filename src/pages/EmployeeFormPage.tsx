@@ -1,5 +1,10 @@
-import { type FormEvent, useMemo, useState } from 'react'
-import { EmployeeBenefitsFields } from '../components/benefits/EmployeeBenefitsFields'
+import { type FormEvent, useEffect, useMemo, useState } from 'react'
+import { EmployeeOfficeFields } from '../components/employees/EmployeeOfficeFields'
+import {
+  EmployeeOrgPlacementFields,
+  placementFromEmployee,
+  validateOrgPlacement,
+} from '../components/employees/EmployeeOrgPlacementFields'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   CompactFormAlert,
@@ -11,36 +16,50 @@ import {
   CompactFormPage,
   CompactFormRequired,
   CompactFormSection,
-  CompactFormStatus,
 } from '../components/hrms/HrmsCompactForm'
 import { HrmsListShell } from '../components/hrms/HrmsListShell'
-import { EMPLOYMENT_TYPES_FILTERABLE, employmentTypeRequiresEndDate } from '../data/employmentTypes'
+import { EMPLOYMENT_TYPES_FILTERABLE } from '../data/employmentTypes'
+import {
+  APPOINTMENT_DURATION_PRESETS,
+  formatDurationMonths,
+  initialDurationMonthsValue,
+  isValidPresetDurationMonths,
+} from '../utils/serviceDuration'
 import { employmentTypeLabel } from '../data/employmentStats'
-import { getOfficeById, resolveDepartmentOfficeId } from '../data/navttcOffices'
+import {
+  DEFAULT_ORG_HEAD_ID,
+  legacyDepartmentIdForPlacement,
+} from '../data/navttcHqOrganogram'
+import {
+  NAVTTC_HEAD_OFFICE_ID,
+  officePlacementFromEmployee,
+  validateOfficePlacement,
+} from '../data/navttcOfficeMapping'
+import { getDepartmentsForOffice, resolveDepartmentOfficeId } from '../data/navttcOffices'
+import {
+  designationMatchesRoleLevel,
+  designationsMatchingRoleLevel,
+  formatRoleLevelLabel,
+  getRoleLevelById,
+  inferRoleLevelId,
+  NAVTTC_ROLE_LEVELS,
+} from '../data/navttcRoleLevels'
 import { useWireframeData } from '../data/WireframeDataContext'
-import type { EmployeeStatus, EmploymentType } from '../types/hrms'
+import type { EmploymentType } from '../types/hrms'
 
 export function EmployeeFormPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const {
-    offices,
     departments,
     designations,
     employees,
-    getDepartment,
     getEmployee,
     addEmployee,
     updateEmployee,
-    getDepartmentsForOffice,
-    benefitDefinitions,
-    employmentTypeBenefitDefaults,
-    getEmployeeBenefitIds,
   } = useWireframeData()
   const existing = id ? getEmployee(id) : undefined
   const isEdit = Boolean(existing)
-
-  const existingDept = existing ? getDepartment(existing.departmentId) : undefined
 
   const nextCode = useMemo(
     () => `EMP-${String(employees.length + 1).padStart(4, '0')}`,
@@ -50,103 +69,189 @@ export function EmployeeFormPage() {
   const [firstName, setFirstName] = useState(existing?.firstName ?? '')
   const [lastName, setLastName] = useState(existing?.lastName ?? '')
   const [email, setEmail] = useState(existing?.email ?? '')
+  const [phone, setPhone] = useState(existing?.phone && existing.phone !== '—' ? existing.phone : '')
+  const [cnic, setCnic] = useState(existing?.cnic ?? '')
+  const [dateOfBirth, setDateOfBirth] = useState(existing?.dateOfBirth ?? '')
   const [employeeNo, setEmployeeNo] = useState(existing?.employeeNo ?? nextCode)
+  const [officePlacement, setOfficePlacement] = useState(() =>
+    existing
+      ? officePlacementFromEmployee(existing, departments)
+      : { category: 'head_office' as const, officeId: NAVTTC_HEAD_OFFICE_ID },
+  )
+  const [regionalCentreId, setRegionalCentreId] = useState(() => {
+    if (!existing) return ''
+    const placement = officePlacementFromEmployee(existing, departments)
+    if (placement.category !== 'regional_office') return ''
+    const dept = departments.find((d) => d.id === existing.departmentId)
+    if (dept && resolveDepartmentOfficeId(dept) === placement.officeId) return existing.departmentId
+    return ''
+  })
+  const [orgPlacement, setOrgPlacement] = useState(() =>
+    existing?.orgWingId
+      ? placementFromEmployee(existing)
+      : {
+          orgHeadId: DEFAULT_ORG_HEAD_ID,
+          orgWingId: '',
+          orgSectionId: '',
+        },
+  )
+  const [designationId, setDesignationId] = useState(existing?.designationId ?? '')
+  const [roleLevelId, setRoleLevelId] = useState(() => {
+    if (!existing) return ''
+    const des = designations.find((d) => d.id === existing.designationId)
+    return inferRoleLevelId(existing, des?.title) ?? ''
+  })
   const [employmentType, setEmploymentType] = useState<EmploymentType>(
     existing?.employmentType ?? 'regular',
   )
-  const [officeId, setOfficeId] = useState(
-    existingDept ? resolveDepartmentOfficeId(existingDept) : '',
-  )
-  const [departmentId, setDepartmentId] = useState(existing?.departmentId ?? '')
-  const [designationId, setDesignationId] = useState(existing?.designationId ?? '')
-  const [managerId, setManagerId] = useState(existing?.managerId ?? '')
-  const [status, setStatus] = useState<EmployeeStatus>(existing?.status ?? 'active')
   const [joinDate, setJoinDate] = useState(
     existing?.joinDate && existing.joinDate !== '—' ? existing.joinDate : '',
   )
-  const [endDate, setEndDate] = useState(
-    existing?.endDate && existing.endDate !== '—' ? existing.endDate : '',
+  const [durationMonths, setDurationMonths] = useState(() =>
+    existing ? initialDurationMonthsValue(existing) : '',
   )
   const [error, setError] = useState<string | null>(null)
+  const [orgError, setOrgError] = useState<string | null>(null)
+  const [officeError, setOfficeError] = useState<string | null>(null)
 
-  const defaultBenefitIds = useMemo(
-    () => employmentTypeBenefitDefaults[employmentType] ?? [],
-    [employmentTypeBenefitDefaults, employmentType],
-  )
+  const isHeadOffice = officePlacement.category === 'head_office'
 
-  const [selectedBenefitIds, setSelectedBenefitIds] = useState<string[]>(() => {
-    if (existing?.id) return getEmployeeBenefitIds(existing.id)
-    return employmentTypeBenefitDefaults[existing?.employmentType ?? 'regular'] ?? []
-  })
+  const resolvedDurationMonths = useMemo(() => {
+    const n = Number.parseInt(durationMonths, 10)
+    return Number.isFinite(n) && n > 0 ? n : null
+  }, [durationMonths])
 
-  const showEndDate = employmentTypeRequiresEndDate(employmentType)
-  const selectedOffice = officeId ? getOfficeById(officeId) : undefined
-
-  const departmentOptions = useMemo(
-    () => getDepartmentsForOffice(officeId),
-    [officeId, getDepartmentsForOffice, departments],
-  )
-
-  const designationOptions = useMemo(
+  const regionalCentreOptions = useMemo(
     () =>
-      designations.filter(
-        (g) => g.status === 'active' && (!departmentId || g.departmentId === departmentId),
-      ),
-    [designations, departmentId],
+      isHeadOffice || !officePlacement.officeId
+        ? []
+        : getDepartmentsForOffice(officePlacement.officeId, departments),
+    [isHeadOffice, officePlacement.officeId, departments],
   )
 
-  const managerOptions = employees.filter(
-    (e) => e.status === 'active' && !/^vacant$/i.test(e.firstName) && e.id !== existing?.id,
-  )
+  const resolvedDepartmentId = useMemo(() => {
+    if (!isHeadOffice) return regionalCentreId
+    if (!orgPlacement.orgWingId || !orgPlacement.orgSectionId) return ''
+    return legacyDepartmentIdForPlacement({
+      orgHeadId: orgPlacement.orgHeadId,
+      orgWingId: orgPlacement.orgWingId,
+      orgSectionId: orgPlacement.orgSectionId,
+    })
+  }, [isHeadOffice, regionalCentreId, orgPlacement])
 
-  function onEmploymentTypeChange(type: EmploymentType) {
-    const prevDefaults = employmentTypeBenefitDefaults[employmentType] ?? []
-    const nextDefaults = employmentTypeBenefitDefaults[type] ?? []
-    const extras = selectedBenefitIds.filter((id) => !prevDefaults.includes(id))
-    setEmploymentType(type)
-    setSelectedBenefitIds([...new Set([...nextDefaults, ...extras])])
-    if (!employmentTypeRequiresEndDate(type)) {
-      setEndDate('')
+  const selectedRole = getRoleLevelById(roleLevelId)
+
+  const designationOptions = useMemo(() => {
+    if (!roleLevelId) return []
+    return designationsMatchingRoleLevel(roleLevelId, designations, {
+      departmentId: resolvedDepartmentId || undefined,
+      officeId: officePlacement.officeId,
+      departments,
+    })
+  }, [designations, resolvedDepartmentId, roleLevelId, officePlacement.officeId, departments])
+
+  useEffect(() => {
+    if (!designationId || !roleLevelId) return
+    const des = designations.find((d) => d.id === designationId)
+    if (!designationMatchesRoleLevel(des, roleLevelId)) {
+      setDesignationId('')
     }
-  }
+  }, [designationId, roleLevelId, designations])
 
-  function onOfficeChange(nextOfficeId: string) {
-    setOfficeId(nextOfficeId)
-    setDepartmentId('')
-    setDesignationId('')
+  function onOfficePlacementChange(
+    next: typeof officePlacement,
+  ) {
+    setOfficePlacement(next)
+    setOfficeError(null)
+    if (next.category === 'head_office') {
+      setRegionalCentreId('')
+    } else if (next.officeId !== officePlacement.officeId) {
+      setRegionalCentreId('')
+      setDesignationId('')
+    }
   }
 
   function onSubmit(ev: FormEvent) {
     ev.preventDefault()
+    setOrgError(null)
+    setOfficeError(null)
     if (!firstName.trim() || !lastName.trim() || !email.trim()) {
       setError('First name, last name, and email are required.')
       return
     }
-    if (!officeId) {
-      setError('Select a NAVTTC office.')
+    if (!phone.trim()) {
+      setError('Phone number is required.')
       return
     }
-    if (!departmentId) {
-      setError('Select a department for the chosen office.')
+    if (!cnic.trim()) {
+      setError('CNIC is required.')
       return
     }
-    if (showEndDate && !endDate.trim()) {
-      setError('End date is required for deputation, contract, DPL, and short-term appointments.')
+    if (!dateOfBirth) {
+      setError('Date of birth is required.')
       return
     }
+    const officeValidation = validateOfficePlacement(officePlacement)
+    if (officeValidation) {
+      setOfficeError(officeValidation)
+      setError(null)
+      return
+    }
+    if (isHeadOffice) {
+      const orgValidation = validateOrgPlacement(orgPlacement)
+      if (orgValidation) {
+        setOrgError(orgValidation)
+        setError(null)
+        return
+      }
+    } else if (!regionalCentreId) {
+      setError('Select a centre / unit under the regional office.')
+      return
+    }
+    if (resolvedDurationMonths == null || !isValidPresetDurationMonths(resolvedDurationMonths)) {
+      setError('Select an appointment duration (e.g. 12 months, 1 year, 2 years).')
+      return
+    }
+    if (!roleLevelId) {
+      setError('Select a role level (1–7) from the NAVTTC designation hierarchy.')
+      return
+    }
+    if (designationOptions.length > 0 && !designationId) {
+      setError('Select a designation / post at the same BPS as the role level.')
+      return
+    }
+    if (designationId) {
+      const des = designations.find((d) => d.id === designationId)
+      if (!designationMatchesRoleLevel(des, roleLevelId)) {
+        setError(
+          `Designation must be at BPS ${selectedRole?.bps ?? '—'} to match the selected role level.`,
+        )
+        return
+      }
+    }
+    setError(null)
+
     const input = {
       employeeNo: isEdit ? employeeNo : nextCode,
       firstName,
       lastName,
       email,
-      departmentId,
+      phone,
+      cnic,
+      dateOfBirth,
+      departmentId: resolvedDepartmentId,
+      officeId: officePlacement.officeId,
+      orgHeadId: isHeadOffice ? orgPlacement.orgHeadId : undefined,
+      orgWingId: isHeadOffice ? orgPlacement.orgWingId : undefined,
+      orgSectionId: isHeadOffice ? orgPlacement.orgSectionId : undefined,
+      orgSubSection1Id: isHeadOffice ? orgPlacement.orgSubSection1Id : undefined,
+      orgSubSection2Id: isHeadOffice ? orgPlacement.orgSubSection2Id : undefined,
       designationId,
-      managerId: managerId || undefined,
+      roleLevelId,
       employmentType,
-      status,
+      status: existing?.status ?? 'active',
       joinDate: joinDate || '—',
-      endDate: showEndDate ? endDate || '—' : '—',
-      benefitIds: selectedBenefitIds,
+      serviceDurationMonths: resolvedDurationMonths,
     }
     if (isEdit && id) {
       updateEmployee(id, input)
@@ -160,11 +265,7 @@ export function EmployeeFormPage() {
   const heading = isEdit ? 'Edit employee' : 'Create employee'
   const sub = isEdit
     ? 'Update roster details. Changes are saved for this browser session.'
-    : `New code ${nextCode}. Saved to the wireframe roster for this session.`
-
-  const employmentHint = showEndDate
-    ? 'This appointment type requires an end date below.'
-    : 'Regular and vacant posts are open-ended — no end date.'
+    : `New code ${nextCode}. Placement follows NAVTTC HQ organogram (2026).`
 
   return (
     <HrmsListShell
@@ -176,7 +277,7 @@ export function EmployeeFormPage() {
           <form onSubmit={onSubmit}>
             {error ? <CompactFormAlert>{error}</CompactFormAlert> : null}
 
-            <CompactFormSection legend="Personal">
+            <CompactFormSection legend="Personal details">
               <CompactFormGrid>
                 <CompactFormGrid split>
                   <CompactFormField
@@ -228,16 +329,118 @@ export function EmployeeFormPage() {
                     />
                   </CompactFormInputWrap>
                 </CompactFormField>
+                <CompactFormGrid split>
+                  <CompactFormField
+                    label={
+                      <>
+                        Phone <CompactFormRequired />
+                      </>
+                    }
+                  >
+                    <CompactFormInputWrap icon="ri-phone-line">
+                      <input
+                        type="tel"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="03xx-xxxxxxx"
+                        required
+                      />
+                    </CompactFormInputWrap>
+                  </CompactFormField>
+                  <CompactFormField
+                    label={
+                      <>
+                        CNIC <CompactFormRequired />
+                      </>
+                    }
+                  >
+                    <CompactFormInputWrap icon="ri-id-card-line">
+                      <input
+                        value={cnic}
+                        onChange={(e) => setCnic(e.target.value)}
+                        placeholder="xxxxx-xxxxxxx-x"
+                        required
+                      />
+                    </CompactFormInputWrap>
+                  </CompactFormField>
+                </CompactFormGrid>
+                <CompactFormField
+                  label={
+                    <>
+                      Date of birth <CompactFormRequired />
+                    </>
+                  }
+                >
+                  <CompactFormInputWrap icon="ri-cake-2-line">
+                    <input
+                      type="date"
+                      value={dateOfBirth}
+                      onChange={(e) => setDateOfBirth(e.target.value)}
+                      required
+                    />
+                  </CompactFormInputWrap>
+                </CompactFormField>
               </CompactFormGrid>
             </CompactFormSection>
 
-            <CompactFormSection legend="Assignment">
+            <CompactFormSection legend="Office location">
+              <EmployeeOfficeFields
+                value={officePlacement}
+                onChange={onOfficePlacementChange}
+                error={officeError}
+              />
+              {!isHeadOffice && officePlacement.officeId ? (
+                <CompactFormGrid>
+                  <CompactFormField
+                    full
+                    label={
+                      <>
+                        Centre / unit <CompactFormRequired />
+                      </>
+                    }
+                  >
+                    <CompactFormInputWrap icon="ri-building-line">
+                      <select
+                        value={regionalCentreId}
+                        onChange={(e) => {
+                          setRegionalCentreId(e.target.value)
+                          setDesignationId('')
+                        }}
+                        required
+                      >
+                        <option value="">Select centre…</option>
+                        {regionalCentreOptions.map((d) => (
+                          <option key={d.id} value={d.id}>
+                            {d.name} ({d.code})
+                          </option>
+                        ))}
+                      </select>
+                    </CompactFormInputWrap>
+                  </CompactFormField>
+                </CompactFormGrid>
+              ) : null}
+            </CompactFormSection>
+
+            {isHeadOffice ? (
+              <CompactFormSection legend="Organization (NAVTTC HQ organogram)">
+                <EmployeeOrgPlacementFields
+                  value={orgPlacement}
+                  onChange={setOrgPlacement}
+                  error={orgError}
+                />
+              </CompactFormSection>
+            ) : null}
+
+            <CompactFormSection legend="Post & reporting">
               <CompactFormGrid>
-                <CompactFormField full label="Employment type" hint={employmentHint}>
+                <CompactFormField
+                  full
+                  label="Employment type"
+                >
                   <CompactFormInputWrap icon="ri-file-list-3-line">
                     <select
                       value={employmentType}
-                      onChange={(e) => onEmploymentTypeChange(e.target.value as EmploymentType)}
+                      onChange={(e) => setEmploymentType(e.target.value as EmploymentType)}
                     >
                       {EMPLOYMENT_TYPES_FILTERABLE.map((t) => (
                         <option key={t} value={t}>
@@ -249,104 +452,79 @@ export function EmployeeFormPage() {
                 </CompactFormField>
 
                 <CompactFormField
+                  full
                   label={
                     <>
-                      Office <CompactFormRequired />
+                      Role level (1–7) <CompactFormRequired />
                     </>
                   }
-                  hint="NAVTTC HQ or regional office — departments are listed under the office you pick."
                 >
-                  <CompactFormInputWrap icon="ri-map-pin-line">
+                  <CompactFormInputWrap icon="ri-vip-crown-line">
                     <select
-                      value={officeId}
-                      onChange={(e) => onOfficeChange(e.target.value)}
+                      value={roleLevelId}
+                      onChange={(e) => {
+                        setRoleLevelId(e.target.value)
+                        setDesignationId('')
+                      }}
                       required
                     >
-                      <option value="">Select office…</option>
-                      {offices.map((o) => (
-                        <option key={o.id} value={o.id}>
-                          {o.name} ({o.code})
+                      <option value="">Select role…</option>
+                      {NAVTTC_ROLE_LEVELS.map((role) => (
+                        <option key={role.id} value={role.id}>
+                          {formatRoleLevelLabel(role)} — {role.levelCategory}
                         </option>
                       ))}
                     </select>
                   </CompactFormInputWrap>
                 </CompactFormField>
 
-                {officeId ? (
-                  <CompactFormField
-                    label={
-                      <>
-                        Department <CompactFormRequired />
-                      </>
-                    }
-                    hint={
-                      selectedOffice
-                        ? `Functional units at ${selectedOffice.name}.`
-                        : undefined
-                    }
-                  >
-                    {departmentOptions.length === 0 ? (
-                      <p className="hrms-compact-form-field__hint" style={{ margin: 0 }}>
-                        No departments are set up for this office yet.
-                      </p>
-                    ) : (
-                      <CompactFormInputWrap icon="ri-building-line">
-                        <select
-                          value={departmentId}
-                          onChange={(e) => {
-                            setDepartmentId(e.target.value)
-                            setDesignationId('')
-                          }}
-                          required
-                        >
-                          <option value="">Select department…</option>
-                          {departmentOptions.map((d) => (
-                            <option key={d.id} value={d.id}>
-                              {d.name} ({d.code})
-                            </option>
-                          ))}
-                        </select>
-                      </CompactFormInputWrap>
-                    )}
+                {selectedRole ? (
+                  <CompactFormField full label="BPS scale">
+                    <CompactFormInputWrap icon="ri-bar-chart-horizontal-line">
+                      <input readOnly value={`BPS ${selectedRole.bps}`} aria-readonly="true" />
+                    </CompactFormInputWrap>
                   </CompactFormField>
                 ) : null}
 
-                {officeId && departmentId ? (
-                  <CompactFormGrid split>
-                    <CompactFormField label="Designation">
-                      <CompactFormInputWrap icon="ri-briefcase-line">
-                        <select
-                          value={designationId}
-                          onChange={(e) => setDesignationId(e.target.value)}
-                        >
-                          {designationOptions.map((g) => (
-                            <option key={g.id} value={g.id}>
-                              {g.title} ({g.grade})
-                            </option>
-                          ))}
-                        </select>
-                      </CompactFormInputWrap>
-                    </CompactFormField>
-                    <CompactFormField label="Reporting manager">
-                      <CompactFormInputWrap icon="ri-team-line">
-                        <select value={managerId} onChange={(e) => setManagerId(e.target.value)}>
-                          <option value="">— None —</option>
-                          {managerOptions.map((m) => (
-                            <option key={m.id} value={m.id}>
-                              {m.firstName} {m.lastName} · {m.sanctionedPost}
-                            </option>
-                          ))}
-                        </select>
-                      </CompactFormInputWrap>
-                    </CompactFormField>
-                  </CompactFormGrid>
+                {roleLevelId ? (
+                  <CompactFormField
+                    full
+                    label={
+                      <>
+                        Designation / post <CompactFormRequired />
+                      </>
+                    }
+                    hint={
+                      selectedRole
+                        ? `BPS ${selectedRole.bps} only — same unit first, then other centres in this office`
+                        : undefined
+                    }
+                  >
+                    <CompactFormInputWrap icon="ri-briefcase-line">
+                      <select
+                        value={designationId}
+                        onChange={(e) => setDesignationId(e.target.value)}
+                        required={designationOptions.length > 0}
+                      >
+                        <option value="">
+                          {designationOptions.length > 0
+                            ? '— Select designation —'
+                            : `— No BPS ${selectedRole?.bps} designations in catalog —`}
+                        </option>
+                        {designationOptions.map((g) => (
+                          <option key={g.id} value={g.id}>
+                            {g.title} ({g.grade})
+                          </option>
+                        ))}
+                      </select>
+                    </CompactFormInputWrap>
+                  </CompactFormField>
                 ) : null}
               </CompactFormGrid>
             </CompactFormSection>
 
             <CompactFormSection legend="Record">
-              <CompactFormGrid>
-                <CompactFormGrid split>
+              <CompactFormGrid split>
                   <CompactFormField label="Employee code">
                     <CompactFormInputWrap icon="ri-barcode-line">
                       <input
@@ -365,50 +543,44 @@ export function EmployeeFormPage() {
                       />
                     </CompactFormInputWrap>
                   </CompactFormField>
-                  {showEndDate ? (
-                    <CompactFormField
-                      label={
-                        <>
-                          End date <CompactFormRequired />
-                        </>
-                      }
-                      hint="Required for deputation, contract, DPL, and short-term project staff."
-                    >
-                      <CompactFormInputWrap icon="ri-calendar-close-line">
+                  <CompactFormField
+                    label={
+                      <>
+                        Duration <CompactFormRequired />
+                      </>
+                    }
+                  >
+                    <CompactFormInputWrap icon="ri-hourglass-line">
+                      <select
+                        value={durationMonths}
+                        onChange={(e) => setDurationMonths(e.target.value)}
+                        required
+                      >
+                        <option value="">Select duration…</option>
+                        {APPOINTMENT_DURATION_PRESETS.map((opt) => (
+                          <option key={opt.months} value={opt.months}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                    </CompactFormInputWrap>
+                  </CompactFormField>
+                  {resolvedDurationMonths != null ? (
+                    <CompactFormField label="Appointment ends">
+                      <CompactFormInputWrap icon="ri-calendar-check-line">
                         <input
-                          type="date"
-                          value={endDate}
-                          onChange={(e) => setEndDate(e.target.value)}
-                          required
+                          readOnly
+                          value={
+                            joinDate
+                              ? `${formatDurationMonths(resolvedDurationMonths)} from join date`
+                              : formatDurationMonths(resolvedDurationMonths)
+                          }
+                          aria-readonly="true"
                         />
                       </CompactFormInputWrap>
                     </CompactFormField>
                   ) : null}
-                </CompactFormGrid>
-                <CompactFormField label="Status">
-                  <CompactFormStatus
-                    name="employee-status"
-                    value={status}
-                    onChange={setStatus}
-                    ariaLabel="Employee status"
-                    options={[
-                      { value: 'active', label: 'Active' },
-                      { value: 'on_leave', label: 'On leave' },
-                      { value: 'inactive', label: 'Inactive' },
-                    ]}
-                  />
-                </CompactFormField>
               </CompactFormGrid>
-            </CompactFormSection>
-
-            <CompactFormSection legend="Benefits">
-              <EmployeeBenefitsFields
-                employmentType={employmentType}
-                defaultBenefitIds={defaultBenefitIds}
-                selectedBenefitIds={selectedBenefitIds}
-                onChange={setSelectedBenefitIds}
-                definitions={benefitDefinitions}
-              />
             </CompactFormSection>
 
             <CompactFormFooter>

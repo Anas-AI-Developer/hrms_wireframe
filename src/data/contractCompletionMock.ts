@@ -1,6 +1,7 @@
 import type { Employee } from '../types/hrms'
 import { addDaysIso, WIREFRAME_TODAY } from '../utils/attendanceStats'
 import { formatEmployeeDate } from '../utils/formatDate'
+import { expectedEndDateFromMonths, resolveEmployeeDurationMonths } from '../utils/serviceDuration'
 import { DASHBOARD_JOB_FILTERS, employmentLabelForEmployee } from './dashboardEmployment'
 
 export type ContractCompletionRow = {
@@ -78,10 +79,15 @@ export function buildContractCompletions(
 
   return contractStaff
     .map((e, i) => {
+      const months = resolveEmployeeDurationMonths(e)
+      const fromDuration =
+        months != null && e.joinDate && e.joinDate !== '—'
+          ? expectedEndDateFromMonths(e.joinDate, months)
+          : null
       const completionDate =
         e.endDate && e.endDate !== '—'
           ? e.endDate
-          : addDaysIso(WIREFRAME_TODAY, 15 + (i % 8) * 22 - (i % 3) * 40)
+          : fromDuration ?? addDaysIso(WIREFRAME_TODAY, 15 + (i % 8) * 22 - (i % 3) * 40)
       const { status, daysLeft } = statusForEndDate(completionDate)
       return {
         id: `cc-${e.id}`,

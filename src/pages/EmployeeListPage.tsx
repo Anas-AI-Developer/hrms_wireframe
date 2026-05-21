@@ -14,10 +14,12 @@ import {
   matchesJobTypeFilter,
   type DashboardJobFilter,
 } from '../data/dashboardEmployment'
+import { formatOrgPlacementPath } from '../data/navttcHqOrganogram'
 import { useWireframeData } from '../data/WireframeDataContext'
 import { useListControls } from '../hooks/useListControls'
 import type { Employee } from '../types/hrms'
 import { formatEmployeeDate } from '../utils/formatDate'
+import { formatEmployeeDuration } from '../utils/serviceDuration'
 
 const ALL = 'all'
 
@@ -89,12 +91,24 @@ export function EmployeeListPage() {
       const name = `${e.firstName} ${e.lastName}`.toLowerCase()
       const dept = getDepartment(e.departmentId)?.name.toLowerCase() ?? ''
       const des = getDesignation(e.designationId)?.title.toLowerCase() ?? ''
+      const org = e.orgWingId
+        ? formatOrgPlacementPath({
+            orgHeadId: e.orgHeadId,
+            orgWingId: e.orgWingId,
+            orgSectionId: e.orgSectionId,
+            orgSubSection1Id: e.orgSubSection1Id,
+            orgSubSection2Id: e.orgSubSection2Id,
+          }).toLowerCase()
+        : ''
       return (
         name.includes(q) ||
         e.employeeNo.toLowerCase().includes(q) ||
         dept.includes(q) ||
+        org.includes(q) ||
         des.includes(q) ||
-        (e.sanctionedPost?.toLowerCase().includes(q) ?? false)
+        (e.sanctionedPost?.toLowerCase().includes(q) ?? false) ||
+        (e.phone?.toLowerCase().includes(q) ?? false) ||
+        (e.cnic?.toLowerCase().includes(q) ?? false)
       )
     },
     statusFn: (e, f) => {
@@ -112,7 +126,8 @@ export function EmployeeListPage() {
       post: (a, b) => (a.sanctionedPost ?? '').localeCompare(b.sanctionedPost ?? ''),
       status: (a, b) => a.status.localeCompare(b.status),
       joinDate: (a, b) => a.joinDate.localeCompare(b.joinDate),
-      endDate: (a, b) => a.endDate.localeCompare(b.endDate),
+      duration: (a, b) =>
+        formatEmployeeDuration(a).localeCompare(formatEmployeeDuration(b)),
     },
   })
 
@@ -235,12 +250,12 @@ export function EmployeeListPage() {
               <tr>
                 <SortableTh label="Code" column="employeeNo" sortColumn={list.sortColumn} sortDir={list.sortDir} onSort={list.toggleSort} />
                 <SortableTh label="Name" column="name" sortColumn={list.sortColumn} sortDir={list.sortDir} onSort={list.toggleSort} />
-                <SortableTh label="Centre" column="centre" sortColumn={list.sortColumn} sortDir={list.sortDir} onSort={list.toggleSort} />
+                <SortableTh label="Organization" column="centre" sortColumn={list.sortColumn} sortDir={list.sortDir} onSort={list.toggleSort} />
                 <SortableTh label="Post" column="post" sortColumn={list.sortColumn} sortDir={list.sortDir} onSort={list.toggleSort} />
                 {showJobTypeColumn ? <th>Job type</th> : null}
                 <SortableTh label="Status" column="status" sortColumn={list.sortColumn} sortDir={list.sortDir} onSort={list.toggleSort} />
                 <SortableTh label="Joined" column="joinDate" sortColumn={list.sortColumn} sortDir={list.sortDir} onSort={list.toggleSort} />
-                <SortableTh label="End date" column="endDate" sortColumn={list.sortColumn} sortDir={list.sortDir} onSort={list.toggleSort} />
+                <SortableTh label="Duration" column="duration" sortColumn={list.sortColumn} sortDir={list.sortDir} onSort={list.toggleSort} />
                 <th>Actions</th>
               </tr>
             </thead>
@@ -284,6 +299,15 @@ function EmployeeRow({
   const { getDepartment, getDesignation } = useWireframeData()
   const dept = getDepartment(e.departmentId)
   const des = getDesignation(e.designationId)
+  const orgLabel = e.orgWingId
+    ? formatOrgPlacementPath({
+        orgHeadId: e.orgHeadId,
+        orgWingId: e.orgWingId,
+        orgSectionId: e.orgSectionId,
+        orgSubSection1Id: e.orgSubSection1Id,
+        orgSubSection2Id: e.orgSubSection2Id,
+      })
+    : (dept?.name ?? '—')
   return (
     <tr>
       <td>
@@ -294,7 +318,9 @@ function EmployeeRow({
           {e.firstName} {e.lastName}
         </Link>
       </td>
-      <td>{dept?.name ?? '—'}</td>
+      <td className="text-sm" style={{ color: '#475569', maxWidth: '14rem' }} title={orgLabel}>
+        {orgLabel}
+      </td>
       <td>{e.sanctionedPost ?? des?.title ?? '—'}</td>
       {showJobType ? <td>{employmentLabelForEmployee(e)}</td> : null}
       <td>
@@ -304,7 +330,7 @@ function EmployeeRow({
         {formatEmployeeDate(e.joinDate)}
       </td>
       <td className="text-sm" style={{ color: '#64748b' }}>
-        {formatEmployeeDate(e.endDate)}
+        {formatEmployeeDuration(e)}
       </td>
       <td>
         <RowActionsMenu

@@ -17,6 +17,27 @@ import {
 } from './benefitsData'
 import { assignManagers } from './hierarchy'
 import {
+  formatOrgPlacementPath,
+  getOrgNode,
+  legacyDepartmentIdForPlacement,
+} from './navttcHqOrganogram'
+import { inferOrgPlacementFromEmployee } from './navttcOrgMapping'
+import {
+  inferOfficeIdFromEmployee,
+  locationLabelForOfficeId,
+  NAVTTC_HEAD_OFFICE_ID,
+} from './navttcOfficeMapping'
+import {
+  designationsMatchingRoleLevel,
+  getRoleLevelById,
+  inferRoleLevelId,
+  parseBpsFromGrade,
+} from './navttcRoleLevels'
+import {
+  expectedEndDateFromMonths,
+  resolveEmployeeDurationMonths,
+} from '../utils/serviceDuration'
+import {
   departments as seedDepartments,
   designations as seedDesignations,
   employeeHistory as seedHistory,
@@ -57,13 +78,88 @@ function mergeById<T extends { id: string }>(parsed: T[] | undefined, seed: T[])
   return [...byId.values()]
 }
 
+function applyOrgPlacementMigration(employees: Employee[]): Employee[] {
+  return employees.map((e) => {
+    if (e.orgWingId && e.orgSectionId) return e
+    const inferred = inferOrgPlacementFromEmployee(e)
+    if (!inferred) return e
+    return {
+      ...e,
+      orgHeadId: inferred.orgHeadId,
+      orgWingId: inferred.orgWingId,
+      orgSectionId: inferred.orgSectionId,
+      orgSubSection1Id: inferred.orgSubSection1Id,
+      orgSubSection2Id: inferred.orgSubSection2Id,
+    }
+  })
+}
+
+function applyOfficePlacementMigration(
+  employees: Employee[],
+  departments: Department[],
+): Employee[] {
+  return employees.map((e) => {
+    const officeId = inferOfficeIdFromEmployee(e, departments)
+    const location = locationLabelForOfficeId(officeId)
+    if (e.officeId === officeId && e.location === location) return e
+    return { ...e, officeId, location }
+  })
+}
+
+function applyRoleLevelMigration(
+  employees: Employee[],
+  designations: Designation[],
+): Employee[] {
+  return employees.map((e) => {
+    if (e.roleLevelId) return e
+    const des = designations.find((d) => d.id === e.designationId)
+    const inferred = inferRoleLevelId(e, des?.title)
+    if (!inferred) return e
+    const role = getRoleLevelById(inferred)
+    return {
+      ...e,
+      roleLevelId: inferred,
+      bps: role ? String(role.bps) : e.bps,
+    }
+  })
+}
+
+function applyServiceDurationMigration(employees: Employee[]): Employee[] {
+  return employees.map((e) => {
+    const months = resolveEmployeeDurationMonths(e)
+    if (months == null) return e
+    const endDate =
+      e.joinDate && e.joinDate !== '—'
+        ? (expectedEndDateFromMonths(e.joinDate, months) ?? e.endDate)
+        : e.endDate
+    if (e.serviceDurationMonths === months && e.endDate === endDate) return e
+    return {
+      ...e,
+      serviceDurationMonths: months,
+      serviceDurationYears: Math.floor(months / 12) || undefined,
+      endDate: endDate ?? e.endDate,
+    }
+  })
+}
+
 function normalizeState(parsed: Partial<WireframeStoreState>): WireframeStoreState {
   const seed = cloneSeed()
+  const departments = mergeById(parsed.departments, seed.departments)
+  const mergedEmployees = mergeById(parsed.employees, seed.employees)
+  const employees = applyServiceDurationMigration(
+    applyOfficePlacementMigration(
+      applyRoleLevelMigration(
+        applyOrgPlacementMigration(mergedEmployees),
+        mergeById(parsed.designations, seed.designations),
+      ),
+      departments,
+    ),
+  )
   return {
-    departments: mergeById(parsed.departments, seed.departments),
+    departments,
     designations: mergeById(parsed.designations, seed.designations),
     sections: mergeById(parsed.sections, seed.sections),
-    employees: mergeById(parsed.employees, seed.employees),
+    employees,
     employeeHistory: mergeById(parsed.employeeHistory, seed.employeeHistory),
     benefitDefinitions: mergeById(parsed.benefitDefinitions, seed.benefitDefinitions),
     employmentTypeBenefitDefaults:
@@ -234,13 +330,23 @@ export type EmployeeInput = {
   lastName: string
   email: string
   phone?: string
+  cnic?: string
+  dateOfBirth?: string
   departmentId: string
+  officeId?: string
+  orgHeadId?: string
+  orgWingId?: string
+  orgSectionId?: string
+  orgSubSection1Id?: string
+  orgSubSection2Id?: string
   designationId: string
+  roleLevelId?: string
   managerId?: string
   employmentType: EmploymentType
   status: EmployeeStatus
   joinDate: string
-  endDate?: string
+  serviceDurationMonths?: number
+  serviceDurationYears?: number
   sanctionedPost?: string
   workingAs?: string
   benefitIds?: string[]
@@ -270,12 +376,81 @@ function replaceEmployeeBenefits(
   return [...rest, ...added]
 }
 
+function orgFieldsFromInput(input: EmployeeInput) {
+  const placement = {
+    orgHeadId: input.orgHeadId,
+    orgWingId: input.orgWingId,
+    orgSectionId: input.orgSectionId,
+    orgSubSection1Id: input.orgSubSection1Id,
+    orgSubSection2Id: input.orgSubSection2Id,
+  }
+  const wing = input.orgWingId ? getOrgNode(input.orgWingId) : undefined
+  const sectionNode = input.orgSectionId ? getOrgNode(input.orgSectionId) : undefined
+  const orgPath =
+    input.orgWingId && input.orgSectionId ? formatOrgPlacementPath(placement) : ''
+  const departmentId =
+    input.orgWingId && input.orgSectionId
+      ? legacyDepartmentIdForPlacement({
+          orgHeadId: input.orgHeadId!,
+          orgWingId: input.orgWingId,
+          orgSectionId: input.orgSectionId,
+        })
+      : input.departmentId
+  return {
+    departmentId,
+    orgPath,
+    wingName: wing?.name,
+    sectionLabel: sectionNode?.name ?? orgPath,
+    placement,
+  }
+}
+
+function resolveDesignationIdForInput(input: EmployeeInput): string {
+  const role = getRoleLevelById(input.roleLevelId)
+  if (input.designationId?.trim()) {
+    const picked = state.designations.find((d) => d.id === input.designationId.trim())
+    if (picked && role && parseBpsFromGrade(picked.grade) === role.bps) {
+      return picked.id
+    }
+    if (picked && !role) return picked.id
+  }
+  if (!role) return input.designationId?.trim() ?? ''
+  const matched = designationsMatchingRoleLevel(role.id, state.designations, {
+    departmentId: input.departmentId || undefined,
+    officeId: input.officeId,
+    departments: state.departments,
+  })
+  const titleMatch = matched.find(
+    (d) => d.title.toLowerCase() === role.title.toLowerCase(),
+  )
+  return titleMatch?.id ?? matched[0]?.id ?? ''
+}
+
+function resolveDurationForInput(input: EmployeeInput): {
+  months: number | null
+  endDate: string
+} {
+  let months: number | null = input.serviceDurationMonths ?? null
+  if (months == null && input.serviceDurationYears != null) {
+    months = input.serviceDurationYears * 12
+  }
+  const endDate =
+    months != null && input.joinDate && input.joinDate !== '—'
+      ? (expectedEndDateFromMonths(input.joinDate, months) ?? '—')
+      : '—'
+  return { months, endDate }
+}
+
 export function addEmployee(input: EmployeeInput): Employee {
   const maxSerial =
     state.employees.reduce((max, e) => Math.max(max, e.masterSerial ?? 0), 0) + 1
   const dept = state.departments.find((d) => d.id === input.departmentId)
-  const desig = state.designations.find((g) => g.id === input.designationId)
-  const post = input.sanctionedPost?.trim() || desig?.title || 'Staff'
+  const designationId = resolveDesignationIdForInput(input)
+  const desig = state.designations.find((g) => g.id === designationId)
+  const roleLevel = getRoleLevelById(input.roleLevelId)
+  const post = input.sanctionedPost?.trim() || roleLevel?.title || desig?.title || 'Staff'
+  const org = orgFieldsFromInput(input)
+  const duration = resolveDurationForInput(input)
 
   const draft: Employee = {
     id: `m-${maxSerial}`,
@@ -284,22 +459,38 @@ export function addEmployee(input: EmployeeInput): Employee {
     lastName: input.lastName.trim(),
     email: input.email.trim(),
     phone: input.phone?.trim() || '—',
-    departmentId: input.departmentId,
-    designationId: input.designationId,
+    cnic: input.cnic?.trim() || undefined,
+    dateOfBirth: input.dateOfBirth?.trim() || undefined,
+    departmentId: org.departmentId,
+    orgHeadId: input.orgHeadId,
+    orgWingId: input.orgWingId,
+    orgSectionId: input.orgSectionId,
+    orgSubSection1Id: input.orgSubSection1Id,
+    orgSubSection2Id: input.orgSubSection2Id,
+    designationId,
+    roleLevelId: input.roleLevelId,
     managerId: input.managerId || undefined,
     employmentType: input.employmentType,
     status: input.status,
     joinDate: input.joinDate || '—',
-    endDate: input.endDate?.trim() || '—',
-    location: dept?.name ?? '—',
+    serviceDurationMonths: duration.months ?? undefined,
+    serviceDurationYears:
+      duration.months != null ? Math.floor(duration.months / 12) || undefined : undefined,
+    endDate: duration.endDate,
+    officeId: input.officeId ?? NAVTTC_HEAD_OFFICE_ID,
+    location: input.officeId
+      ? locationLabelForOfficeId(input.officeId)
+      : input.orgWingId
+        ? locationLabelForOfficeId(NAVTTC_HEAD_OFFICE_ID)
+        : '—',
     masterSerial: maxSerial,
-    section: 'General',
+    section: org.sectionLabel,
     sanctionedPost: post,
     workingAs: input.workingAs?.trim() || post,
     actualPost: post,
-    bps: desig?.grade.replace(/[^\d]/g, '') || '—',
+    bps: roleLevel ? String(roleLevel.bps) : desig?.grade.replace(/[^\d]/g, '') || '—',
     modeOfAppointment: 'Regular',
-    parentDepartment: 'NAVTTC',
+    parentDepartment: org.wingName ?? dept?.name ?? 'NAVTTC',
   }
 
   const benefitIds =
@@ -325,9 +516,13 @@ export function addEmployee(input: EmployeeInput): Employee {
 }
 
 export function updateEmployee(id: string, input: EmployeeInput): Employee | undefined {
-  const dept = state.departments.find((d) => d.id === input.departmentId)
-  const desig = state.designations.find((g) => g.id === input.designationId)
-  const post = input.sanctionedPost?.trim() || desig?.title
+  const designationId = resolveDesignationIdForInput(input)
+  const desig = state.designations.find((g) => g.id === designationId)
+  const roleLevel = getRoleLevelById(input.roleLevelId)
+  const post = input.sanctionedPost?.trim() || roleLevel?.title || desig?.title
+  const org = orgFieldsFromInput(input)
+  const duration = resolveDurationForInput(input)
+  const centre = state.departments.find((d) => d.id === org.departmentId)
 
   let targetId = id
   const mapped = state.employees.map((e) => {
@@ -339,17 +534,45 @@ export function updateEmployee(id: string, input: EmployeeInput): Employee | und
       lastName: input.lastName.trim(),
       email: input.email.trim(),
       phone: input.phone?.trim() || e.phone,
-      departmentId: input.departmentId,
-      designationId: input.designationId,
-      managerId: input.managerId || undefined,
+      cnic: input.cnic?.trim() || e.cnic,
+      dateOfBirth: input.dateOfBirth?.trim() || e.dateOfBirth,
+      departmentId: org.departmentId,
+      orgHeadId: input.orgHeadId ?? e.orgHeadId,
+      orgWingId: input.orgWingId ?? e.orgWingId,
+      orgSectionId: input.orgSectionId ?? e.orgSectionId,
+      orgSubSection1Id: input.orgSubSection1Id ?? e.orgSubSection1Id,
+      orgSubSection2Id: input.orgSubSection2Id ?? e.orgSubSection2Id,
+      designationId,
+      roleLevelId: input.roleLevelId ?? e.roleLevelId,
+      managerId:
+        input.managerId !== undefined ? input.managerId || undefined : e.managerId,
       employmentType: input.employmentType,
       status: input.status,
       joinDate: input.joinDate || e.joinDate,
-      endDate: input.endDate !== undefined ? input.endDate.trim() || '—' : e.endDate,
-      location: dept?.name ?? e.location,
+      serviceDurationMonths: duration.months ?? e.serviceDurationMonths,
+      serviceDurationYears:
+        duration.months != null
+          ? Math.floor(duration.months / 12) || undefined
+          : e.serviceDurationYears,
+      endDate: duration.endDate !== '—' ? duration.endDate : e.endDate,
+      officeId: input.officeId ?? e.officeId,
+      location: input.officeId
+        ? locationLabelForOfficeId(input.officeId)
+        : input.orgWingId
+          ? locationLabelForOfficeId(NAVTTC_HEAD_OFFICE_ID)
+          : e.location,
+      section: input.orgWingId ? org.sectionLabel || e.section : (centre?.name ?? e.section),
+      parentDepartment: input.orgWingId
+        ? (org.wingName ?? e.parentDepartment)
+        : input.officeId
+          ? locationLabelForOfficeId(input.officeId)
+          : e.parentDepartment,
       sanctionedPost: post ?? e.sanctionedPost,
       workingAs: input.workingAs?.trim() || post || e.workingAs,
       actualPost: post ?? e.actualPost,
+      bps: roleLevel
+        ? String(roleLevel.bps)
+        : desig?.grade.replace(/[^\d]/g, '') || e.bps,
     }
   })
 

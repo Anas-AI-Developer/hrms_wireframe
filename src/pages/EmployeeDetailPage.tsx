@@ -8,6 +8,13 @@ import { StatusBadge } from '../components/hrms/StatusBadge'
 import { RowActionsMenu } from '../components/hrms/RowActionsMenu'
 import { homePathForRole } from '../portals/homePath'
 import { employmentTypeLabel } from '../data/employmentStats'
+import { formatOrgPlacementPath } from '../data/navttcHqOrganogram'
+import {
+  formatOfficePlacement,
+  officePlacementFromEmployee,
+} from '../data/navttcOfficeMapping'
+import { formatRoleLevelLabel, getRoleLevelById } from '../data/navttcRoleLevels'
+import { formatEmployeeDuration } from '../utils/serviceDuration'
 import {
   getDepartment,
   getDesignation,
@@ -34,8 +41,12 @@ export function EmployeeDetailPage() {
   const { user, can, canViewEmployee } = useAuth()
   const canWrite = can('page:employees:write')
   const { id } = useParams<{ id: string }>()
-  const { benefitDefinitions, employeeBenefitEnrollments } = useWireframeData()
+  const { benefitDefinitions, departments, employeeBenefitEnrollments } = useWireframeData()
   const e = id ? getEmployee(id) : undefined
+  const officeLabel = e
+    ? formatOfficePlacement(officePlacementFromEmployee(e, departments))
+    : ''
+  const roleLevel = e?.roleLevelId ? getRoleLevelById(e.roleLevelId) : undefined
 
   const enrollments = useMemo(
     () =>
@@ -108,8 +119,8 @@ export function EmployeeDetailPage() {
 
       <section className="hrms-list-summary" aria-label="Profile highlights">
         <article className="hrms-list-summary__card">
-          <span className="hrms-list-summary__label">Centre</span>
-          <span className="hrms-list-summary__value">{e.location}</span>
+          <span className="hrms-list-summary__label">Office</span>
+          <span className="hrms-list-summary__value">{officeLabel || e.location}</span>
         </article>
         <article className="hrms-list-summary__card">
           <span className="hrms-list-summary__label">Sanctioned post</span>
@@ -145,8 +156,10 @@ export function EmployeeDetailPage() {
                   {employmentTypeLabel(e.employmentType)}
                 </DetailField>
                 <DetailField label="Phone">{e.phone || '—'}</DetailField>
+                <DetailField label="CNIC">{e.cnic ?? '—'}</DetailField>
+                <DetailField label="Date of birth">{e.dateOfBirth ?? '—'}</DetailField>
                 <DetailField label="Join date">{e.joinDate}</DetailField>
-                <DetailField label="End date">{e.endDate}</DetailField>
+                <DetailField label="Duration">{formatEmployeeDuration(e)}</DetailField>
                 <DetailField label="Mode of appointment">{e.modeOfAppointment ?? '—'}</DetailField>
               </dl>
             </div>
@@ -158,10 +171,25 @@ export function EmployeeDetailPage() {
             </header>
             <div className="hrms-ref-panel-body">
               <dl className="hrms-detail-fields">
-                <DetailField label="Department (centre)">
-                  {dept ? `${dept.name} (${dept.code})` : '—'}
+                <DetailField label="Office">{officeLabel || e.location || '—'}</DetailField>
+                <DetailField label="Organogram placement">
+                  {e.orgWingId
+                    ? formatOrgPlacementPath({
+                        orgHeadId: e.orgHeadId,
+                        orgWingId: e.orgWingId,
+                        orgSectionId: e.orgSectionId,
+                        orgSubSection1Id: e.orgSubSection1Id,
+                        orgSubSection2Id: e.orgSubSection2Id,
+                      }) || '—'
+                    : dept
+                      ? `${dept.name} (${dept.code}) — legacy`
+                      : '—'}
                 </DetailField>
-                <DetailField label="Section">{e.section ?? '—'}</DetailField>
+                <DetailField label="Wing">{e.parentDepartment ?? '—'}</DetailField>
+                <DetailField label="Section / unit">{e.section ?? '—'}</DetailField>
+                <DetailField label="Role level (1–7)">
+                  {roleLevel ? formatRoleLevelLabel(roleLevel) : '—'}
+                </DetailField>
                 <DetailField label="Sanctioned post">{e.sanctionedPost ?? des?.title ?? '—'}</DetailField>
                 <DetailField label="Working as">{e.workingAs ?? '—'}</DetailField>
                 <DetailField label="Actual post">{e.actualPost ?? '—'}</DetailField>

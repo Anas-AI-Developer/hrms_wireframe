@@ -1,0 +1,259 @@
+/* Roles & permissions matrix */
+
+.hrms-rbac-page {
+  width: 100%;
+  max-width: none;
+}
+
+.hrms-rbac-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.hrms-rbac-search {
+  flex: 1;
+  min-width: 200px;
+  max-width: 320px;
+  padding: 0.5rem 0.75rem 0.5rem 2.25rem;
+  font-size: 0.875rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2394a3b8' viewBox='0 0 24 24'%3E%3Cpath d='M10.5 3a7.5 7.5 0 105.379 12.879l4.083 4.084-1.414 1.414-4.084-4.083A7.5 7.5 0 0010.5 3zm0 2a5.5 5.5 0 110 11 5.5 5.5 0 010-11z'/%3E%3C/svg%3E")
+    no-repeat 0.65rem center;
+}
+
+.hrms-rbac-search:focus {
+  outline: none;
+  border-color: #4b62be;
+  box-shadow: 0 0 0 3px rgba(75, 98, 190, 0.12);
+}
+
+.hrms-rbac-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.8125rem;
+  color: #64748b;
+}
+
+.hrms-rbac-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.hrms-rbac-matrix-wrap {
+  overflow: auto;
+  max-height: min(70vh, 720px);
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 41, 0.04);
+}
+
+.hrms-rbac-matrix {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.8125rem;
+}
+
+.hrms-rbac-matrix thead th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 2px solid #e2e8f0;
+  padding: 0.65rem 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #475569;
+  text-align: center;
+  vertical-align: bottom;
+  min-width: 4.25rem;
+}
+
+.hrms-rbac-matrix thead th.hrms-rbac-matrix__perm-col {
+  left: 0;
+  z-index: 4;
+  text-align: left;
+  min-width: 220px;
+  max-width: 280px;
+  padding-left: 1rem;
+  padding-right: 0.75rem;
+}
+
+.hrms-rbac-matrix__role-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  line-height: 1.25;
+}
+
+.hrms-rbac-matrix__role-abbr {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #2f4798;
+  white-space: nowrap;
+}
+
+.hrms-rbac-matrix tbody tr.hrms-rbac-matrix__group-row td {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: #eef2ff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #3730a3;
+  padding: 0.5rem 1rem;
+  border-top: 1px solid #c7d2fe;
+  border-bottom: 1px solid #c7d2fe;
+}
+
+.hrms-rbac-matrix tbody tr.hrms-rbac-matrix__group-row td:not(:first-child) {
+  position: static;
+  background: #eef2ff;
+  border-top: 1px solid #c7d2fe;
+  border-bottom: 1px solid #c7d2fe;
+}
+
+.hrms-rbac-matrix tbody td {
+  padding: 0.55rem 0.5rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.hrms-rbac-matrix tbody tr:hover td:not(.hrms-rbac-matrix__perm-cell) {
+  background: #fafbfc;
+}
+
+.hrms-rbac-matrix__perm-cell {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: #fff;
+  padding-left: 1rem;
+  padding-right: 0.75rem;
+  min-width: 220px;
+  max-width: 280px;
+  border-right: 1px solid #f1f5f9;
+}
+
+.hrms-rbac-matrix tbody tr:hover .hrms-rbac-matrix__perm-cell {
+  background: #fafbfc;
+}
+
+.hrms-rbac-matrix__perm-label {
+  display: block;
+  font-weight: 600;
+  color: #0f172a;
+  line-height: 1.35;
+  margin-bottom: 0.15rem;
+}
+
+.hrms-rbac-matrix__perm-code {
+  display: block;
+  font-size: 0.68rem;
+  font-family: ui-monospace, monospace;
+  color: #94a3b8;
+  word-break: break-all;
+}
+
+.hrms-rbac-matrix__cell {
+  text-align: center;
+}
+
+.hrms-rbac-matrix__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.65rem;
+  height: 1.65rem;
+  border-radius: 50%;
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.hrms-rbac-matrix__badge--yes {
+  color: #fff;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  box-shadow: 0 1px 4px rgba(22, 163, 74, 0.35);
+}
+
+.hrms-rbac-matrix__badge--no {
+  color: #cbd5e1;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  font-weight: 500;
+}
+
+.hrms-rbac-role-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+}
+
+.hrms-rbac-role-card {
+  padding: 0.65rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
+}
+
+.hrms-rbac-role-card__name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #334155;
+  line-height: 1.3;
+  margin-bottom: 0.25rem;
+}
+
+.hrms-rbac-role-card__count {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #2f4798;
+}
+
+.hrms-rbac-role-card__count span {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.hrms-rbac-role-card--full .hrms-rbac-role-card__count {
+  color: #16a34a;
+}
+
+.hrms-rbac-footer-link {
+  margin-top: 1rem;
+}
+
+.hrms-rbac-footer-link .hrms-rbac-quick-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #2f4798;
+  text-decoration: none;
+  border: 1px solid rgba(75, 98, 190, 0.35);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.hrms-rbac-footer-link .hrms-rbac-quick-link:hover {
+  background: #f0f4ff;
+}

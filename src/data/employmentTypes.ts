@@ -35,14 +35,19 @@ export const EMPLOYMENT_TYPES_FILTERABLE: EmploymentType[] = [
   'vacant_post',
 ]
 
-/** Fixed-term / non-permanent types that require an end date on the employee form. */
-export const EMPLOYMENT_TYPES_WITH_END_DATE: EmploymentType[] = [
+/** Fixed-term types that use a manual appointment duration (years), not retirement at 60. */
+export const EMPLOYMENT_TYPES_WITH_MANUAL_DURATION: EmploymentType[] = [
   'deputation',
   'contingent',
   'dpl',
   'short_term_project',
 ]
 
+export function employmentTypeUsesManualDuration(type: EmploymentType): boolean {
+  return EMPLOYMENT_TYPES_WITH_MANUAL_DURATION.includes(type)
+}
+
+/** @deprecated Use employmentTypeUsesManualDuration */
 export function employmentTypeRequiresEndDate(type: EmploymentType): boolean {
-  return EMPLOYMENT_TYPES_WITH_END_DATE.includes(type)
+  return employmentTypeUsesManualDuration(type)
 }

@@ -71,6 +71,7 @@ export function permissionForPath(pathname: string): Permission | null {
 
   if (path === '/roadmap') return 'page:roadmap'
   if (path === '/modules') return 'page:modules'
+  if (path === '/organogram/mapping') return 'page:organogram'
   if (path === '/organogram') return 'page:organogram'
   if (path === '/master-data') return 'page:master_data'
 

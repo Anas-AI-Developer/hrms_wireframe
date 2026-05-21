@@ -3,6 +3,10 @@
  */
 import type { Department, Designation, Employee, EmployeeHistoryEvent, OrgSection } from '../types/hrms'
 import { assignManagers } from './hierarchy'
+import {
+  durationMonthsBetweenDates,
+  expectedEndDateFromMonths,
+} from '../utils/serviceDuration'
 
 export const departments: Department[] = [
   {
@@ -937,10 +941,26 @@ const EMPLOYEE_END_DATES: Partial<Record<string, string>> = {
 }
 
 export const employees: Employee[] = assignManagers(
-  employeesDraft.map((e) => ({
-    ...e,
-    endDate: EMPLOYEE_END_DATES[e.id] ?? '—',
-  })),
+  employeesDraft.map((e) => {
+    const endDate = EMPLOYEE_END_DATES[e.id] ?? '—'
+    const serviceDurationMonths =
+      endDate !== '—' && e.joinDate
+        ? durationMonthsBetweenDates(e.joinDate, endDate)
+        : undefined
+    const resolvedEnd =
+      serviceDurationMonths != null && e.joinDate
+        ? (expectedEndDateFromMonths(e.joinDate, serviceDurationMonths) ?? endDate)
+        : endDate
+    return {
+      ...e,
+      endDate: resolvedEnd,
+      serviceDurationMonths: serviceDurationMonths ?? undefined,
+      serviceDurationYears:
+        serviceDurationMonths != null
+          ? Math.floor(serviceDurationMonths / 12) || undefined
+          : undefined,
+    }
+  }),
 )
 
 export const employeeHistory: EmployeeHistoryEvent[] = [
