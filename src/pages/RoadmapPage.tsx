@@ -16,16 +16,15 @@ const phases = [
     phase: 'Operations (wireframe)',
     items: [
       { label: 'Attendance import & logs', to: '/attendance' },
-      { label: 'Leave request & approval', to: '/leave' },
+      { label: 'Leave management', to: '/leave' },
       { label: 'Recruitment pipeline', to: '/recruitment' },
       { label: 'Onboarding → employee record', to: '/onboarding' },
     ],
   },
   {
-    phase: 'Finance & ESS (wireframe)',
+    phase: 'People & ESS (wireframe)',
     items: [
-      { label: 'Payroll runs (AAO)', to: '/payroll' },
-      { label: 'Employee payslip', to: '/payslip' },
+      { label: 'Performance & training', to: '/performance' },
       { label: 'Self-service portal', to: '/ess' },
     ],
   },

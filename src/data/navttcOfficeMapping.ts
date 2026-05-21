@@ -9,6 +9,9 @@ export const NAVTTC_HEAD_OFFICE_ID = 'o-hq'
 
 export type OfficeCategory = 'head_office' | 'regional_office'
 
+/** Form-only: empty until user selects a role or office type. */
+export type OfficeCategorySelection = OfficeCategory | ''
+
 export const OFFICE_CATEGORY_LABELS: Record<OfficeCategory, string> = {
   head_office: 'Head Office',
   regional_office: 'Regional Office',
@@ -49,7 +52,7 @@ export const REGIONAL_OFFICE_MAPPING_ROWS = OFFICE_MAPPING_ROWS.filter(
 )
 
 export type EmployeeOfficePlacement = {
-  category: OfficeCategory
+  category: OfficeCategorySelection
   officeId: string
 }
 
@@ -86,12 +89,14 @@ export function officePlacementFromEmployee(
 }
 
 export function formatOfficePlacement(placement: EmployeeOfficePlacement): string {
+  if (!placement.category || !placement.officeId) return ''
   const office = getOfficeById(placement.officeId)
   if (!office) return ''
   return `${OFFICE_CATEGORY_LABELS[placement.category]} · ${office.name} (${office.code})`
 }
 
 export function validateOfficePlacement(placement: EmployeeOfficePlacement): string | null {
+  if (!placement.category) return 'Select office type, or choose a role first for headquarters posts.'
   if (!placement.officeId) return 'Select an office location.'
   if (placement.category === 'head_office' && placement.officeId !== NAVTTC_HEAD_OFFICE_ID) {
     return 'Head office must be NAVTTC HQs.'

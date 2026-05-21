@@ -1,10 +1,9 @@
 import { useMemo, useState } from 'react'
-import { Link, Navigate, useSearchParams } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { DashboardKpiCard } from '../components/dashboard/DashboardKpiCard'
 import { DataListPanel } from '../components/hrms/DataListPanel'
 import { HrmsListShell } from '../components/hrms/HrmsListShell'
-import { RowActionsMenu } from '../components/hrms/RowActionsMenu'
 import { useWireframeData } from '../data/WireframeDataContext'
 import {
   LEAVE_TYPE_LABELS,
@@ -12,11 +11,7 @@ import {
 } from '../data/leaveMock'
 import { useListControls, type StatusFilter } from '../hooks/useListControls'
 import { useLeaveHub } from '../leave/LeaveHubContext'
-import {
-  filterPendingForApprover,
-  isDirectorateHrRole,
-  summarizeLeaveForScope,
-} from '../utils/leaveStats'
+import { summarizeLeaveForScope } from '../utils/leaveStats'
 import '../styles/dashboard.css'
 import './pages.css'
 
@@ -30,18 +25,13 @@ const LEAVE_STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
   { value: 'cancelled', label: 'Cancelled' },
 ]
 
-type TabId = 'all' | 'approvals'
-
 export function LeaveManagementPage() {
-  const { user, can, visibleEmployees, actorEmployeeId } = useAuth()
+  const { user, visibleEmployees } = useAuth()
   const { departments, getDepartment, getEmployee } = useWireframeData()
-  const { requests, approveRequest, rejectRequest } = useLeaveHub()
-  const [searchParams, setSearchParams] = useSearchParams()
-  const tab: TabId = searchParams.get('tab') === 'approvals' ? 'approvals' : 'all'
+  const { requests } = useLeaveHub()
 
   const [departmentFilter, setDepartmentFilter] = useState(ALL)
   const [typeFilter, setTypeFilter] = useState<LeaveTypeId | typeof ALL>(ALL)
-  const [message, setMessage] = useState<string | null>(null)
 
   if (user?.role === 'employee') {
     return <Navigate to="/ess/leave" replace />
@@ -56,30 +46,13 @@ export function LeaveManagementPage() {
 
   const summary = useMemo(() => summarizeLeaveForScope(scopedRequests, roster.length), [scopedRequests, roster.length])
 
-  const pendingQueue = useMemo(
-    () =>
-      filterPendingForApprover(
-        requests,
-        scopedIds,
-        user?.role ?? '',
-        actorEmployeeId,
-        roster,
-      ),
-    [requests, scopedIds, user?.role, actorEmployeeId, roster],
-  )
-
-  const canApprove = can('leave.approve')
-  const showApprovalsTab = can('page:leave:approvals')
-
   const departmentOptions = useMemo(() => {
     const ids = new Set(roster.map((e) => e.departmentId))
     return departments.filter((d) => ids.has(d.id)).sort((a, b) => a.name.localeCompare(b.name))
   }, [roster])
 
-  const sourceRows = tab === 'approvals' ? pendingQueue : scopedRequests
-
   const filteredSource = useMemo(() => {
-    return sourceRows.filter((r) => {
+    return scopedRequests.filter((r) => {
       if (departmentFilter !== ALL) {
         const emp = getEmployee(r.employeeId)
         if (!emp || emp.departmentId !== departmentFilter) return false
@@ -87,7 +60,7 @@ export function LeaveManagementPage() {
       if (typeFilter !== ALL && r.leaveType !== typeFilter) return false
       return true
     })
-  }, [sourceRows, departmentFilter, typeFilter])
+  }, [scopedRequests, departmentFilter, typeFilter])
 
   const list = useListControls(filteredSource, {
     searchFn: (r, q) => {
@@ -128,30 +101,14 @@ export function LeaveManagementPage() {
     setTypeFilter(ALL)
   }
 
-  function setTab(next: TabId) {
-    if (next === 'all') setSearchParams({})
-    else setSearchParams({ tab: 'approvals' })
-    list.setPage(1)
-  }
-
-  function handleApprove(id: string) {
-    approveRequest(id, isDirectorateHrRole(user?.role ?? '') ? 'Approved by directorate HR' : 'Approved by manager')
-    setMessage('Leave request approved — list updated.')
-  }
-
-  function handleReject(id: string) {
-    rejectRequest(id, 'Not approved at this time (wireframe)')
-    setMessage('Leave request rejected — list updated.')
-  }
-
   return (
     <HrmsListShell current="Leave Management">
       <section className="hrms-kpi-grid" style={{ marginBottom: '1rem' }} aria-label="Leave summary">
         <DashboardKpiCard
           static
-          label="Pending approval"
+          label="Pending"
           value={summary.pendingCount}
-          subtext={showApprovalsTab ? 'Open the Approvals tab to action' : 'In your scope'}
+          subtext="In your scope"
           icon={<i className="ri-time-line" />}
           tone="warning"
         />
@@ -181,36 +138,8 @@ export function LeaveManagementPage() {
         />
       </section>
 
-      {showApprovalsTab ? (
-        <div className="hrms-leave-tabs" role="tablist" aria-label="Leave views">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === 'all'}
-            className={`hrms-leave-tabs__btn${tab === 'all' ? ' hrms-leave-tabs__btn--active' : ''}`}
-            onClick={() => setTab('all')}
-          >
-            All requests
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === 'approvals'}
-            className={`hrms-leave-tabs__btn${tab === 'approvals' ? ' hrms-leave-tabs__btn--active' : ''}`}
-            onClick={() => setTab('approvals')}
-          >
-            Pending approvals
-            {pendingQueue.length > 0 ? (
-              <span className="hrms-leave-tabs__badge">{pendingQueue.length}</span>
-            ) : null}
-          </button>
-        </div>
-      ) : null}
-
-      {message ? <p className="wf-note">{message}</p> : null}
-
       <DataListPanel
-        title={tab === 'approvals' ? 'Pending approval queue' : 'All leave requests'}
+        title="Leave requests"
         search={list.search}
         onSearchChange={list.setSearch}
         searchPlaceholder="Search employee, code, centre, type, or reason..."
@@ -277,16 +206,13 @@ export function LeaveManagementPage() {
                 <th>Reason</th>
                 <th>Status</th>
                 <th>Submitted</th>
-                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {list.pageRows.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="hrms-empty">
-                    {tab === 'approvals'
-                      ? 'No pending requests in your approval queue.'
-                      : 'No leave requests match your filters.'}
+                  <td colSpan={9} className="hrms-empty">
+                    No leave requests match your filters.
                   </td>
                 </tr>
               ) : (
@@ -328,24 +254,6 @@ export function LeaveManagementPage() {
                       </td>
                       <td className="text-sm" style={{ color: '#64748b' }}>
                         {r.submittedAt}
-                      </td>
-                      <td>
-                        <RowActionsMenu
-                          id={r.id}
-                          actions={[
-                            ...(emp ? [{ label: 'View employee', href: `/employees/${emp.id}` }] : []),
-                            ...(canApprove && r.status === 'pending'
-                              ? [
-                                  { label: 'Approve', onClick: () => handleApprove(r.id) },
-                                  {
-                                    label: 'Reject',
-                                    danger: true,
-                                    onClick: () => handleReject(r.id),
-                                  },
-                                ]
-                              : []),
-                          ]}
-                        />
                       </td>
                     </tr>
                   )

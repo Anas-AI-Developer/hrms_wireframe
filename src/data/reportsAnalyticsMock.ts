@@ -52,8 +52,8 @@ export const headcountByCentre: EmployeeCentreHeadcount[] = [
 export const executiveKpis = {
   totalActive: 254,
   openRecruitment: 3,
-  leavePendingApproval: 7,
-  payrollLastPosted: 'April 2026',
-  complianceDueSoon: 2,
+  leavePending: 7,
+  onboardingInProgress: 4,
+  trainingEnrollments: 18,
   appraisalCycleOpen: 'FY 2025–26',
 }

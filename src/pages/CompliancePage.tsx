@@ -1,10 +1,8 @@
-import { useAuth } from '../auth/AuthContext'
 import { complianceRegisters } from '../data/complianceMock'
 import './pages.css'
 
 export function CompliancePage() {
-  const { can } = useAuth()
-  const canManage = can('page:compliance:manage')
+  const canManage = false
 
   return (
     <div className="wf-page wf-page--wide">

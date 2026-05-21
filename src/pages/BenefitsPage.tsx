@@ -1,5 +1,4 @@
 import { type FormEvent, useMemo, useState } from 'react'
-import { useAuth } from '../auth/AuthContext'
 import { HrmsListShell } from '../components/hrms/HrmsListShell'
 import {
   BENEFIT_TYPE_LABELS,
@@ -11,8 +10,7 @@ import { useWireframeData } from '../data/WireframeDataContext'
 import '../styles/benefits.css'
 
 export function BenefitsPage() {
-  const { can } = useAuth()
-  const canManage = can('page:benefits:manage')
+  const canManage = false
   const {
     benefitDefinitions,
     employmentTypeBenefitDefaults,

@@ -1,4 +1,3 @@
-import { useAuth } from '../auth/AuthContext'
 import { payrollRuns } from '../data/payrollMock'
 import './pages.css'
 
@@ -8,8 +7,7 @@ function formatPkr(n: number) {
 }
 
 export function PayrollRunsPage() {
-  const { can } = useAuth()
-  const canRun = can('payroll.run')
+  const canRun = false
 
   return (
     <div className="wf-page wf-page--wide">

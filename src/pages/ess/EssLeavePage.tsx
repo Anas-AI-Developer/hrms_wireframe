@@ -64,7 +64,7 @@ export function EssLeavePage() {
     if (!reason.trim()) return
     const days = draftDays
     addLeaveRequest({ leaveType: draftType, fromDate, toDate, days, reason: reason.trim() })
-    setMessage('Your leave request was submitted and is pending manager approval.')
+    setMessage('Your leave request was submitted and is pending review.')
     closeModal()
   }
 
@@ -75,7 +75,7 @@ export function EssLeavePage() {
           <h2 className="wf-h2" style={{ marginBottom: '0.35rem' }}>
             My leave
           </h2>
-          <p className="wf-lead">Balances, submit requests, and track approval (manager → HR).</p>
+          <p className="wf-lead">Balances, submit requests, and track status.</p>
         </div>
         <button type="button" className="hrms-btn-primary" onClick={openModal}>
           <i className="ri-calendar-event-line" aria-hidden /> Request leave
@@ -152,9 +152,7 @@ export function EssLeavePage() {
               </tbody>
             </table>
           </div>
-          <p className="hrms-list-footnote">
-            Demo as of {WIREFRAME_TODAY}. Approval chain: manager → HR.
-          </p>
+          <p className="hrms-list-footnote">Demo as of {WIREFRAME_TODAY}.</p>
         </div>
       </article>
 
@@ -162,7 +160,7 @@ export function EssLeavePage() {
         open={modalOpen}
         onClose={closeModal}
         title="Request leave"
-        description="Submit dates and reason. Your manager will review before HR finalizes."
+        description="Submit dates and reason. HR will update status when reviewed."
         size="lg"
         footer={
           <>

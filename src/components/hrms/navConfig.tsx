@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react'
 import type { Permission, RoleId } from '../../auth/types'
-import { payslipPathForRole } from '../../portals/homePath'
 import {
   IconAttendance,
   IconBriefcase,
@@ -9,9 +8,6 @@ import {
   IconChart,
   IconCheckCircle,
   IconDashboard,
-  IconGift,
-  IconInbox,
-  IconReceipt,
   IconSettings,
   IconUsers,
 } from './icons'
@@ -45,15 +41,46 @@ export const HR_NAV_GROUPS: NavGroupDef[] = [
     ],
   },
   {
-    label: 'Human Resources',
+    label: 'NAVTTC HQ Organogram',
     accent: 'administration',
     items: [
       {
-        to: '/departments',
-        label: 'Departments',
+        to: '/org/head',
+        label: 'Head',
+        permission: 'page:departments',
+        icon: <IconUsers />,
+        end: true,
+      },
+      {
+        to: '/org/wings',
+        label: 'Wings',
         permission: 'page:departments',
         icon: <IconBuilding />,
       },
+      {
+        to: '/org/sections',
+        label: 'Sections',
+        permission: 'page:departments',
+        icon: <IconBuilding />,
+      },
+      {
+        to: '/org/section-1',
+        label: 'Section 1 (DD)',
+        permission: 'page:departments',
+        icon: <IconBriefcase />,
+      },
+      {
+        to: '/org/section-2',
+        label: 'Section 2 (AD)',
+        permission: 'page:departments',
+        icon: <IconBriefcase />,
+      },
+    ],
+  },
+  {
+    label: 'Human Resources',
+    accent: 'administration',
+    items: [
       {
         to: '/designations',
         label: 'Designations',
@@ -79,22 +106,10 @@ export const HR_NAV_GROUPS: NavGroupDef[] = [
         icon: <IconCalendar />,
       },
       {
-        to: '/employee-requests',
-        label: 'Request management',
-        permission: 'page:ess_requests:manage',
-        icon: <IconInbox />,
-      },
-      {
         to: '/performance',
         label: 'Performance management',
         permission: 'page:performance:manage',
         icon: <IconChart />,
-      },
-      {
-        to: '/benefits',
-        label: 'Benefits setup',
-        permission: 'page:benefits:manage',
-        icon: <IconGift />,
       },
       {
         to: '/jobs',
@@ -164,22 +179,10 @@ export const SELF_SERVICE_NAV: NavItemDef[] = [
     icon: <IconCalendar />,
   },
   {
-    to: '/ess/requests',
-    label: 'Requests',
-    permission: 'page:ess_requests',
-    icon: <IconInbox />,
-  },
-  {
     to: '/ess/attendance',
     label: 'Attendance',
     permission: 'page:attendance',
     icon: <IconAttendance />,
-  },
-  {
-    to: '/ess/payslip',
-    label: 'Payslip',
-    permission: 'page:payslip',
-    icon: <IconReceipt />,
   },
   {
     to: '/ess/performance',
@@ -193,22 +196,13 @@ export const SELF_SERVICE_NAV: NavItemDef[] = [
     permission: 'page:training',
     icon: <IconCheckCircle />,
   },
-  {
-    to: '/ess/benefits',
-    label: 'Benefits',
-    permission: 'page:benefits',
-    icon: <IconUsers />,
-  },
 ]
 
 export function selfServiceNavForRole(
-  role: RoleId,
+  _role: RoleId,
   can: (permission: Permission) => boolean,
 ): NavItemDef[] {
-  return SELF_SERVICE_NAV.map((item) => ({
-    ...item,
-    to: item.label === 'Payslip' ? payslipPathForRole(role) : item.to,
-  })).filter((item) => can(item.permission))
+  return SELF_SERVICE_NAV.filter((item) => can(item.permission))
 }
 
 export const ESS_NAV: NavItemDef[] = [

@@ -17,13 +17,9 @@ function todayLabel(): string {
   })
 }
 
-function formatPkr(n: number) {
-  return new Intl.NumberFormat('en-PK', { style: 'currency', currency: 'PKR', maximumFractionDigits: 0 }).format(n)
-}
-
 export function EssDashboardPage() {
   const { user, can } = useAuth()
-  const { employeeId, metrics, leaveRequests, employeeRequests } = useEssSession()
+  const { employeeId, metrics, leaveRequests } = useEssSession()
   const profile = employeeId ? getEmployee(employeeId) : undefined
 
   if (!profile) {
@@ -91,16 +87,6 @@ export function EssDashboardPage() {
               tone="info"
             />
           ) : null}
-          {can('page:payslip') && metrics.payslipPeriod ? (
-            <DashboardKpiCard
-              static
-              label="Last payslip"
-              value={metrics.payslipNet != null ? formatPkr(metrics.payslipNet) : '—'}
-              subtext={metrics.payslipPeriod}
-              icon={<i className="ri-money-dollar-circle-line" />}
-              tone="primary"
-            />
-          ) : null}
           {can('page:performance') ? (
             <DashboardKpiCard
               static
@@ -110,28 +96,6 @@ export function EssDashboardPage() {
               icon={<i className="ri-bar-chart-line" />}
               tone="secondary"
             />
-          ) : null}
-          {can('page:benefits') ? (
-            <DashboardKpiCard
-              static
-              label="Benefits"
-              value={metrics.benefitsCount}
-              subtext="Active enrollments"
-              icon={<i className="ri-heart-pulse-line" />}
-              tone="success"
-            />
-          ) : null}
-          {can('page:ess_requests') ? (
-            <Link to="/ess/requests" className="hrms-kpi-card-link">
-              <DashboardKpiCard
-                static
-                label="My requests"
-                value={employeeRequests.length}
-                subtext="Subject · details · dates"
-                icon={<i className="ri-file-list-3-line" />}
-                tone="primary"
-              />
-            </Link>
           ) : null}
         </section>
 

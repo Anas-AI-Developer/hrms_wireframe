@@ -14,7 +14,7 @@ const flows = [
   },
   {
     title: 'Time & leave',
-    steps: ['Sheet import (8h day)', 'Attendance log', 'Leave request', 'Manager → HR approval'],
+    steps: ['Sheet import (8h day)', 'Attendance log', 'Leave request', 'Status tracking'],
     links: [
       { label: 'Attendance', to: '/attendance' },
       { label: 'Leave', to: '/leave' },
@@ -29,12 +29,9 @@ const flows = [
     ],
   },
   {
-    title: 'Payroll & ESS',
-    steps: ['Payroll run (AAO)', 'Post payslips', 'Employee self-service portal'],
-    links: [
-      { label: 'Payroll', to: '/payroll' },
-      { label: 'ESS', to: '/ess' },
-    ],
+    title: 'Employee self-service',
+    steps: ['Staff portal login', 'Leave & attendance', 'Training & performance'],
+    links: [{ label: 'ESS', to: '/ess' }],
   },
   {
     title: 'Performance & development',
@@ -42,14 +39,6 @@ const flows = [
     links: [
       { label: 'Performance', to: '/performance' },
       { label: 'Training', to: '/training' },
-    ],
-  },
-  {
-    title: 'Benefits & compliance',
-    steps: ['Benefit plans', 'Enrollment', 'Statutory registers', 'Accounts review'],
-    links: [
-      { label: 'Benefits', to: '/benefits' },
-      { label: 'Compliance', to: '/compliance' },
     ],
   },
 ]

@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { HrmsListShell } from '../components/hrms/HrmsListShell'
@@ -28,15 +27,6 @@ const PIPELINE_STEPS = [
 export function AdminSettingsPage() {
   const { can } = useAuth()
   const canEdit = can('page:admin_settings')
-  const [hrApproval, setHrApproval] = useState<'yes' | 'no'>('yes')
-  const [saved, setSaved] = useState(false)
-
-  function onApprovalChange(value: 'yes' | 'no') {
-    if (!canEdit) return
-    setHrApproval(value)
-    setSaved(true)
-    window.setTimeout(() => setSaved(false), 2500)
-  }
 
   return (
     <HrmsListShell current="Admin settings">
@@ -51,12 +41,6 @@ export function AdminSettingsPage() {
           <p className="hrms-admin-settings__alert" role="status">
             <i className="ri-information-line" aria-hidden style={{ marginRight: '0.35rem' }} />
             Read-only view. Sign in as Executive Director to change configuration.
-          </p>
-        ) : null}
-
-        {saved ? (
-          <p className="hrms-admin-settings__alert hrms-admin-settings__alert--ok" role="status">
-            Setting saved for this browser session (wireframe demo).
           </p>
         ) : null}
 
@@ -111,37 +95,6 @@ export function AdminSettingsPage() {
                   </li>
                 ))}
               </ul>
-            </div>
-          </article>
-
-          <article className="hrms-ref-panel hrms-admin-settings__panel">
-            <header className="hrms-ref-panel-head">
-              <div className="hrms-admin-settings__panel-head">
-                <span className="hrms-admin-settings__panel-icon" aria-hidden>
-                  <i className="ri-checkbox-circle-line" />
-                </span>
-                <div className="hrms-admin-settings__panel-head-text">
-                  <h2 className="hrms-ref-panel-title">Leave approval</h2>
-                  <p className="hrms-ref-panel-desc">Workflow after manager recommendation</p>
-                </div>
-              </div>
-            </header>
-            <div className="hrms-ref-panel-body">
-              <div className="hrms-admin-settings__field">
-                <label className="hrms-admin-settings__field-label" htmlFor="hr-approval-setting">
-                  HR approval required after manager
-                </label>
-                <select
-                  id="hr-approval-setting"
-                  className="hrms-admin-settings__select"
-                  value={hrApproval}
-                  disabled={!canEdit}
-                  onChange={(e) => onApprovalChange(e.target.value as 'yes' | 'no')}
-                >
-                  <option value="yes">Yes — manager then HR</option>
-                  <option value="no">No — manager only</option>
-                </select>
-              </div>
             </div>
           </article>
 

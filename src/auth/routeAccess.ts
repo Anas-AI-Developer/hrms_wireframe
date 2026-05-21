@@ -17,12 +17,9 @@ export function permissionForPath(pathname: string): Permission | null {
   if (path === '/dashboard') return 'page:dashboard'
   if (path === '/ess' || path === '/ess/') return 'page:dashboard'
   if (path === '/ess/leave') return 'page:leave'
-  if (path === '/ess/requests') return 'page:ess_requests'
   if (path === '/ess/attendance') return 'page:attendance'
-  if (path === '/ess/payslip') return 'page:payslip'
   if (path === '/ess/performance') return 'page:performance'
   if (path === '/ess/training') return 'page:training'
-  if (path === '/ess/benefits') return 'page:benefits'
 
   if (path === '/admin/settings') return 'page:admin_settings'
   if (path === '/admin/rbac') return 'page:rbac'
@@ -33,15 +30,14 @@ export function permissionForPath(pathname: string): Permission | null {
   if (path.startsWith('/employees')) return 'page:employees'
 
   if (path === '/departments') return 'page:departments'
+  if (path.startsWith('/org/')) return 'page:departments'
   if (path === '/designations') return 'page:designations'
 
   if (path === '/attendance/import') return 'page:attendance:import'
   if (/^\/attendance\/employee\/[^/]+$/.test(path)) return 'page:attendance'
   if (path === '/attendance') return 'page:attendance'
 
-  if (path === '/leave/approvals') return 'page:leave:approvals'
   if (path === '/leave') return 'page:leave'
-  if (path === '/employee-requests') return 'page:ess_requests:manage'
 
   if (path === '/jobs/new' || /^\/jobs\/[^/]+\/edit$/.test(path)) return 'page:recruitment'
   if (
@@ -55,20 +51,13 @@ export function permissionForPath(pathname: string): Permission | null {
 
   if (path === '/onboarding/cases' || path === '/onboarding') return 'page:onboarding'
 
-  if (path === '/payroll') return 'page:payroll'
-  if (path === '/payslip') return 'page:payslip'
-
   if (path === '/reports/attendance') return 'page:reports:attendance'
-  if (path === '/reports/payroll') return 'page:reports:payroll'
   if (path === '/reports/employees') return 'page:reports:employees'
   if (path === '/reports') return 'page:reports'
 
   if (path === '/proposal') return 'page:proposal'
   if (path === '/performance') return 'page:performance:manage'
   if (path === '/training') return 'page:training'
-  if (path === '/benefits') return 'page:benefits'
-  if (path === '/compliance') return 'page:compliance'
-
   if (path === '/roadmap') return 'page:roadmap'
   if (path === '/modules') return 'page:modules'
   if (path === '/organogram/mapping') return 'page:organogram'

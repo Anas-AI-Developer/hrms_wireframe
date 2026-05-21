@@ -39,7 +39,6 @@ function employeeLabel(employeeId: string) {
 export function LeaveRequestsPage() {
   const { can, visibleEmployees, actorEmployeeId, user } = useAuth()
   const canRequest = can('leave.request')
-  const canApprovals = can('page:leave:approvals')
   const roster = visibleEmployees()
   const scopedIds = new Set(roster.map((e) => e.id))
   const isEmployee = user?.role === 'employee'
@@ -104,19 +103,12 @@ export function LeaveRequestsPage() {
   function submitMock(ev: FormEvent) {
     ev.preventDefault()
     if (!actorEmployeeId) return
-    alert(`Wireframe: ${LEAVE_TYPE_LABELS[draftType]} request submitted for approval.`)
+    alert(`Wireframe: ${LEAVE_TYPE_LABELS[draftType]} request submitted.`)
   }
 
   return (
     <HrmsListShell
       current="Leave Management"
-      actions={
-        canApprovals ? (
-          <Link to="/leave/approvals" className="hrms-btn-primary">
-            <i className="ri-time-line" aria-hidden /> Pending approvals
-          </Link>
-        ) : undefined
-      }
     >
       <section className="hrms-list-summary" aria-label="Leave summary">
         {canRequest && balance ? (
@@ -338,7 +330,7 @@ export function LeaveRequestsPage() {
                   </td>
                 </tr>
               ) : (
-                list.pageRows.map((r) => <LeaveRow key={r.id} request={r} canApprovals={canApprovals} />)
+                list.pageRows.map((r) => <LeaveRow key={r.id} request={r} />)
               )}
             </tbody>
           </table>
@@ -357,7 +349,7 @@ export function LeaveRequestsPage() {
   )
 }
 
-function LeaveRow({ request: r, canApprovals }: { request: LeaveRequest; canApprovals: boolean }) {
+function LeaveRow({ request: r }: { request: LeaveRequest }) {
   const emp = getEmployee(r.employeeId)
   return (
     <tr>
@@ -391,9 +383,6 @@ function LeaveRow({ request: r, canApprovals }: { request: LeaveRequest; canAppr
           id={r.id}
           actions={[
             ...(emp ? [{ label: 'View employee', href: `/employees/${emp.id}` }] : []),
-            ...(canApprovals && r.status === 'pending'
-              ? [{ label: 'Review approval', href: '/leave/approvals' }]
-              : []),
           ]}
         />
       </td>

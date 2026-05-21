@@ -3,7 +3,19 @@
  * Aligned with Organogram_NAVTTC HQs_2026.pdf
  */
 import type { Employee } from '../types/hrms'
-import type { EmployeeOrgPlacement, NavttcOrgNode, OrgLevel } from './navttcHqOrganogram'
+import type { NavttcOrgNode, OrgLevel } from './navttcOrgTypes'
+import { ORG_LEVEL_LABELS } from './navttcOrgTypes'
+
+export type { NavttcOrgNode, OrgLevel } from './navttcOrgTypes'
+
+/** Placement fields stored on employees (defined here to avoid circular imports). */
+export type EmployeeOrgPlacement = {
+  orgHeadId: string
+  orgWingId: string
+  orgSectionId: string
+  orgSubSection1Id?: string
+  orgSubSection2Id?: string
+}
 
 export type OrgMappingNode = {
   id: string
@@ -440,7 +452,7 @@ function flattenTree(
     id: node.id,
     code: node.code,
     level: node.level,
-    levelLabel: node.level.replace(/_/g, ' '),
+    levelLabel: ORG_LEVEL_LABELS[node.level],
     name: node.name,
     parentId: parent?.id ?? null,
     parentName: parent?.name ?? null,

@@ -2,7 +2,7 @@ import type { Department } from '../types/hrms'
 import { resolveDepartmentOfficeId } from './navttcOffices'
 
 /**
- * NAVTTC designation hierarchy (roles 1–7) — Master Data, ordered by BPS level.
+ * NAVTTC designation hierarchy (Chairman → Employee) — Master Data, ordered by BPS level.
  * Source: NAVTTC — Designations Ordered by Level (BPS), April 2026.
  */
 export type NavttcRoleLevel = {
@@ -22,6 +22,13 @@ export const NAVTTC_ROLE_LEVELS: NavttcRoleLevel[] = [
   { id: 'role-5', order: 5, title: 'Deputy Director', bps: 18, levelCategory: 'Upper Management' },
   { id: 'role-6', order: 6, title: 'Assistant Director', bps: 17, levelCategory: 'Middle Management' },
   { id: 'role-7', order: 7, title: 'Assistant', bps: 15, levelCategory: 'Supervisory' },
+  {
+    id: 'role-8',
+    order: 8,
+    title: 'Employee',
+    bps: 15,
+    levelCategory: 'Employee',
+  },
 ]
 
 export function getRoleLevelById(id: string | undefined): NavttcRoleLevel | undefined {
@@ -30,6 +37,7 @@ export function getRoleLevelById(id: string | undefined): NavttcRoleLevel | unde
 }
 
 export function formatRoleLevelLabel(role: NavttcRoleLevel): string {
+  if (role.id === 'role-8') return role.title
   return `Role ${role.order} · ${role.title} (BPS ${role.bps})`
 }
 

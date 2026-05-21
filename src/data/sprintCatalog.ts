@@ -57,7 +57,7 @@ export const sprintCatalog: SprintBlock[] = [
       {
         id: 's2-leave',
         title: 'Leave',
-        summary: 'Policies, balances, requests, approvals (ties to hierarchy).',
+        summary: 'Policies, balances, and leave requests.',
         wireframeStatus: 'live_stub',
       },
       {
@@ -78,9 +78,8 @@ export const sprintCatalog: SprintBlock[] = [
     id: 's3',
     title: 'Sprint 3 — Business logic',
     weight: '30%',
-    goal: 'Payroll, performance, training, benefits, compliance, and employee self-service (ESS).',
+    goal: 'Performance, training, and employee self-service (ESS).',
     modules: [
-      { id: 's3-pay', title: 'Payroll', summary: 'Runs, payslips, adjustments.', wireframeStatus: 'live_stub' },
       {
         id: 's3-perf',
         title: 'Performance',
@@ -94,21 +93,9 @@ export const sprintCatalog: SprintBlock[] = [
         wireframeStatus: 'live_stub',
       },
       {
-        id: 's3-ben',
-        title: 'Benefits',
-        summary: 'Enrollment and allowances.',
-        wireframeStatus: 'live_stub',
-      },
-      {
-        id: 's3-comp',
-        title: 'Compliance',
-        summary: 'Statutory registers and checks.',
-        wireframeStatus: 'live_stub',
-      },
-      {
         id: 's3-ess',
         title: 'ESS',
-        summary: 'Employee portal: profile, payslip, leave self-service.',
+        summary: 'Employee portal: profile, leave, attendance, training.',
         wireframeStatus: 'live_stub',
       },
     ],
@@ -123,12 +110,6 @@ export const sprintCatalog: SprintBlock[] = [
         id: 's4-r-att',
         title: 'Attendance reports',
         summary: 'Sprint 4 scope — attendance analytics.',
-        wireframeStatus: 'live_stub',
-      },
-      {
-        id: 's4-r-pay',
-        title: 'Payroll reports',
-        summary: 'Registers and payroll analytics.',
         wireframeStatus: 'live_stub',
       },
       {

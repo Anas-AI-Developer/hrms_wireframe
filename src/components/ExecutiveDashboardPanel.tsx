@@ -24,8 +24,8 @@ export function ExecutiveDashboardPanel() {
         <DashboardKpiCard
           static
           label="Leave pipeline"
-          value={k.leavePendingApproval}
-          subtext="Pending approvals"
+          value={k.leavePending}
+          subtext="Pending requests"
           icon={<i className="ri-calendar-check-line" />}
           tone="warning"
         />
@@ -39,18 +39,18 @@ export function ExecutiveDashboardPanel() {
         />
         <DashboardKpiCard
           static
-          label="Payroll"
-          value={k.payrollLastPosted}
-          subtext="Last posted period"
-          icon={<i className="ri-money-dollar-circle-line" />}
+          label="Onboarding"
+          value={k.onboardingInProgress}
+          subtext="Active checklists"
+          icon={<i className="ri-user-follow-line" />}
           tone="secondary"
         />
         <DashboardKpiCard
           static
-          label="Compliance"
-          value={k.complianceDueSoon}
-          subtext="Due soon"
-          icon={<i className="ri-shield-check-line" />}
+          label="Training"
+          value={k.trainingEnrollments}
+          subtext="Active nominations"
+          icon={<i className="ri-graduation-cap-line" />}
           tone="success"
         />
         <DashboardKpiCard

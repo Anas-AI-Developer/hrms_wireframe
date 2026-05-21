@@ -77,7 +77,7 @@ export type Employee = {
   orgSubSection1Id?: string
   orgSubSection2Id?: string
   designationId: string
-  /** NAVTTC role level 1–7 (Chairman → Assistant). */
+  /** NAVTTC role level (Chairman → Employee). */
   roleLevelId?: string
   managerId?: string
   employmentType: EmploymentType

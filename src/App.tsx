@@ -8,31 +8,25 @@ import { AttendanceImportPage } from './pages/AttendanceImportPage'
 import { AttendanceListPage } from './pages/AttendanceListPage'
 import { EmployeeAttendanceHistoryPage } from './pages/EmployeeAttendanceHistoryPage'
 import { AttendanceReportPage } from './pages/AttendanceReportPage'
-import { BenefitsPage } from './pages/BenefitsPage'
-import { CompliancePage } from './pages/CompliancePage'
 import { DashboardPage } from './pages/DashboardPage'
 import { DepartmentFormPage } from './pages/DepartmentFormPage'
 import { DepartmentListPage } from './pages/DepartmentListPage'
+import { OrgStructurePage } from './pages/OrgStructurePage'
 import { DesignationFormPage } from './pages/DesignationFormPage'
 import { DesignationListPage } from './pages/DesignationListPage'
 import { EmployeeDetailPage } from './pages/EmployeeDetailPage'
 import { EmployeeFormPage } from './pages/EmployeeFormPage'
 import { EmployeeAnalyticsPage } from './pages/EmployeeAnalyticsPage'
 import { EmployeeListPage } from './pages/EmployeeListPage'
-import { EmployeeRequestsManagementPage } from './pages/EmployeeRequestsManagementPage'
 import { EssLayout } from './layouts/EssLayout'
 import { EssAttendancePage } from './pages/ess/EssAttendancePage'
-import { EssBenefitsPage } from './pages/ess/EssBenefitsPage'
 import { EssLeavePage } from './pages/ess/EssLeavePage'
 import { EssDashboardPage } from './pages/ess/EssDashboardPage'
-import { EssPayslipPage } from './pages/ess/EssPayslipPage'
 import { EssPerformancePage } from './pages/ess/EssPerformancePage'
-import { EssRequestsPage } from './pages/ess/EssRequestsPage'
 import { EssTrainingPage } from './pages/ess/EssTrainingPage'
 import { HiringPipelinePage } from './pages/HiringPipelinePage'
 import { JobPostingFormPage } from './pages/JobPostingFormPage'
 import { JobPostingsListPage } from './pages/JobPostingsListPage'
-import { LeaveApprovalsPage } from './pages/LeaveApprovalsPage'
 import { LeaveManagementPage } from './pages/LeaveManagementPage'
 import { LeaveHubProvider } from './leave/LeaveHubContext'
 import { LoginPage } from './pages/LoginPage'
@@ -40,9 +34,6 @@ import { OnboardingListPage } from './pages/OnboardingListPage'
 import { OnboardingPage } from './pages/OnboardingPage'
 import { OrganogramMappingPage } from './pages/OrganogramMappingPage'
 import { OrganogramPage } from './pages/OrganogramPage'
-import { PayrollReportPage } from './pages/PayrollReportPage'
-import { PayrollRunsPage } from './pages/PayrollRunsPage'
-import { PayslipPage } from './pages/PayslipPage'
 import { PerformancePage } from './pages/PerformancePage'
 import { RbacMatrixPage } from './pages/RbacMatrixPage'
 import { RecruitmentPage } from './pages/RecruitmentPage'
@@ -88,26 +79,10 @@ export default function App() {
                 }
               />
               <Route
-                path="requests"
-                element={
-                  <RequirePermission permission="page:ess_requests">
-                    <EssRequestsPage />
-                  </RequirePermission>
-                }
-              />
-              <Route
                 path="attendance"
                 element={
                   <RequirePermission permission="page:attendance">
                     <EssAttendancePage />
-                  </RequirePermission>
-                }
-              />
-              <Route
-                path="payslip"
-                element={
-                  <RequirePermission permission="page:payslip">
-                    <EssPayslipPage />
                   </RequirePermission>
                 }
               />
@@ -124,14 +99,6 @@ export default function App() {
                 element={
                   <RequirePermission permission="page:training">
                     <EssTrainingPage />
-                  </RequirePermission>
-                }
-              />
-              <Route
-                path="benefits"
-                element={
-                  <RequirePermission permission="page:benefits">
-                    <EssBenefitsPage />
                   </RequirePermission>
                 }
               />
@@ -200,8 +167,17 @@ export default function App() {
                 </RequirePermission>
               }
             />
+            <Route path="departments" element={<Navigate to="/org/wings" replace />} />
             <Route
-              path="departments"
+              path="org/:levelKey"
+              element={
+                <RequirePermission permission="page:departments">
+                  <OrgStructurePage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="departments/list"
               element={
                 <RequirePermission permission="page:departments">
                   <DepartmentListPage />
@@ -273,14 +249,6 @@ export default function App() {
               }
             />
             <Route
-              path="employee-requests"
-              element={
-                <RequirePermission permission="page:ess_requests:manage">
-                  <EmployeeRequestsManagementPage />
-                </RequirePermission>
-              }
-            />
-            <Route
               path="leave"
               element={
                 <RequirePermission permission="page:leave">
@@ -291,14 +259,6 @@ export default function App() {
               }
             >
               <Route index element={<LeaveManagementPage />} />
-              <Route
-                path="approvals"
-                element={
-                  <RequirePermission permission="page:leave:approvals">
-                    <LeaveApprovalsPage />
-                  </RequirePermission>
-                }
-              />
             </Route>
             <Route
               path="jobs"
@@ -365,22 +325,6 @@ export default function App() {
               }
             />
             <Route
-              path="payroll"
-              element={
-                <RequirePermission permission="page:payroll">
-                  <PayrollRunsPage />
-                </RequirePermission>
-              }
-            />
-            <Route
-              path="payslip"
-              element={
-                <RequirePermission permission="page:payslip">
-                  <PayslipPage />
-                </RequirePermission>
-              }
-            />
-            <Route
               path="reports"
               element={
                 <RequirePermission permission="page:reports">
@@ -393,14 +337,6 @@ export default function App() {
               element={
                 <RequirePermission permission="page:reports:attendance">
                   <AttendanceReportPage />
-                </RequirePermission>
-              }
-            />
-            <Route
-              path="reports/payroll"
-              element={
-                <RequirePermission permission="page:reports:payroll">
-                  <PayrollReportPage />
                 </RequirePermission>
               }
             />
@@ -433,22 +369,6 @@ export default function App() {
               element={
                 <RequirePermission permission="page:training">
                   <TrainingPage />
-                </RequirePermission>
-              }
-            />
-            <Route
-              path="benefits"
-              element={
-                <RequirePermission permission="page:benefits">
-                  <BenefitsPage />
-                </RequirePermission>
-              }
-            />
-            <Route
-              path="compliance"
-              element={
-                <RequirePermission permission="page:compliance">
-                  <CompliancePage />
                 </RequirePermission>
               }
             />

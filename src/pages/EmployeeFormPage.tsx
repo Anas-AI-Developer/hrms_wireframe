@@ -3,7 +3,6 @@ import { EmployeeOfficeFields } from '../components/employees/EmployeeOfficeFiel
 import {
   EmployeeOrgPlacementFields,
   placementFromEmployee,
-  validateOrgPlacement,
 } from '../components/employees/EmployeeOrgPlacementFields'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
@@ -31,10 +30,18 @@ import {
   legacyDepartmentIdForPlacement,
 } from '../data/navttcHqOrganogram'
 import {
+  orgPlacementForRoleChange,
+  roleOrgUiConfig,
+  validateOrgPlacementForRole,
+} from '../data/roleOrgPlacement'
+import {
   NAVTTC_HEAD_OFFICE_ID,
   officePlacementFromEmployee,
   validateOfficePlacement,
+  type EmployeeOfficePlacement,
 } from '../data/navttcOfficeMapping'
+
+const EMPTY_OFFICE_PLACEMENT: EmployeeOfficePlacement = { category: '', officeId: '' }
 import { getDepartmentsForOffice, resolveDepartmentOfficeId } from '../data/navttcOffices'
 import {
   designationMatchesRoleLevel,
@@ -76,7 +83,7 @@ export function EmployeeFormPage() {
   const [officePlacement, setOfficePlacement] = useState(() =>
     existing
       ? officePlacementFromEmployee(existing, departments)
-      : { category: 'head_office' as const, officeId: NAVTTC_HEAD_OFFICE_ID },
+      : EMPTY_OFFICE_PLACEMENT,
   )
   const [regionalCentreId, setRegionalCentreId] = useState(() => {
     if (!existing) return ''
@@ -114,7 +121,11 @@ export function EmployeeFormPage() {
   const [orgError, setOrgError] = useState<string | null>(null)
   const [officeError, setOfficeError] = useState<string | null>(null)
 
-  const isHeadOffice = officePlacement.category === 'head_office'
+  const isHeadOffice =
+    officePlacement.category === 'head_office' && officePlacement.officeId === NAVTTC_HEAD_OFFICE_ID
+  const roleOrgCfg = useMemo(() => roleOrgUiConfig(roleLevelId), [roleLevelId])
+  const lockHeadOffice = Boolean(roleOrgCfg?.forceHeadOffice)
+  const showHqOrganogram = Boolean(roleOrgCfg)
 
   const resolvedDurationMonths = useMemo(() => {
     const n = Number.parseInt(durationMonths, 10)
@@ -131,7 +142,7 @@ export function EmployeeFormPage() {
 
   const resolvedDepartmentId = useMemo(() => {
     if (!isHeadOffice) return regionalCentreId
-    if (!orgPlacement.orgWingId || !orgPlacement.orgSectionId) return ''
+    if (!orgPlacement.orgWingId) return 'c1'
     return legacyDepartmentIdForPlacement({
       orgHeadId: orgPlacement.orgHeadId,
       orgWingId: orgPlacement.orgWingId,
@@ -158,9 +169,41 @@ export function EmployeeFormPage() {
     }
   }, [designationId, roleLevelId, designations])
 
-  function onOfficePlacementChange(
-    next: typeof officePlacement,
-  ) {
+  function onOrgPlacementChange(next: typeof orgPlacement) {
+    setOrgPlacement(next)
+    setOrgError(null)
+    setDesignationId('')
+  }
+
+  function onRoleLevelChange(nextRoleId: string) {
+    setRoleLevelId(nextRoleId)
+    setDesignationId('')
+    if (!nextRoleId) {
+      setOfficePlacement(EMPTY_OFFICE_PLACEMENT)
+      setRegionalCentreId('')
+      setOrgPlacement({
+        orgHeadId: DEFAULT_ORG_HEAD_ID,
+        orgWingId: '',
+        orgSectionId: '',
+      })
+      setOfficeError(null)
+      setOrgError(null)
+      return
+    }
+    const cfg = roleOrgUiConfig(nextRoleId)
+    if (cfg?.forceHeadOffice) {
+      setOfficePlacement({ category: 'head_office', officeId: NAVTTC_HEAD_OFFICE_ID })
+      setRegionalCentreId('')
+      setOfficeError(null)
+    }
+    if (cfg) {
+      setOrgPlacement(orgPlacementForRoleChange(nextRoleId, orgPlacement))
+      setOrgError(null)
+    }
+  }
+
+  function onOfficePlacementChange(next: typeof officePlacement) {
+    if (lockHeadOffice) return
     setOfficePlacement(next)
     setOfficeError(null)
     if (next.category === 'head_office') {
@@ -197,14 +240,14 @@ export function EmployeeFormPage() {
       setError(null)
       return
     }
-    if (isHeadOffice) {
-      const orgValidation = validateOrgPlacement(orgPlacement)
+    if (showHqOrganogram) {
+      const orgValidation = validateOrgPlacementForRole(orgPlacement, roleLevelId)
       if (orgValidation) {
         setOrgError(orgValidation)
         setError(null)
         return
       }
-    } else if (!regionalCentreId) {
+    } else if (officePlacement.category === 'regional_office' && !regionalCentreId) {
       setError('Select a centre / unit under the regional office.')
       return
     }
@@ -213,7 +256,7 @@ export function EmployeeFormPage() {
       return
     }
     if (!roleLevelId) {
-      setError('Select a role level (1–7) from the NAVTTC designation hierarchy.')
+      setError('Select a role from the NAVTTC hierarchy.')
       return
     }
     if (designationOptions.length > 0 && !designationId) {
@@ -240,12 +283,12 @@ export function EmployeeFormPage() {
       cnic,
       dateOfBirth,
       departmentId: resolvedDepartmentId,
-      officeId: officePlacement.officeId,
-      orgHeadId: isHeadOffice ? orgPlacement.orgHeadId : undefined,
-      orgWingId: isHeadOffice ? orgPlacement.orgWingId : undefined,
-      orgSectionId: isHeadOffice ? orgPlacement.orgSectionId : undefined,
-      orgSubSection1Id: isHeadOffice ? orgPlacement.orgSubSection1Id : undefined,
-      orgSubSection2Id: isHeadOffice ? orgPlacement.orgSubSection2Id : undefined,
+      officeId: officePlacement.officeId || undefined,
+      orgHeadId: showHqOrganogram ? orgPlacement.orgHeadId : undefined,
+      orgWingId: showHqOrganogram ? orgPlacement.orgWingId || undefined : undefined,
+      orgSectionId: showHqOrganogram ? orgPlacement.orgSectionId || undefined : undefined,
+      orgSubSection1Id: showHqOrganogram ? orgPlacement.orgSubSection1Id : undefined,
+      orgSubSection2Id: showHqOrganogram ? orgPlacement.orgSubSection2Id : undefined,
       designationId,
       roleLevelId,
       employmentType,
@@ -265,7 +308,7 @@ export function EmployeeFormPage() {
   const heading = isEdit ? 'Edit employee' : 'Create employee'
   const sub = isEdit
     ? 'Update roster details. Changes are saved for this browser session.'
-    : `New code ${nextCode}. Placement follows NAVTTC HQ organogram (2026).`
+    : `New code ${nextCode}. Select role first — HQ organogram (2026) steps follow automatically.`
 
   return (
     <HrmsListShell
@@ -383,13 +426,63 @@ export function EmployeeFormPage() {
               </CompactFormGrid>
             </CompactFormSection>
 
+            <CompactFormSection legend="Role (NAVTTC hierarchy)">
+              <CompactFormGrid>
+                <CompactFormField
+                  full
+                  label={
+                    <>
+                      Role <CompactFormRequired />
+                    </>
+                  }
+                  hint="Choose first — Head Office and organogram steps depend on this role"
+                >
+                  <CompactFormInputWrap icon="ri-vip-crown-line">
+                    <select
+                      value={roleLevelId}
+                      onChange={(e) => onRoleLevelChange(e.target.value)}
+                      required
+                    >
+                      <option value="">Select role…</option>
+                      {NAVTTC_ROLE_LEVELS.map((role) => (
+                        <option key={role.id} value={role.id}>
+                          {role.id === 'role-8'
+                            ? formatRoleLevelLabel(role)
+                            : `${formatRoleLevelLabel(role)} — ${role.levelCategory}`}
+                        </option>
+                      ))}
+                    </select>
+                  </CompactFormInputWrap>
+                </CompactFormField>
+
+                {selectedRole ? (
+                  <CompactFormField full label="BPS scale">
+                    <CompactFormInputWrap icon="ri-bar-chart-horizontal-line">
+                      <input readOnly value={`BPS ${selectedRole.bps}`} aria-readonly="true" />
+                    </CompactFormInputWrap>
+                  </CompactFormField>
+                ) : null}
+              </CompactFormGrid>
+            </CompactFormSection>
+
             <CompactFormSection legend="Office location">
               <EmployeeOfficeFields
                 value={officePlacement}
                 onChange={onOfficePlacementChange}
                 error={officeError}
+                lockHeadOffice={lockHeadOffice}
+                disabledUntilRole={!isEdit}
               />
-              {!isHeadOffice && officePlacement.officeId ? (
+              {lockHeadOffice ? (
+                <p className="wf-note" style={{ marginTop: '0.5rem' }}>
+                  Head Office is set automatically for the selected HQ role (Organogram 2026).
+                </p>
+              ) : !roleLevelId ? (
+                <p className="wf-note" style={{ marginTop: '0.5rem' }}>
+                  Select a role above first — headquarters roles will set Head Office automatically.
+                </p>
+              ) : null}
+              {!isHeadOffice && officePlacement.category === 'regional_office' && officePlacement.officeId ? (
                 <CompactFormGrid>
                   <CompactFormField
                     full
@@ -421,17 +514,25 @@ export function EmployeeFormPage() {
               ) : null}
             </CompactFormSection>
 
-            {isHeadOffice ? (
-              <CompactFormSection legend="Organization (NAVTTC HQ organogram)">
+            {showHqOrganogram && selectedRole ? (
+              <CompactFormSection
+                legend={`Organization — ${selectedRole.title}`}
+              >
                 <EmployeeOrgPlacementFields
                   value={orgPlacement}
-                  onChange={setOrgPlacement}
+                  onChange={onOrgPlacementChange}
                   error={orgError}
+                  roleLevelId={roleLevelId}
                 />
               </CompactFormSection>
+            ) : roleLevelId ? (
+              <p className="wf-note">
+                Select a headquarters role to place this employee on the NAVTTC organogram, or use a
+                regional office without HQ placement.
+              </p>
             ) : null}
 
-            <CompactFormSection legend="Post & reporting">
+            <CompactFormSection legend="Post & appointment">
               <CompactFormGrid>
                 <CompactFormField
                   full
@@ -451,41 +552,6 @@ export function EmployeeFormPage() {
                   </CompactFormInputWrap>
                 </CompactFormField>
 
-                <CompactFormField
-                  full
-                  label={
-                    <>
-                      Role level (1–7) <CompactFormRequired />
-                    </>
-                  }
-                >
-                  <CompactFormInputWrap icon="ri-vip-crown-line">
-                    <select
-                      value={roleLevelId}
-                      onChange={(e) => {
-                        setRoleLevelId(e.target.value)
-                        setDesignationId('')
-                      }}
-                      required
-                    >
-                      <option value="">Select role…</option>
-                      {NAVTTC_ROLE_LEVELS.map((role) => (
-                        <option key={role.id} value={role.id}>
-                          {formatRoleLevelLabel(role)} — {role.levelCategory}
-                        </option>
-                      ))}
-                    </select>
-                  </CompactFormInputWrap>
-                </CompactFormField>
-
-                {selectedRole ? (
-                  <CompactFormField full label="BPS scale">
-                    <CompactFormInputWrap icon="ri-bar-chart-horizontal-line">
-                      <input readOnly value={`BPS ${selectedRole.bps}`} aria-readonly="true" />
-                    </CompactFormInputWrap>
-                  </CompactFormField>
-                ) : null}
-
                 {roleLevelId ? (
                   <CompactFormField
                     full
@@ -496,7 +562,7 @@ export function EmployeeFormPage() {
                     }
                     hint={
                       selectedRole
-                        ? `BPS ${selectedRole.bps} only — same unit first, then other centres in this office`
+                        ? `BPS ${selectedRole.bps} — filtered by wing/section you selected above`
                         : undefined
                     }
                   >

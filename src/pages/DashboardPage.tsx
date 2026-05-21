@@ -8,7 +8,6 @@ import { DashboardKpiCard } from '../components/dashboard/DashboardKpiCard'
 import { EmployeeDataCard } from '../components/dashboard/EmployeeDataCard'
 import { PageBreadcrumb } from '../components/hrms/PageBreadcrumb'
 import { StatusBadge } from '../components/hrms/StatusBadge'
-import { isFilledEmployee } from '../data/dashboardEmployment'
 import { useWireframeData } from '../data/WireframeDataContext'
 import { portalForUser } from '../portals/portalConfig'
 import { homePathForRole } from '../portals/homePath'
@@ -34,10 +33,8 @@ export function DashboardPage() {
 
   const portal = portalForUser(user.role)
   const canEmployees = can('page:employees')
-  const canPayroll = can('payroll.view')
   const canReports = can('page:reports:attendance')
   const scoped = visibleEmployees()
-  const filled = useMemo(() => scoped.filter(isFilledEmployee), [scoped])
   const active = scoped.filter((e) => e.status === 'active').length
   const onLeave = scoped.filter((e) => e.status === 'on_leave').length
   const inactive = scoped.filter((e) => e.status === 'inactive').length
@@ -96,10 +93,10 @@ export function DashboardPage() {
             <DashboardKpiCard
               static
               compact
-              label={canPayroll ? 'Payroll' : 'Centres'}
-              value={canPayroll ? filled.length : departments.length}
-              subtext={canPayroll ? 'Roster rows' : `${inactive} inactive`}
-              icon={<i className={canPayroll ? 'ri-money-dollar-circle-line' : 'ri-building-4-line'} />}
+              label="Centres"
+              value={departments.length}
+              subtext={`${inactive} inactive`}
+              icon={<i className="ri-building-4-line" />}
               tone="info"
             />
           </div>

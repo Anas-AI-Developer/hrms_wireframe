@@ -5,13 +5,16 @@ import {
   CompactFormInputWrap,
   CompactFormRequired,
 } from '../hrms/HrmsCompactForm'
+import { roleOrgUiConfig, validateOrgPlacementForRole } from '../../data/roleOrgPlacement'
 import {
   DEFAULT_ORG_HEAD_ID,
   formatOrgPlacementPath,
+  getOrgAncestorAtLevel,
   getOrgChildren,
   getOrgNode,
   ORG_LEVEL_LABELS,
   type EmployeeOrgPlacement,
+  type NavttcOrgNode,
   type OrgLevel,
 } from '../../data/navttcHqOrganogram'
 
@@ -19,6 +22,7 @@ type Props = {
   value: EmployeeOrgPlacement
   onChange: (next: EmployeeOrgPlacement) => void
   error?: string | null
+  roleLevelId?: string
 }
 
 const LEVEL_ORDER: OrgLevel[] = ['head', 'wing', 'section', 'sub_section_1', 'sub_section_2']
@@ -29,6 +33,21 @@ const LEVEL_ICONS: Record<OrgLevel, string> = {
   section: 'ri-organization-chart',
   sub_section_1: 'ri-node-tree',
   sub_section_2: 'ri-stack-line',
+}
+
+const PARENT_LEVEL: Partial<Record<OrgLevel, OrgLevel>> = {
+  wing: 'head',
+  section: 'wing',
+  sub_section_1: 'section',
+  sub_section_2: 'sub_section_1',
+}
+
+const PLACEHOLDER: Record<OrgLevel, string> = {
+  head: 'Select head…',
+  wing: 'Select Director General…',
+  section: 'Select directorate (Section)…',
+  sub_section_1: 'Select Section 1 (DD)…',
+  sub_section_2: 'Select Section 2 (AD)…',
 }
 
 function levelKey(level: OrgLevel): keyof EmployeeOrgPlacement {
@@ -42,14 +61,63 @@ function levelKey(level: OrgLevel): keyof EmployeeOrgPlacement {
   return map[level]
 }
 
-export function EmployeeOrgPlacementFields({ value, onChange, error }: Props) {
+function levelValue(placement: EmployeeOrgPlacement, level: OrgLevel): string {
+  const key = levelKey(level)
+  if (key === 'orgSubSection1Id' || key === 'orgSubSection2Id') {
+    return placement[key] ?? ''
+  }
+  return (placement[key] as string) ?? ''
+}
+
+function formatOptionLabel(node: NavttcOrgNode): string {
+  const wing = getOrgAncestorAtLevel(node, 'wing')
+  if (node.level === 'section' && wing) return `${node.name} · ${wing.name}`
+  if (node.level === 'sub_section_1') {
+    const section = getOrgNode(node.parentId ?? '')
+    return section ? `${node.name} · ${section.name}` : node.name
+  }
+  if (node.level === 'sub_section_2') {
+    const ss1 = getOrgNode(node.parentId ?? '')
+    return ss1 ? `${node.name} · ${ss1.name}` : node.name
+  }
+  return node.code ? `${node.name} (${node.code})` : node.name
+}
+
+function parentIdForLevel(placement: EmployeeOrgPlacement, level: OrgLevel): string | null {
+  const parentLevel = PARENT_LEVEL[level]
+  if (!parentLevel) return null
+  const id = levelValue(placement, parentLevel)
+  return id || null
+}
+
+function optionsForLevel(placement: EmployeeOrgPlacement, level: OrgLevel): NavttcOrgNode[] {
+  if (level === 'head') return getOrgChildren(null, 'head')
+  const parentId = parentIdForLevel(placement, level)
+  if (!parentId) return []
+  return getOrgChildren(parentId, level)
+}
+
+function parentReady(placement: EmployeeOrgPlacement, level: OrgLevel): boolean {
+  const parentLevel = PARENT_LEVEL[level]
+  if (!parentLevel) return true
+  return Boolean(levelValue(placement, parentLevel))
+}
+
+export function EmployeeOrgPlacementFields({ value, onChange, error, roleLevelId }: Props) {
   const pathPreview = useMemo(() => formatOrgPlacementPath(value), [value])
+  const roleCfg = roleOrgUiConfig(roleLevelId)
+
+  const showLevel = (level: OrgLevel) =>
+    roleCfg ? roleCfg.visibleLevels.includes(level) : true
+
+  const requireLevel = (level: OrgLevel) =>
+    roleCfg ? roleCfg.requiredLevels.includes(level) : level !== 'sub_section_1' && level !== 'sub_section_2'
 
   function setLevel(level: OrgLevel, id: string) {
     const idx = LEVEL_ORDER.indexOf(level)
     const next: EmployeeOrgPlacement = { ...value }
     const key = levelKey(level)
-    if (key === 'orgHeadId') next.orgHeadId = id
+    if (key === 'orgHeadId') next.orgHeadId = id || DEFAULT_ORG_HEAD_ID
     else if (key === 'orgWingId') next.orgWingId = id
     else if (key === 'orgSectionId') next.orgSectionId = id
     else if (key === 'orgSubSection1Id') next.orgSubSection1Id = id || undefined
@@ -66,17 +134,79 @@ export function EmployeeOrgPlacementFields({ value, onChange, error }: Props) {
     onChange(next)
   }
 
-  const headOptions = getOrgChildren(null, 'head')
-  const wingParent = value.orgHeadId || DEFAULT_ORG_HEAD_ID
-  const wingOptions = getOrgChildren(wingParent, 'wing')
-  const sectionOptions = getOrgChildren(value.orgWingId || null, 'section')
-  const ss1Options = getOrgChildren(value.orgSectionId || null, 'sub_section_1')
-  const ss2Options = value.orgSubSection1Id
-    ? getOrgChildren(value.orgSubSection1Id, 'sub_section_2')
-    : []
+  const optionsByLevel = useMemo(
+    () =>
+      Object.fromEntries(
+        LEVEL_ORDER.map((level) => [level, optionsForLevel(value, level)]),
+      ) as Record<OrgLevel, NavttcOrgNode[]>,
+    [value],
+  )
+
+  function renderLevelField(level: OrgLevel) {
+    if (!showLevel(level)) return null
+
+    const options = optionsByLevel[level]
+    const ready = parentReady(value, level)
+    const required = requireLevel(level)
+    const optional = showLevel(level) && !required
+    const current = levelValue(value, level)
+    const disabled = level !== 'head' && !ready
+
+    let hint = ''
+    if (level === 'wing') hint = 'P&D · A&F · A&C · S&C'
+    else if (level === 'section') hint = 'Directorates under the selected wing'
+    else if (level === 'sub_section_1') hint = 'Deputy Director (DD) units'
+    else if (level === 'sub_section_2') hint = 'Assistant Director (AD) units under DD'
+    else hint = 'NAVTTC Headquarters'
+
+    if (!ready && level !== 'head') {
+      hint = `Select ${ORG_LEVEL_LABELS[PARENT_LEVEL[level]!]} first`
+    } else if (ready && options.length === 0) {
+      hint = 'No units defined in organogram for this branch yet'
+    }
+
+    return (
+      <CompactFormField
+        key={level}
+        label={
+          <>
+            {ORG_LEVEL_LABELS[level]} {required ? <CompactFormRequired /> : null}
+          </>
+        }
+        hint={hint}
+      >
+        <CompactFormInputWrap icon={LEVEL_ICONS[level]}>
+          <select
+            value={current}
+            onChange={(e) => setLevel(level, e.target.value)}
+            required={required}
+            disabled={disabled}
+          >
+            <option value="">{PLACEHOLDER[level]}</option>
+            {options.map((n) => (
+              <option key={n.id} value={n.id}>
+                {formatOptionLabel(n)}
+              </option>
+            ))}
+          </select>
+        </CompactFormInputWrap>
+        {optional && ready && options.length === 0 ? (
+          <span className="text-sm" style={{ color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
+            No {ORG_LEVEL_LABELS[level].toLowerCase()} listed — leave blank if not applicable.
+          </span>
+        ) : null}
+      </CompactFormField>
+    )
+  }
 
   return (
     <div className="hrms-org-placement">
+      {roleCfg?.formHint ? (
+        <p className="wf-note" style={{ marginBottom: '0.75rem' }}>
+          {roleCfg.formHint}
+        </p>
+      ) : null}
+
       {pathPreview ? (
         <p className="hrms-org-placement__path" aria-live="polite">
           <i className="ri-route-line" aria-hidden />
@@ -90,122 +220,7 @@ export function EmployeeOrgPlacementFields({ value, onChange, error }: Props) {
         </p>
       ) : null}
 
-      <CompactFormGrid>
-        <CompactFormField
-          label={
-            <>
-              {ORG_LEVEL_LABELS.head} <CompactFormRequired />
-            </>
-          }
-          hint="Top leadership — NAVTTC HQs"
-        >
-          <CompactFormInputWrap icon={LEVEL_ICONS.head}>
-            <select
-              value={value.orgHeadId || DEFAULT_ORG_HEAD_ID}
-              onChange={(e) => setLevel('head', e.target.value)}
-              required
-            >
-              {headOptions.map((n) => (
-                <option key={n.id} value={n.id}>
-                  {n.code ? `${n.name} (${n.code})` : n.name}
-                </option>
-              ))}
-            </select>
-          </CompactFormInputWrap>
-        </CompactFormField>
-
-        <CompactFormField
-          label={
-            <>
-              {ORG_LEVEL_LABELS.wing} <CompactFormRequired />
-            </>
-          }
-        >
-          <CompactFormInputWrap icon={LEVEL_ICONS.wing}>
-            <select
-              value={value.orgWingId}
-              onChange={(e) => setLevel('wing', e.target.value)}
-              required
-              disabled={!value.orgHeadId}
-            >
-              <option value="">Select wing…</option>
-              {wingOptions.map((n) => (
-                <option key={n.id} value={n.id}>
-                  {n.code ? `${n.name} (${n.code})` : n.name}
-                </option>
-              ))}
-            </select>
-          </CompactFormInputWrap>
-        </CompactFormField>
-
-        {value.orgWingId ? (
-          <CompactFormField
-            label={
-              <>
-                {ORG_LEVEL_LABELS.section} <CompactFormRequired />
-              </>
-            }
-            hint="Director-level unit under the selected wing"
-          >
-            <CompactFormInputWrap icon={LEVEL_ICONS.section}>
-              <select
-                value={value.orgSectionId}
-                onChange={(e) => setLevel('section', e.target.value)}
-                required
-              >
-                <option value="">Select section…</option>
-                {sectionOptions.map((n) => (
-                  <option key={n.id} value={n.id}>
-                    {n.code ? `${n.name} (${n.code})` : n.name}
-                  </option>
-                ))}
-              </select>
-            </CompactFormInputWrap>
-          </CompactFormField>
-        ) : null}
-
-        {value.orgSectionId && ss1Options.length > 0 ? (
-          <CompactFormField
-            label={ORG_LEVEL_LABELS.sub_section_1}
-            hint="Optional — first sub-unit under the section"
-          >
-            <CompactFormInputWrap icon={LEVEL_ICONS.sub_section_1}>
-              <select
-                value={value.orgSubSection1Id ?? ''}
-                onChange={(e) => setLevel('sub_section_1', e.target.value)}
-              >
-                <option value="">— None —</option>
-            {ss1Options.map((n) => (
-              <option key={n.id} value={n.id}>
-                {n.code ? `${n.name} (${n.code})` : n.name}
-              </option>
-            ))}
-              </select>
-            </CompactFormInputWrap>
-          </CompactFormField>
-        ) : null}
-
-        {ss2Options.length > 0 ? (
-          <CompactFormField
-            label={ORG_LEVEL_LABELS.sub_section_2}
-            hint="Optional — Deputy Director / second-tier unit"
-          >
-            <CompactFormInputWrap icon={LEVEL_ICONS.sub_section_2}>
-              <select
-                value={value.orgSubSection2Id ?? ''}
-                onChange={(e) => setLevel('sub_section_2', e.target.value)}
-              >
-                <option value="">— None —</option>
-            {ss2Options.map((n) => (
-              <option key={n.id} value={n.id}>
-                {n.code ? `${n.name} (${n.code})` : n.name}
-              </option>
-            ))}
-              </select>
-            </CompactFormInputWrap>
-          </CompactFormField>
-        ) : null}
-      </CompactFormGrid>
+      <CompactFormGrid>{LEVEL_ORDER.map((level) => renderLevelField(level))}</CompactFormGrid>
     </div>
   )
 }
@@ -226,13 +241,16 @@ export function placementFromEmployee(emp: {
   }
 }
 
-export function validateOrgPlacement(placement: EmployeeOrgPlacement): string | null {
+export function validateOrgPlacement(
+  placement: EmployeeOrgPlacement,
+  roleLevelId?: string,
+): string | null {
+  const roleMsg = validateOrgPlacementForRole(placement, roleLevelId)
+  if (roleMsg) return roleMsg
+  if (roleLevelId) return null
+
   if (!placement.orgHeadId) return 'Select the organizational head.'
-  if (!placement.orgWingId) return 'Select a wing under the head.'
-  if (!placement.orgSectionId) return 'Select a section under the wing.'
-  if (!getOrgNode(placement.orgWingId)) return 'Invalid wing selection.'
-  if (!getOrgNode(placement.orgSectionId)) return 'Invalid section selection.'
-  const parentWing = getOrgNode(placement.orgSectionId)?.parentId
-  if (parentWing !== placement.orgWingId) return 'Section must belong to the selected wing.'
+  if (!placement.orgWingId) return 'Select a Director General.'
+  if (!placement.orgSectionId) return 'Select a section under the Director General.'
   return null
 }

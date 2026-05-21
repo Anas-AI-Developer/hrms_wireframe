@@ -12,19 +12,34 @@ import {
   OFFICE_CATEGORY_LABELS,
   REGIONAL_OFFICE_MAPPING_ROWS,
   type EmployeeOfficePlacement,
-  type OfficeCategory,
+  type OfficeCategorySelection,
 } from '../../data/navttcOfficeMapping'
 
 type Props = {
   value: EmployeeOfficePlacement
   onChange: (next: EmployeeOfficePlacement) => void
   error?: string | null
+  /** When true, office is fixed to Head Office (HQ leadership roles). */
+  lockHeadOffice?: boolean
+  /** Disable office fields until a role is chosen (create flow). */
+  disabledUntilRole?: boolean
 }
 
-export function EmployeeOfficeFields({ value, onChange, error }: Props) {
+export function EmployeeOfficeFields({
+  value,
+  onChange,
+  error,
+  lockHeadOffice,
+  disabledUntilRole,
+}: Props) {
   const pathPreview = useMemo(() => formatOfficePlacement(value), [value])
+  const fieldsDisabled = disabledUntilRole && !lockHeadOffice
 
-  function setCategory(category: OfficeCategory) {
+  function setCategory(category: OfficeCategorySelection) {
+    if (!category) {
+      onChange({ category: '', officeId: '' })
+      return
+    }
     if (category === 'head_office') {
       onChange({ category, officeId: NAVTTC_HEAD_OFFICE_ID })
       return
@@ -42,6 +57,8 @@ export function EmployeeOfficeFields({ value, onChange, error }: Props) {
   function setRegionalOfficeId(officeId: string) {
     onChange({ category: 'regional_office', officeId })
   }
+
+  const selectValue = lockHeadOffice ? 'head_office' : value.category
 
   return (
     <div className="hrms-org-placement">
@@ -68,17 +85,19 @@ export function EmployeeOfficeFields({ value, onChange, error }: Props) {
         >
           <CompactFormInputWrap icon="ri-building-2-line">
             <select
-              value={value.category}
-              onChange={(e) => setCategory(e.target.value as OfficeCategory)}
-              required
+              value={selectValue}
+              onChange={(e) => setCategory(e.target.value as OfficeCategorySelection)}
+              required={!fieldsDisabled}
+              disabled={lockHeadOffice || fieldsDisabled}
             >
+              {!lockHeadOffice ? <option value="">— Select office type —</option> : null}
               <option value="head_office">{OFFICE_CATEGORY_LABELS.head_office}</option>
               <option value="regional_office">{OFFICE_CATEGORY_LABELS.regional_office}</option>
             </select>
           </CompactFormInputWrap>
         </CompactFormField>
 
-        {value.category === 'head_office' ? (
+        {value.category === 'head_office' && value.officeId ? (
           <CompactFormField label="Head office">
             <CompactFormInputWrap icon="ri-government-line">
               <input
@@ -87,7 +106,9 @@ export function EmployeeOfficeFields({ value, onChange, error }: Props) {
               />
             </CompactFormInputWrap>
           </CompactFormField>
-        ) : (
+        ) : null}
+
+        {value.category === 'regional_office' ? (
           <CompactFormField
             label={
               <>
@@ -100,6 +121,7 @@ export function EmployeeOfficeFields({ value, onChange, error }: Props) {
                 value={value.officeId}
                 onChange={(e) => setRegionalOfficeId(e.target.value)}
                 required
+                disabled={fieldsDisabled}
               >
                 <option value="">Select regional office…</option>
                 {REGIONAL_OFFICE_MAPPING_ROWS.map((row) => (
@@ -110,7 +132,7 @@ export function EmployeeOfficeFields({ value, onChange, error }: Props) {
               </select>
             </CompactFormInputWrap>
           </CompactFormField>
-        )}
+        ) : null}
       </CompactFormGrid>
     </div>
   )

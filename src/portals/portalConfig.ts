@@ -36,7 +36,7 @@ export const PORTALS: Record<Exclude<PortalId, 'employee'>, PortalDefinition> = 
     id: 'accounts',
     title: 'Accounts & finance portal',
     subtitle:
-      'Registers, master data, and read-only HR lists — payroll and finance modules (wireframe).',
+      'Registers, master data, and read-only HR lists (wireframe).',
     tagline: 'Accounts portal',
   },
 }
@@ -69,7 +69,7 @@ export function portalForUser(role: RoleId): PortalDefinition | null {
       ...base,
       title: 'Finance portal',
       subtitle:
-        'Finance registers and master data — read-only HR lists; payroll run when backend is connected.',
+        'Finance registers and master data — read-only HR lists (wireframe).',
       tagline: 'Finance portal',
     }
   }
@@ -87,7 +87,7 @@ export function portalForUser(role: RoleId): PortalDefinition | null {
 
 /** HR home links — same order as hrms/resources/views/filament/resources/dashboard/hrms-home.blade.php */
 export const PORTAL_HR_LINKS: PortalLink[] = [
-  { label: 'Departments', to: '/departments', permission: 'page:departments' },
+  { label: 'Wings', to: '/org/wings', permission: 'page:departments' },
   { label: 'Designations', to: '/designations', permission: 'page:designations' },
   { label: 'Employees', to: '/employees', permission: 'page:employees' },
 ]

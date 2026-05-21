@@ -13,11 +13,11 @@ const iconCls = 'side-menu__icon'
 
 export const DASHBOARD_QUICK_HR: QuickAccessItem[] = [
   {
-    label: 'Departments',
-    to: '/departments',
+    label: 'Wings',
+    to: '/org/wings',
     permission: 'page:departments',
     icon: <IconBuilding className={iconCls} />,
-    description: 'Centres & org units',
+    description: 'Director Generals (P&D, A&F, A&C, S&C)',
   },
   {
     label: 'Designations',
@@ -45,7 +45,7 @@ export const DASHBOARD_QUICK_HR: QuickAccessItem[] = [
     to: '/leave',
     permission: 'page:leave',
     icon: <IconCalendar className={iconCls} />,
-    description: 'Requests & approvals',
+    description: 'Leave requests',
   },
   {
     label: 'Job postings',

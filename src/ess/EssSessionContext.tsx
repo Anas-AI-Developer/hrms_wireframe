@@ -10,21 +10,12 @@ import {
 import { useAuth } from '../auth/AuthContext'
 import {
   getEssAttendance,
-  getEssBenefits,
   getEssGoals,
   getEssLeaveBalance,
   getEssLeaveRequests,
   getEssOpenCycle,
-  getEssPayslip,
   getEssTraining,
 } from '../data/essSeed'
-import {
-  addEmployeeRequest as persistEmployeeRequest,
-  getEmployeeRequests,
-  subscribeEmployeeRequests,
-  type EmployeeRequest,
-  type NewEmployeeRequestInput,
-} from '../data/employeeRequestsStore'
 import type { LeaveRequest, LeaveTypeId } from '../data/leaveMock'
 import type { TrainingCourse, TrainingEnrollment } from '../data/trainingMock'
 import { trainingCatalog } from '../data/trainingMock'
@@ -37,11 +28,8 @@ export type EssDashboardMetrics = {
   trainingTotal: number
   trainingNominated: number
   trainingApproved: number
-  benefitsCount: number
   goalsCount: number
   goalsWithSelfRating: number
-  payslipPeriod: string | null
-  payslipNet: number | null
   appraisalCycle: string
 }
 
@@ -56,13 +44,11 @@ type NewLeaveInput = {
 type EssSessionValue = {
   employeeId: string
   leaveRequests: LeaveRequest[]
-  employeeRequests: EmployeeRequest[]
   enrollments: TrainingEnrollment[]
   catalog: TrainingCourse[]
   leaveBalance: ReturnType<typeof getEssLeaveBalance> | undefined
   metrics: EssDashboardMetrics
   addLeaveRequest: (input: NewLeaveInput) => void
-  addEmployeeRequest: (input: NewEmployeeRequestInput) => void
   nominateTraining: (course: TrainingCourse) => { ok: true } | { ok: false; message: string }
   cancelTrainingNomination: (enrollmentId: string) => void
 }
@@ -79,9 +65,7 @@ function buildMetrics(
   enrollments: TrainingEnrollment[],
 ): EssDashboardMetrics {
   const attendance = employeeId ? getEssAttendance(employeeId) : []
-  const slip = employeeId ? getEssPayslip(employeeId) : null
   const goals = employeeId ? getEssGoals(employeeId) : []
-  const benefits = employeeId ? getEssBenefits(employeeId) : []
   const cycle = getEssOpenCycle()
   const activeEnrollments = enrollments.filter((e) => e.status !== 'cancelled')
 
@@ -94,11 +78,8 @@ function buildMetrics(
     trainingNominated: activeEnrollments.filter((e) => e.status === 'nominated').length,
     trainingApproved: activeEnrollments.filter((e) => e.status === 'approved' || e.status === 'completed')
       .length,
-    benefitsCount: benefits.length,
     goalsCount: goals.length,
     goalsWithSelfRating: goals.filter((g) => g.selfRating).length,
-    payslipPeriod: slip?.periodLabel ?? null,
-    payslipNet: slip?.netPay ?? null,
     appraisalCycle: cycle?.title ?? '—',
   }
 }
@@ -108,29 +89,19 @@ export function EssSessionProvider({ children }: { children: ReactNode }) {
   const employeeId = actorEmployeeId ?? ''
 
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([])
-  const [employeeRequests, setEmployeeRequests] = useState<EmployeeRequest[]>([])
   const [enrollments, setEnrollments] = useState<TrainingEnrollment[]>([])
   const [catalog, setCatalog] = useState<TrainingCourse[]>([])
 
   useEffect(() => {
     if (!employeeId) {
       setLeaveRequests([])
-      setEmployeeRequests([])
       setEnrollments([])
       setCatalog([...trainingCatalog])
       return
     }
-    function refresh() {
-      setLeaveRequests(getEssLeaveRequests(employeeId))
-      setEmployeeRequests(getEmployeeRequests(employeeId))
-      setEnrollments(getEssTraining(employeeId))
-      setCatalog([...trainingCatalog])
-    }
-    refresh()
-    const unsub = subscribeEmployeeRequests(refresh)
-    return () => {
-      unsub()
-    }
+    setLeaveRequests(getEssLeaveRequests(employeeId))
+    setEnrollments(getEssTraining(employeeId))
+    setCatalog([...trainingCatalog])
   }, [employeeId])
 
   const leaveBalance = employeeId ? getEssLeaveBalance(employeeId) : undefined
@@ -155,15 +126,6 @@ export function EssSessionProvider({ children }: { children: ReactNode }) {
         submittedAt: todayIso(),
       }
       setLeaveRequests((prev) => [entry, ...prev])
-    },
-    [employeeId],
-  )
-
-  const addEmployeeRequest = useCallback(
-    (input: NewEmployeeRequestInput) => {
-      if (!employeeId) return
-      const entry = persistEmployeeRequest(employeeId, input)
-      setEmployeeRequests((prev) => [entry, ...prev])
     },
     [employeeId],
   )
@@ -213,26 +175,22 @@ export function EssSessionProvider({ children }: { children: ReactNode }) {
     () => ({
       employeeId,
       leaveRequests,
-      employeeRequests,
       enrollments,
       catalog,
       leaveBalance,
       metrics,
       addLeaveRequest,
-      addEmployeeRequest,
       nominateTraining,
       cancelTrainingNomination,
     }),
     [
       employeeId,
       leaveRequests,
-      employeeRequests,
       enrollments,
       catalog,
       leaveBalance,
       metrics,
       addLeaveRequest,
-      addEmployeeRequest,
       nominateTraining,
       cancelTrainingNomination,
     ],

@@ -16,11 +16,6 @@ const ESS_MODULES = [
     status: 'Planned',
   },
   {
-    title: 'My payslip',
-    desc: 'UI payslip — monthly after payroll run.',
-    status: 'Planned',
-  },
-  {
     title: 'My profile',
     desc: 'Personal details, documents, and contact information.',
     status: 'Open',
@@ -37,7 +32,7 @@ export function EssDashboardPage() {
         <span className="hrms-portal-hero__badge">Employee self-service</span>
         <h1 className="hrms-portal-hero__title">Staff portal</h1>
         <p className="hrms-portal-hero__lead">
-          Portal for operational designations — profile, leave, attendance, and payslip. Signed in as{' '}
+          Portal for operational designations — profile, leave, and attendance. Signed in as{' '}
           <strong>{user ? userRoleLabel(user.role, user.designation) : '—'}</strong>.
         </p>
       </header>

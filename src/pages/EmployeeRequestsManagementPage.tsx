@@ -99,7 +99,7 @@ export function EmployeeRequestsManagementPage() {
     return <Navigate to="/ess/requests" replace />
   }
 
-  if (!can('page:ess_requests:manage')) {
+  if (!can('page:employees')) {
     return <Navigate to="/dashboard" replace />
   }
 
