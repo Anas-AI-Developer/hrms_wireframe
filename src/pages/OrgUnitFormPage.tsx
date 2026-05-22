@@ -27,7 +27,6 @@ import {
   type OrgStructureRouteKey,
 } from '../data/navttcHqOrganogram'
 import { ORG_LEVEL_LABELS, type OrgLevel } from '../data/navttcOrgTypes'
-import { useWireframeData } from '../data/WireframeDataContext'
 import { useOrganogramNodes } from '../hooks/useOrganogramNodes'
 
 function isOrgStructureRouteKey(key: string | undefined): key is OrgStructureRouteKey {
@@ -154,7 +153,6 @@ export function OrgUnitFormPage() {
 function OrgUnitFormBody({ levelKey, id }: { levelKey: OrgStructureRouteKey; id?: string }) {
   const navigate = useNavigate()
   const { can } = useAuth()
-  const { departments } = useWireframeData()
   const nodes = useOrganogramNodes()
 
   const config = ORG_STRUCTURE_ROUTES[levelKey]
@@ -168,10 +166,9 @@ function OrgUnitFormBody({ levelKey, id }: { levelKey: OrgStructureRouteKey; id?
       ? `/org/${levelKey}`
       : null
 
-  const headId = useMemo(
-    () => getOrgChildrenFromStore(null, 'head')[0]?.id ?? null,
-    [nodes],
-  )
+  const heads = useMemo(() => getOrgChildrenFromStore(null, 'head'), [nodes])
+
+  const headId = useMemo(() => heads[0]?.id ?? null, [heads])
 
   const initialCascade = useMemo(
     () => initialCascadeFromNode(level, existing?.id),
@@ -183,7 +180,7 @@ function OrgUnitFormBody({ levelKey, id }: { levelKey: OrgStructureRouteKey; id?
   const [wingId, setWingId] = useState(initialCascade.wingId)
   const [sectionId, setSectionId] = useState(initialCascade.sectionId)
   const [section1Id, setSection1Id] = useState(initialCascade.section1Id)
-  const [legacyDepartmentId, setLegacyDepartmentId] = useState(existing?.legacyDepartmentId ?? '')
+  const [selectedHeadId, setSelectedHeadId] = useState(existing?.parentId ?? headId ?? '')
   const [error, setError] = useState<string | null>(null)
 
   const wings = useMemo(
@@ -242,16 +239,27 @@ function OrgUnitFormBody({ levelKey, id }: { levelKey: OrgStructureRouteKey; id?
   }, [initialCascade.wingId, initialCascade.sectionId, initialCascade.section1Id])
 
   useEffect(() => {
+    if (level !== 'wing') return
+    if (isEdit && existing?.parentId) {
+      setSelectedHeadId(existing.parentId)
+      return
+    }
+    if (headId) setSelectedHeadId(headId)
+  }, [level, isEdit, existing?.parentId, headId])
+
+  useEffect(() => {
     if (!usesAutoCode(level)) return
     if (autoCode) setCode(autoCode)
   }, [level, autoCode])
 
+  const showHead = level === 'wing'
   const showWing = level === 'section' || level === 'sub_section_1' || level === 'sub_section_2'
   const showSection = level === 'sub_section_1' || level === 'sub_section_2'
   const showSection1 = level === 'sub_section_2'
 
   function resolveParentId(): string | null {
-    if (level === 'head' || level === 'wing') return headId
+    if (level === 'head') return null
+    if (level === 'wing') return selectedHeadId || headId
     if (level === 'section') return wingId || null
     if (level === 'sub_section_1') return sectionId || null
     if (level === 'sub_section_2') return section1Id || null
@@ -281,6 +289,10 @@ function OrgUnitFormBody({ levelKey, id }: { levelKey: OrgStructureRouteKey; id?
     }
 
     const parentId = resolveParentId()
+    if (level === 'wing' && !parentId) {
+      setError('Select a Head.')
+      return
+    }
     if (level === 'section' && !wingId) {
       setError('Select a Wing.')
       return
@@ -314,7 +326,9 @@ function OrgUnitFormBody({ levelKey, id }: { levelKey: OrgStructureRouteKey; id?
       name,
       code: finalCode,
       parentId,
-      legacyDepartmentId: level === 'wing' ? legacyDepartmentId || undefined : undefined,
+      ...(isEdit && existing?.level === 'wing' && existing.legacyDepartmentId
+        ? { legacyDepartmentId: existing.legacyDepartmentId }
+        : {}),
     }
     if (isEdit && id) {
       const result = updateOrgNode(id, input)
@@ -348,9 +362,37 @@ function OrgUnitFormBody({ levelKey, id }: { levelKey: OrgStructureRouteKey; id?
           <form onSubmit={onSubmit}>
             {error ? <CompactFormAlert>{error}</CompactFormAlert> : null}
 
-            {showWing || showSection || showSection1 ? (
+            {showHead || showWing || showSection || showSection1 ? (
               <CompactFormSection legend="Organogram placement">
                 <CompactFormGrid>
+                  {showHead ? (
+                    <CompactFormField
+                      full
+                      label={
+                        <>
+                          Head <CompactFormRequired />
+                        </>
+                      }
+                      hint="Wings report under the Executive Director (Head)"
+                    >
+                      <CompactFormInputWrap icon="ri-user-star-line">
+                        <select
+                          value={selectedHeadId}
+                          onChange={(e) => setSelectedHeadId(e.target.value)}
+                          required
+                        >
+                          <option value="">Select head…</option>
+                          {heads.map((h) => (
+                            <option key={h.id} value={h.id}>
+                              {h.name}
+                              {h.code ? ` (${h.code})` : ''}
+                            </option>
+                          ))}
+                        </select>
+                      </CompactFormInputWrap>
+                    </CompactFormField>
+                  ) : null}
+
                   {showWing ? (
                     <CompactFormField
                       full
@@ -463,7 +505,7 @@ function OrgUnitFormBody({ levelKey, id }: { levelKey: OrgStructureRouteKey; id?
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       required
-                      autoFocus={!showWing}
+                      autoFocus={!showHead && !showWing}
                       placeholder={
                         level === 'wing'
                           ? 'e.g. HQ Wing — Operations'
@@ -518,30 +560,6 @@ function OrgUnitFormBody({ levelKey, id }: { levelKey: OrgStructureRouteKey; id?
                     </CompactFormInputWrap>
                   </CompactFormField>
                 )}
-
-                {level === 'wing' ? (
-                  <CompactFormField
-                    full
-                    label="Legacy department (roster)"
-                    hint="Links employees / designations to this wing"
-                  >
-                    <CompactFormInputWrap icon="ri-building-line">
-                      <select
-                        value={legacyDepartmentId}
-                        onChange={(e) => setLegacyDepartmentId(e.target.value)}
-                      >
-                        <option value="">— Default (HQ) —</option>
-                        {departments
-                          .filter((d) => d.status === 'active')
-                          .map((d) => (
-                            <option key={d.id} value={d.id}>
-                              {d.name} ({d.code})
-                            </option>
-                          ))}
-                      </select>
-                    </CompactFormInputWrap>
-                  </CompactFormField>
-                ) : null}
               </CompactFormGrid>
             </CompactFormSection>
 
