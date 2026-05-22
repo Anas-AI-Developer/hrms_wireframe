@@ -12,6 +12,7 @@ import { DashboardPage } from './pages/DashboardPage'
 import { DepartmentFormPage } from './pages/DepartmentFormPage'
 import { DepartmentListPage } from './pages/DepartmentListPage'
 import { OrgStructurePage } from './pages/OrgStructurePage'
+import { OrgUnitFormPage } from './pages/OrgUnitFormPage'
 import { DesignationFormPage } from './pages/DesignationFormPage'
 import { DesignationListPage } from './pages/DesignationListPage'
 import { EmployeeDetailPage } from './pages/EmployeeDetailPage'
@@ -168,6 +169,22 @@ export default function App() {
               }
             />
             <Route path="departments" element={<Navigate to="/org/wings" replace />} />
+            <Route
+              path="org/:levelKey/new"
+              element={
+                <RequirePermission permission="page:departments:write">
+                  <OrgUnitFormPage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="org/:levelKey/:id/edit"
+              element={
+                <RequirePermission permission="page:departments:write">
+                  <OrgUnitFormPage />
+                </RequirePermission>
+              }
+            />
             <Route
               path="org/:levelKey"
               element={

@@ -34,13 +34,13 @@ const ROLE_ORG_CONFIG: Record<string, RoleOrgUiConfig> = {
     forceHeadOffice: true,
     visibleLevels: ['head', 'wing'],
     requiredLevels: ['head', 'wing'],
-    formHint: 'Director General — select which DG wing: P&D, A&F, A&C, or S&C.',
+    formHint: 'Select the HQ wing this post reports under.',
   },
   'role-4': {
     forceHeadOffice: true,
     visibleLevels: ['head', 'wing', 'section'],
     requiredLevels: ['head', 'wing', 'section'],
-    formHint: 'Director — pick Wing, then the directorate (Section) under that DG.',
+    formHint: 'Director — select wing, then the section under that wing.',
   },
   'role-5': {
     forceHeadOffice: true,
@@ -124,10 +124,10 @@ export function validateOrgPlacementForRole(
 
   for (const level of cfg.requiredLevels) {
     if (level === 'wing' && !placement.orgWingId) {
-      return 'Select a Director General (P&D, A&F, A&C, or S&C).'
+      return 'Select a wing.'
     }
     if (level === 'section' && !placement.orgSectionId) {
-      return 'Select the directorate (Section) under that Director General.'
+      return 'Select the section under that wing.'
     }
     if (level === 'sub_section_1' && !placement.orgSubSection1Id) {
       return 'Select Section 1 (Deputy Director unit) under the section.'
@@ -138,13 +138,13 @@ export function validateOrgPlacementForRole(
   }
 
   if (placement.orgWingId && !getOrgNode(placement.orgWingId)) {
-    return 'Invalid Director General selection.'
+    return 'Invalid wing selection.'
   }
   if (placement.orgSectionId) {
     if (!getOrgNode(placement.orgSectionId)) return 'Invalid section selection.'
     const parentWing = getOrgNode(placement.orgSectionId)?.parentId
     if (parentWing !== placement.orgWingId) {
-      return 'Section must belong to the selected Director General.'
+      return 'Section must belong to the selected wing.'
     }
   }
   if (placement.orgSubSection1Id) {

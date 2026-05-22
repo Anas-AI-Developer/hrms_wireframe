@@ -41,22 +41,22 @@ export const ORG_STRUCTURE_ROUTES: Record<
   wings: {
     level: 'wing',
     title: 'Wings',
-    description: 'Director General (P&D), (A&F), (A&C), and (S&C).',
+    description: 'HQ wings under the Executive Director.',
   },
   sections: {
     level: 'section',
     title: 'Sections',
-    description: 'Directorates under each Director General (dark blocks on organogram PDF).',
+    description: 'HQ sections under each wing.',
   },
   'section-1': {
     level: 'sub_section_1',
     title: 'Section 1 (DD)',
-    description: 'Deputy Director units under each directorate.',
+    description: 'Sub-units under each section.',
   },
   'section-2': {
     level: 'sub_section_2',
     title: 'Section 2 (AD)',
-    description: 'Assistant Director units under Section 1.',
+    description: 'Sub-units under Section 1.',
   },
 }
 

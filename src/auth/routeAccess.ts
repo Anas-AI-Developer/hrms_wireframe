@@ -30,7 +30,13 @@ export function permissionForPath(pathname: string): Permission | null {
   if (path.startsWith('/employees')) return 'page:employees'
 
   if (path === '/departments') return 'page:departments'
+  if (/^\/org\/[^/]+\/new$/.test(path) || /^\/org\/[^/]+\/[^/]+\/edit$/.test(path)) {
+    return 'page:departments:write'
+  }
   if (path.startsWith('/org/')) return 'page:departments'
+  if (path === '/departments/new' || /^\/departments\/[^/]+\/edit$/.test(path)) {
+    return 'page:departments:write'
+  }
   if (path === '/designations') return 'page:designations'
 
   if (path === '/attendance/import') return 'page:attendance:import'

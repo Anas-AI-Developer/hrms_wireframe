@@ -16,8 +16,11 @@ import './styles/organogram-mapping.css'
 import './styles/rbac-matrix.css'
 import './styles/ess-performance.css'
 import App from './App.tsx'
+import { hydrateOrganogramFromProjectFile } from './data/organogramStore'
 
-createRoot(document.getElementById('root')!).render(
+async function bootstrap() {
+  await hydrateOrganogramFromProjectFile()
+  createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AuthProvider>
       <WireframeDataProvider>
@@ -25,4 +28,7 @@ createRoot(document.getElementById('root')!).render(
       </WireframeDataProvider>
     </AuthProvider>
   </StrictMode>,
-)
+  )
+}
+
+bootstrap()

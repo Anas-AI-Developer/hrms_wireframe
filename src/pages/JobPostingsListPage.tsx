@@ -10,7 +10,6 @@ import type { JobPosting, JobStatus } from '../data/recruitmentMock'
 import { useJobPostings } from '../hooks/useJobPostings'
 import { useListControls, type StatusFilter } from '../hooks/useListControls'
 import { formatEmployeeDate } from '../utils/formatDate'
-
 const STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
   { value: 'all', label: 'All statuses' },
   { value: 'active', label: 'Published' },

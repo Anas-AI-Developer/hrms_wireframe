@@ -17,7 +17,7 @@ export const DASHBOARD_QUICK_HR: QuickAccessItem[] = [
     to: '/org/wings',
     permission: 'page:departments',
     icon: <IconBuilding className={iconCls} />,
-    description: 'Director Generals (P&D, A&F, A&C, S&C)',
+    description: 'HQ organogram wings',
   },
   {
     label: 'Designations',

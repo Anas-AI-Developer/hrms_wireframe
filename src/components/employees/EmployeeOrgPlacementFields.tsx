@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useOrganogramNodes } from '../../hooks/useOrganogramNodes'
 import {
   CompactFormField,
   CompactFormGrid,
@@ -44,8 +45,8 @@ const PARENT_LEVEL: Partial<Record<OrgLevel, OrgLevel>> = {
 
 const PLACEHOLDER: Record<OrgLevel, string> = {
   head: 'Select head…',
-  wing: 'Select Director General…',
-  section: 'Select directorate (Section)…',
+  wing: 'Select wing…',
+  section: 'Select section…',
   sub_section_1: 'Select Section 1 (DD)…',
   sub_section_2: 'Select Section 2 (AD)…',
 }
@@ -104,7 +105,8 @@ function parentReady(placement: EmployeeOrgPlacement, level: OrgLevel): boolean 
 }
 
 export function EmployeeOrgPlacementFields({ value, onChange, error, roleLevelId }: Props) {
-  const pathPreview = useMemo(() => formatOrgPlacementPath(value), [value])
+  const nodes = useOrganogramNodes()
+  const pathPreview = useMemo(() => formatOrgPlacementPath(value), [value, nodes])
   const roleCfg = roleOrgUiConfig(roleLevelId)
 
   const showLevel = (level: OrgLevel) =>
@@ -139,7 +141,7 @@ export function EmployeeOrgPlacementFields({ value, onChange, error, roleLevelId
       Object.fromEntries(
         LEVEL_ORDER.map((level) => [level, optionsForLevel(value, level)]),
       ) as Record<OrgLevel, NavttcOrgNode[]>,
-    [value],
+    [value, nodes],
   )
 
   function renderLevelField(level: OrgLevel) {
@@ -153,10 +155,10 @@ export function EmployeeOrgPlacementFields({ value, onChange, error, roleLevelId
     const disabled = level !== 'head' && !ready
 
     let hint = ''
-    if (level === 'wing') hint = 'P&D · A&F · A&C · S&C'
-    else if (level === 'section') hint = 'Directorates under the selected wing'
+    if (level === 'wing') hint = 'HQ wing under Head Office'
+    else if (level === 'section') hint = 'Sections under the selected wing'
     else if (level === 'sub_section_1') hint = 'Deputy Director (DD) units'
-    else if (level === 'sub_section_2') hint = 'Assistant Director (AD) units under DD'
+    else if (level === 'sub_section_2') hint = 'Assistant Director (AD) units under Section 1'
     else hint = 'NAVTTC Headquarters'
 
     if (!ready && level !== 'head') {
@@ -250,7 +252,7 @@ export function validateOrgPlacement(
   if (roleLevelId) return null
 
   if (!placement.orgHeadId) return 'Select the organizational head.'
-  if (!placement.orgWingId) return 'Select a Director General.'
-  if (!placement.orgSectionId) return 'Select a section under the Director General.'
+  if (!placement.orgWingId) return 'Select a wing.'
+  if (!placement.orgSectionId) return 'Select a section under the selected wing.'
   return null
 }

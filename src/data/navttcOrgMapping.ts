@@ -48,17 +48,11 @@ export const NAVTTC_HQ_ORG_TREE: OrgMappingNode = {
           level: 'section',
           children: [
             {
-              id: 'org-ss1-pd-nsis-data',
-              code: 'SS1-NSIS-DATA',
-              name: 'NSIS Data & Analytics',
+              id: 'org-ss1-pd-nsis-dd',
+              code: 'SS1-DD-NSIS',
+              name: 'Deputy Director (NSIS)',
               level: 'sub_section_1',
               children: [
-                {
-                  id: 'org-ss2-pd-nsis-dd',
-                  code: 'SS2-DD-NSIS',
-                  name: 'Deputy Director (NSIS)',
-                  level: 'sub_section_2',
-                },
                 {
                   id: 'org-ss2-pd-nsis-ad',
                   code: 'SS2-AD-NSIS',
@@ -76,15 +70,15 @@ export const NAVTTC_HQ_ORG_TREE: OrgMappingNode = {
           level: 'section',
           children: [
             {
-              id: 'org-ss1-pd-plan-policy',
-              code: 'SS1-PLAN-POL',
-              name: 'Policy & Research',
+              id: 'org-ss1-pd-plan-dd',
+              code: 'SS1-DD-PLAN',
+              name: 'Deputy Director (Planning)',
               level: 'sub_section_1',
               children: [
                 {
-                  id: 'org-ss2-pd-plan-dd',
-                  code: 'SS2-DD-PLAN',
-                  name: 'Deputy Director (Planning)',
+                  id: 'org-ss2-pd-plan-ad',
+                  code: 'SS2-AD-PLAN',
+                  name: 'Assistant Director (Planning)',
                   level: 'sub_section_2',
                 },
               ],
@@ -98,15 +92,15 @@ export const NAVTTC_HQ_ORG_TREE: OrgMappingNode = {
           level: 'section',
           children: [
             {
-              id: 'org-ss1-pd-me-field',
-              code: 'SS1-ME-FLD',
-              name: 'Field Monitoring',
+              id: 'org-ss1-pd-me-dd',
+              code: 'SS1-DD-ME',
+              name: 'Deputy Director (M&E)',
               level: 'sub_section_1',
               children: [
                 {
-                  id: 'org-ss2-pd-me-dd',
-                  code: 'SS2-DD-ME',
-                  name: 'Deputy Director (M&E)',
+                  id: 'org-ss2-pd-me-ad',
+                  code: 'SS2-AD-ME',
+                  name: 'Assistant Director (M&E)',
                   level: 'sub_section_2',
                 },
               ],
@@ -120,15 +114,15 @@ export const NAVTTC_HQ_ORG_TREE: OrgMappingNode = {
           level: 'section',
           children: [
             {
-              id: 'org-ss1-pd-innov-pm',
-              code: 'SS1-INNOV-PM',
-              name: 'Partnerships & PMYSDP',
+              id: 'org-ss1-pd-innov-dd',
+              code: 'SS1-DD-INNOV',
+              name: 'Deputy Director (Innovation)',
               level: 'sub_section_1',
               children: [
                 {
-                  id: 'org-ss2-pd-innov-dd',
-                  code: 'SS2-DD-INNOV',
-                  name: 'Deputy Director (Innovation)',
+                  id: 'org-ss2-pd-innov-ad',
+                  code: 'SS2-AD-INNOV',
+                  name: 'Assistant Director (Innovation)',
                   level: 'sub_section_2',
                 },
               ],
@@ -151,15 +145,15 @@ export const NAVTTC_HQ_ORG_TREE: OrgMappingNode = {
           level: 'section',
           children: [
             {
-              id: 'org-ss1-af-admin-gen',
-              code: 'SS1-ADMIN',
-              name: 'General Administration',
+              id: 'org-ss1-af-admin-dd',
+              code: 'SS1-DD-ADMIN',
+              name: 'Deputy Director (Administration)',
               level: 'sub_section_1',
               children: [
                 {
-                  id: 'org-ss2-af-admin-dd',
-                  code: 'SS2-DD-ADMIN',
-                  name: 'Deputy Director (Administration)',
+                  id: 'org-ss2-af-admin-ad',
+                  code: 'SS2-AD-ADMIN',
+                  name: 'Assistant Director (Administration)',
                   level: 'sub_section_2',
                 },
               ],
@@ -173,15 +167,15 @@ export const NAVTTC_HQ_ORG_TREE: OrgMappingNode = {
           level: 'section',
           children: [
             {
-              id: 'org-ss1-af-fin-accts',
-              code: 'SS1-ACCOUNTS',
-              name: 'Accounts & Budget',
+              id: 'org-ss1-af-fin-dd',
+              code: 'SS1-DD-FIN',
+              name: 'Deputy Director (Finance)',
               level: 'sub_section_1',
               children: [
                 {
-                  id: 'org-ss2-af-fin-dd',
-                  code: 'SS2-DD-FIN',
-                  name: 'Deputy Director (Finance)',
+                  id: 'org-ss2-af-fin-ad',
+                  code: 'SS2-AD-FIN',
+                  name: 'Assistant Director (Finance)',
                   level: 'sub_section_2',
                 },
               ],
@@ -195,17 +189,11 @@ export const NAVTTC_HQ_ORG_TREE: OrgMappingNode = {
           level: 'section',
           children: [
             {
-              id: 'org-ss1-af-hr-ops',
-              code: 'SS1-HR-OPS',
-              name: 'HR Operations',
+              id: 'org-ss1-af-hr-dd',
+              code: 'SS1-DD-HR',
+              name: 'Deputy Director (HR)',
               level: 'sub_section_1',
               children: [
-                {
-                  id: 'org-ss2-af-hr-dd',
-                  code: 'SS2-DD-HR',
-                  name: 'Deputy Director (HR)',
-                  level: 'sub_section_2',
-                },
                 {
                   id: 'org-ss2-af-hr-ad',
                   code: 'SS2-AD-HR',
@@ -223,15 +211,15 @@ export const NAVTTC_HQ_ORG_TREE: OrgMappingNode = {
           level: 'section',
           children: [
             {
-              id: 'org-ss1-af-estate-log',
-              code: 'SS1-LOGISTICS',
-              name: 'Logistics & Transport',
+              id: 'org-ss1-af-estate-dd',
+              code: 'SS1-DD-ESTATE',
+              name: 'Deputy Director (Estate)',
               level: 'sub_section_1',
               children: [
                 {
-                  id: 'org-ss2-af-estate-dd',
-                  code: 'SS2-DD-ESTATE',
-                  name: 'Deputy Director (Estate)',
+                  id: 'org-ss2-af-estate-ad',
+                  code: 'SS2-AD-ESTATE',
+                  name: 'Assistant Director (Estate)',
                   level: 'sub_section_2',
                 },
               ],
@@ -254,15 +242,15 @@ export const NAVTTC_HQ_ORG_TREE: OrgMappingNode = {
           level: 'section',
           children: [
             {
-              id: 'org-ss1-ac-accred-reg',
-              code: 'SS1-ACCRED-REG',
-              name: 'Accreditation Registry',
+              id: 'org-ss1-ac-accred-dd',
+              code: 'SS1-DD-ACCRED',
+              name: 'Deputy Director (Accreditation)',
               level: 'sub_section_1',
               children: [
                 {
-                  id: 'org-ss2-ac-accred-dd',
-                  code: 'SS2-DD-ACCRED',
-                  name: 'Deputy Director (Accreditation)',
+                  id: 'org-ss2-ac-accred-ad',
+                  code: 'SS2-AD-ACCRED',
+                  name: 'Assistant Director (Accreditation)',
                   level: 'sub_section_2',
                 },
               ],
@@ -276,15 +264,15 @@ export const NAVTTC_HQ_ORG_TREE: OrgMappingNode = {
           level: 'section',
           children: [
             {
-              id: 'org-ss1-ac-cert-ops',
-              code: 'SS1-CERT',
-              name: 'Certification Operations',
+              id: 'org-ss1-ac-cert-dd',
+              code: 'SS1-DD-CERT',
+              name: 'Deputy Director (Certification)',
               level: 'sub_section_1',
               children: [
                 {
-                  id: 'org-ss2-ac-cert-dd',
-                  code: 'SS2-DD-CERT',
-                  name: 'Deputy Director (Certification)',
+                  id: 'org-ss2-ac-cert-ad',
+                  code: 'SS2-AD-CERT',
+                  name: 'Assistant Director (Certification)',
                   level: 'sub_section_2',
                 },
               ],
@@ -298,15 +286,15 @@ export const NAVTTC_HQ_ORG_TREE: OrgMappingNode = {
           level: 'section',
           children: [
             {
-              id: 'org-ss1-ac-qa-audit',
-              code: 'SS1-QA',
-              name: 'QA & Audit',
+              id: 'org-ss1-ac-qa-dd',
+              code: 'SS1-DD-QA',
+              name: 'Deputy Director (Quality Assurance)',
               level: 'sub_section_1',
               children: [
                 {
-                  id: 'org-ss2-ac-qa-dd',
-                  code: 'SS2-DD-QA',
-                  name: 'Deputy Director (Quality Assurance)',
+                  id: 'org-ss2-ac-qa-ad',
+                  code: 'SS2-AD-QA',
+                  name: 'Assistant Director (Quality Assurance)',
                   level: 'sub_section_2',
                 },
               ],
@@ -329,15 +317,15 @@ export const NAVTTC_HQ_ORG_TREE: OrgMappingNode = {
           level: 'section',
           children: [
             {
-              id: 'org-ss1-sc-curr-dev',
-              code: 'SS1-CURR-DEV',
-              name: 'Curriculum Development',
+              id: 'org-ss1-sc-curr-dd',
+              code: 'SS1-DD-CURR',
+              name: 'Deputy Director (Curricula)',
               level: 'sub_section_1',
               children: [
                 {
-                  id: 'org-ss2-sc-curr-dd',
-                  code: 'SS2-DD-CURR',
-                  name: 'Deputy Director (Curricula)',
+                  id: 'org-ss2-sc-curr-ad',
+                  code: 'SS2-AD-CURR',
+                  name: 'Assistant Director (Curricula)',
                   level: 'sub_section_2',
                 },
               ],
@@ -351,15 +339,15 @@ export const NAVTTC_HQ_ORG_TREE: OrgMappingNode = {
           level: 'section',
           children: [
             {
-              id: 'org-ss1-sc-std-nos',
-              code: 'SS1-NOS',
-              name: 'National Occupational Standards',
+              id: 'org-ss1-sc-std-dd',
+              code: 'SS1-DD-STD',
+              name: 'Deputy Director (Standards)',
               level: 'sub_section_1',
               children: [
                 {
-                  id: 'org-ss2-sc-std-dd',
-                  code: 'SS2-DD-STD',
-                  name: 'Deputy Director (Standards)',
+                  id: 'org-ss2-sc-std-ad',
+                  code: 'SS2-AD-STD',
+                  name: 'Assistant Director (Standards)',
                   level: 'sub_section_2',
                 },
               ],
@@ -373,15 +361,15 @@ export const NAVTTC_HQ_ORG_TREE: OrgMappingNode = {
           level: 'section',
           children: [
             {
-              id: 'org-ss1-sc-assess-ctr',
-              code: 'SS1-ASSESS',
-              name: 'Assessment Centres',
+              id: 'org-ss1-sc-assess-dd',
+              code: 'SS1-DD-ASSESS',
+              name: 'Deputy Director (Assessment)',
               level: 'sub_section_1',
               children: [
                 {
-                  id: 'org-ss2-sc-assess-dd',
-                  code: 'SS2-DD-ASSESS',
-                  name: 'Deputy Director (Assessment)',
+                  id: 'org-ss2-sc-assess-ad',
+                  code: 'SS2-AD-ASSESS',
+                  name: 'Assistant Director (Assessment)',
                   level: 'sub_section_2',
                 },
               ],
@@ -508,12 +496,29 @@ export function inferOrgPlacementFromEmployee(emp: Employee): EmployeeOrgPlaceme
     orgSubSection2Id: emp.orgSubSection2Id,
   }
 
-  if (!placement.orgSubSection2Id && emp.sanctionedPost && /deputy director|\bdd\b/i.test(emp.sanctionedPost)) {
-    const ss1 = treeToFlatNodes().find((n) => n.parentId === sectionId && n.level === 'sub_section_1')
-    const ss2 = ss1
-      ? treeToFlatNodes().find((n) => n.parentId === ss1.id && n.level === 'sub_section_2' && /dd/i.test(n.name))
-      : treeToFlatNodes().find((n) => n.parentId === sectionId && n.level === 'sub_section_2' && /dd/i.test(n.name))
+  if (!placement.orgSubSection1Id && emp.sanctionedPost && /deputy director|\bdd\b/i.test(emp.sanctionedPost)) {
+    const ss1 = treeToFlatNodes().find(
+      (n) =>
+        n.parentId === sectionId &&
+        n.level === 'sub_section_1' &&
+        /deputy director/i.test(n.name),
+    )
     if (ss1) placement.orgSubSection1Id = ss1.id
+  }
+  if (!placement.orgSubSection2Id && emp.sanctionedPost && /assistant director|\bad\b/i.test(emp.sanctionedPost)) {
+    const ss1Id = placement.orgSubSection1Id
+    const ss1 = ss1Id
+      ? treeToFlatNodes().find((n) => n.id === ss1Id)
+      : treeToFlatNodes().find((n) => n.parentId === sectionId && n.level === 'sub_section_1')
+    const ss2 = ss1
+      ? treeToFlatNodes().find(
+          (n) =>
+            n.parentId === ss1.id &&
+            n.level === 'sub_section_2' &&
+            /assistant director/i.test(n.name),
+        )
+      : undefined
+    if (ss1 && !placement.orgSubSection1Id) placement.orgSubSection1Id = ss1.id
     if (ss2) placement.orgSubSection2Id = ss2.id
   }
 

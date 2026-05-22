@@ -1,9 +1,17 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
+import { useAuth } from '../auth/AuthContext'
 import { DataListPanel } from '../components/hrms/DataListPanel'
 import { HrmsListShell } from '../components/hrms/HrmsListShell'
+import { RowActionsMenu } from '../components/hrms/RowActionsMenu'
+import {
+  canCreateAtLevel,
+  canDeleteNode,
+  deleteOrgNode,
+} from '../data/organogramStore'
 import { useWireframeData } from '../data/WireframeDataContext'
 import { useListControls } from '../hooks/useListControls'
+import { useOrganogramNodes } from '../hooks/useOrganogramNodes'
 import {
   ORG_LEVEL_LABELS,
   ORG_STRUCTURE_ROUTES,
@@ -13,7 +21,7 @@ import {
   orgNodesAtLevel,
   type OrgStructureRouteKey,
 } from '../data/navttcHqOrganogram'
-import type { NavttcOrgNode, OrgLevel } from '../data/navttcHqOrganogram'
+import type { NavttcOrgNode, OrgLevel } from '../data/navttcOrgTypes'
 import type { Employee } from '../types/hrms'
 import './pages.css'
 
@@ -45,14 +53,18 @@ function countStaff(employees: Employee[], node: NavttcOrgNode): number {
 export function OrgStructurePage() {
   const { levelKey } = useParams<{ levelKey: string }>()
   const { employees } = useWireframeData()
-
-  if (!isOrgStructureRouteKey(levelKey)) {
-    return <Navigate to="/org/wings" replace />
-  }
-
-  const config = ORG_STRUCTURE_ROUTES[levelKey]
-  const mappingColumns = ORG_TABLE_MAPPING_COLUMNS[levelKey]
-  const allNodes = useMemo(() => orgNodesAtLevel(config.level), [config.level])
+  const { can } = useAuth()
+  const canWrite = can('page:departments:write')
+  const nodes = useOrganogramNodes()
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const validKey = isOrgStructureRouteKey(levelKey)
+  const config = validKey ? ORG_STRUCTURE_ROUTES[levelKey] : null
+  const mappingColumns = validKey ? ORG_TABLE_MAPPING_COLUMNS[levelKey] : []
+  const allNodes = useMemo(
+    () => (config ? orgNodesAtLevel(config.level) : []),
+    [config, nodes],
+  )
+  const allowCreate = Boolean(config && canWrite && canCreateAtLevel(config.level))
 
   const list = useListControls(allNodes, {
     searchFn: (n, q) => orgMappingSearchText(n, mappingColumns).includes(q.toLowerCase()),
@@ -63,10 +75,34 @@ export function OrgStructurePage() {
     defaultSortColumn: 'name',
   })
 
-  const colSpan = 3 + mappingColumns.length + 1
+  const colSpan = 3 + mappingColumns.length + 1 + (canWrite ? 1 : 0)
+
+  if (!validKey || !config) {
+    return <Navigate to="/org/wings" replace />
+  }
+
+  function handleDelete(node: NavttcOrgNode) {
+    const msg = `Delete "${node.name}" (${node.code ?? node.id})? This cannot be undone.`
+    if (!window.confirm(msg)) return
+    const result = deleteOrgNode(node.id)
+    if ('error' in result) {
+      setDeleteError(result.error)
+      return
+    }
+    setDeleteError(null)
+  }
 
   return (
-    <HrmsListShell current={config.title}>
+    <HrmsListShell
+      current={config.title}
+      actions={
+        allowCreate ? (
+          <Link to={`/org/${levelKey}/new`} className="hrms-btn-primary">
+            <i className="ri-add-line" aria-hidden /> Add {ORG_LEVEL_LABELS[config.level]}
+          </Link>
+        ) : undefined
+      }
+    >
       <header className="wf-page-head" style={{ marginBottom: '1rem' }}>
         <div>
           <h1 className="wf-h1">{config.title}</h1>
@@ -81,6 +117,12 @@ export function OrgStructurePage() {
           </Link>
         </div>
       </header>
+
+      {deleteError ? (
+        <p className="hrms-form-alert" role="alert" style={{ marginBottom: '1rem' }}>
+          {deleteError}
+        </p>
+      ) : null}
 
       <DataListPanel
         title={`${config.title} — ${allNodes.length} unit${allNodes.length === 1 ? '' : 's'}`}
@@ -110,6 +152,7 @@ export function OrgStructurePage() {
                 ))}
                 <th>Level</th>
                 <th>Staff</th>
+                {canWrite ? <th>Actions</th> : null}
               </tr>
             </thead>
             <tbody>
@@ -122,6 +165,7 @@ export function OrgStructurePage() {
               ) : (
                 list.pageRows.map((node) => {
                   const staff = countStaff(employees, node)
+                  const showDelete = canWrite && canDeleteNode(node.id)
                   return (
                     <tr key={node.id}>
                       <td className="font-medium">{node.name}</td>
@@ -140,6 +184,25 @@ export function OrgStructurePage() {
                         <span className="wf-pill">{ORG_LEVEL_LABELS[node.level]}</span>
                       </td>
                       <td>{staff}</td>
+                      {canWrite ? (
+                        <td>
+                          <RowActionsMenu
+                            id={node.id}
+                            actions={[
+                              { label: 'Edit', href: `/org/${levelKey}/${node.id}/edit` },
+                              ...(showDelete
+                                ? [
+                                    {
+                                      label: 'Delete',
+                                      danger: true,
+                                      onClick: () => handleDelete(node),
+                                    },
+                                  ]
+                                : []),
+                            ]}
+                          />
+                        </td>
+                      ) : null}
                     </tr>
                   )
                 })

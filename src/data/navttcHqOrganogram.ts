@@ -1,12 +1,6 @@
 /**
- * NAVTTC HQs organogram — flat node API (built from navttcOrgMapping tree).
+ * NAVTTC HQs organogram — flat node API (reads from organogramStore).
  */
-import {
-  NAVTTC_HQ_ORG_TREE,
-  ORG_MAPPING_ROWS,
-  treeToFlatNodes,
-  type OrgMappingRow,
-} from './navttcOrgMapping'
 import type { EmployeeOrgPlacement } from './navttcOrgMapping'
 import type { NavttcOrgNode, OrgLevel } from './navttcOrgTypes'
 import {
@@ -16,6 +10,14 @@ import {
   ORG_TABLE_MAPPING_COLUMNS,
   type OrgMappingColumn,
 } from './navttcOrgTypes'
+import {
+  buildOrgMappingRows,
+  getOrgChildrenFromStore,
+  getOrgMappingRowsSnapshot,
+  getOrgNodeFromStore,
+  getOrgNodesSnapshot,
+  orgNodesAtLevelFromStore,
+} from './organogramStore'
 
 export type { NavttcOrgNode, OrgLevel, OrgMappingColumn, OrgStructureRouteKey } from './navttcOrgTypes'
 export type { EmployeeOrgPlacement } from './navttcOrgMapping'
@@ -27,33 +29,30 @@ export {
 }
 
 export const NAVTTC_HQ_OFFICE_ID = 'o-hq'
+export const DEFAULT_ORG_HEAD_ID = 'org-head'
 
-export const NAVTTC_ORG_NODES: NavttcOrgNode[] = treeToFlatNodes(NAVTTC_HQ_ORG_TREE)
-
-const nodeById = new Map(NAVTTC_ORG_NODES.map((n) => [n.id, n]))
+/** @deprecated Use getOrgNodesSnapshot() — kept for legacy imports */
+export function getOrgNodes(): NavttcOrgNode[] {
+  return getOrgNodesSnapshot()
+}
 
 export function getOrgNode(id: string | undefined): NavttcOrgNode | undefined {
-  if (!id) return undefined
-  return nodeById.get(id)
+  return getOrgNodeFromStore(id)
 }
 
 export function getOrgChildren(parentId: string | null, level: OrgLevel): NavttcOrgNode[] {
-  return NAVTTC_ORG_NODES.filter((n) => n.parentId === parentId && n.level === level).sort((a, b) =>
-    a.name.localeCompare(b.name),
-  )
+  return getOrgChildrenFromStore(parentId, level)
 }
 
 export function orgNodesAtLevel(level: OrgLevel): NavttcOrgNode[] {
-  return NAVTTC_ORG_NODES.filter((n) => n.level === level).sort((a, b) =>
-    a.name.localeCompare(b.name),
-  )
+  return orgNodesAtLevelFromStore(level)
 }
 
 export function orgParentPath(node: NavttcOrgNode): string {
   const parts: string[] = []
   let id: string | null | undefined = node.parentId
   while (id) {
-    const parent = getOrgNode(id)
+    const parent = getOrgNodeFromStore(id)
     if (!parent) break
     parts.unshift(parent.name)
     id = parent.parentId
@@ -67,7 +66,7 @@ export function getOrgAncestorAtLevel(
 ): NavttcOrgNode | undefined {
   let id: string | null | undefined = node.parentId
   while (id) {
-    const parent = getOrgNode(id)
+    const parent = getOrgNodeFromStore(id)
     if (!parent) break
     if (parent.level === ancestorLevel) return parent
     id = parent.parentId
@@ -93,16 +92,20 @@ export function formatOrgPlacementPath(placement: Partial<EmployeeOrgPlacement>)
     placement.orgSubSection2Id,
   ].filter(Boolean) as string[]
   return ids
-    .map((id) => getOrgNode(id)?.name)
+    .map((id) => getOrgNodeFromStore(id)?.name)
     .filter(Boolean)
     .join(' › ')
 }
 
 export function legacyDepartmentIdForPlacement(placement: EmployeeOrgPlacement): string {
-  const wing = getOrgNode(placement.orgWingId)
+  const wing = getOrgNodeFromStore(placement.orgWingId)
   return wing?.legacyDepartmentId ?? 'c1'
 }
 
-export const DEFAULT_ORG_HEAD_ID = 'org-head'
+export function getOrgMappingRows(): ReturnType<typeof buildOrgMappingRows> {
+  return getOrgMappingRowsSnapshot()
+}
 
-export { ORG_MAPPING_ROWS, type OrgMappingRow }
+export type OrgMappingRow = ReturnType<typeof buildOrgMappingRows>[number]
+
+export { buildOrgMappingRows as ORG_MAPPING_ROWS_BUILDER }

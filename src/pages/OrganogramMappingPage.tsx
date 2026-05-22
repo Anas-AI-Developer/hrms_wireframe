@@ -1,13 +1,20 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../auth/AuthContext'
 import { HrmsListShell } from '../components/hrms/HrmsListShell'
+import {
+  exportOrganogramSnapshotDownload,
+  importOrganogramSnapshotFromJson,
+  ORGANOGRAM_SNAPSHOT_PATH,
+  resetOrganogramStore,
+} from '../data/organogramStore'
 import {
   LEGACY_DEPARTMENT_TO_WING,
   LEGACY_SECTION_TO_ORG_SECTION,
-  ORG_MAPPING_ROWS,
   type OrgMappingRow,
 } from '../data/navttcOrgMapping'
-import { ORG_LEVEL_LABELS } from '../data/navttcHqOrganogram'
+import { ORG_LEVEL_LABELS, getOrgMappingRows } from '../data/navttcHqOrganogram'
+import { useOrganogramNodes } from '../hooks/useOrganogramNodes'
 import { getDepartments } from '../data/mock'
 import '../styles/organogram-mapping.css'
 import './pages.css'
@@ -15,12 +22,18 @@ import './pages.css'
 const LEVEL_ORDER = ['head', 'wing', 'section', 'sub_section_1', 'sub_section_2'] as const
 
 export function OrganogramMappingPage() {
+  const { can } = useAuth()
+  const canWrite = can('page:departments:write')
   const [search, setSearch] = useState('')
   const [levelFilter, setLevelFilter] = useState<string>('all')
+  const [dataNotice, setDataNotice] = useState<string | null>(null)
+  const importRef = useRef<HTMLInputElement>(null)
+  const nodes = useOrganogramNodes()
+  const mappingRows = useMemo(() => getOrgMappingRows(), [nodes])
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
-    return ORG_MAPPING_ROWS.filter((r) => {
+    return mappingRows.filter((r) => {
       if (levelFilter !== 'all' && r.level !== levelFilter) return false
       if (!q) return true
       return (
@@ -30,15 +43,15 @@ export function OrganogramMappingPage() {
         (r.parentName?.toLowerCase().includes(q) ?? false)
       )
     })
-  }, [search, levelFilter])
+  }, [search, levelFilter, mappingRows])
 
   const deptRows = useMemo(() => {
     return getDepartments().map((d) => ({
       dept: d,
       wingId: LEGACY_DEPARTMENT_TO_WING[d.id],
-      wingName: ORG_MAPPING_ROWS.find((r) => r.id === LEGACY_DEPARTMENT_TO_WING[d.id])?.name ?? '—',
+      wingName: mappingRows.find((r) => r.id === LEGACY_DEPARTMENT_TO_WING[d.id])?.name ?? '—',
     }))
-  }, [])
+  }, [mappingRows])
 
   return (
     <HrmsListShell current="Organogram mapping">
@@ -47,15 +60,82 @@ export function OrganogramMappingPage() {
           <div>
             <h1 className="wf-h1">Organogram mapping</h1>
           </div>
-          <div className="wf-actions">
+          <div className="wf-actions" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
             <Link to="/organogram" className="hrms-ref-btn-secondary">
               <i className="ri-file-pdf-line" aria-hidden /> View PDF
             </Link>
+            {canWrite ? (
+              <>
+                <button
+                  type="button"
+                  className="hrms-ref-btn-secondary"
+                  onClick={() => exportOrganogramSnapshotDownload()}
+                >
+                  <i className="ri-download-2-line" aria-hidden /> Export JSON
+                </button>
+                <button
+                  type="button"
+                  className="hrms-ref-btn-secondary"
+                  onClick={() => importRef.current?.click()}
+                >
+                  <i className="ri-upload-2-line" aria-hidden /> Import JSON
+                </button>
+                <button
+                  type="button"
+                  className="hrms-ref-btn-secondary"
+                  onClick={() => {
+                    if (
+                      window.confirm(
+                        'Reset organogram to built-in seed? This clears browser-saved CRUD data.',
+                      )
+                    ) {
+                      resetOrganogramStore()
+                      setDataNotice('Organogram reset to default seed.')
+                    }
+                  }}
+                >
+                  <i className="ri-restart-line" aria-hidden /> Reset data
+                </button>
+                <input
+                  ref={importRef}
+                  type="file"
+                  accept="application/json,.json"
+                  hidden
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0]
+                    e.target.value = ''
+                    if (!file) return
+                    const text = await file.text()
+                    const result = importOrganogramSnapshotFromJson(text)
+                    if ('error' in result) {
+                      setDataNotice(result.error)
+                      return
+                    }
+                    setDataNotice(
+                      `Imported ${file.name}. To show this file in Cursor, save the same JSON as hrms_wireframe/public/organogram-snapshot.json`,
+                    )
+                  }}
+                />
+              </>
+            ) : null}
             <Link to="/employees/new" className="hrms-btn-primary">
               <i className="ri-user-add-line" aria-hidden /> Create employee
             </Link>
           </div>
         </header>
+
+        <p className="hrms-list-footnote" style={{ marginBottom: '1rem' }}>
+          Organogram CRUD is saved in your <strong>browser</strong> (localStorage), not in project files — that is why
+          Cursor&apos;s file tree does not change. Use <strong>Export JSON</strong>, save it as{' '}
+          <code>hrms_wireframe/public/organogram-snapshot.json</code>, then reload (or Reset data first). Edits to{' '}
+          <code>navttcOrgMapping.ts</code> only apply after Reset data or when no browser copy exists. Optional file:{' '}
+          <code>{ORGANOGRAM_SNAPSHOT_PATH}</code>
+        </p>
+        {dataNotice ? (
+          <p className="hrms-form-alert" role="status" style={{ marginBottom: '1rem' }}>
+            {dataNotice}
+          </p>
+        ) : null}
 
         <div className="hrms-org-mapping-levels" aria-label="Hierarchy levels">
           {LEVEL_ORDER.map((lvl, i) => (
@@ -73,7 +153,7 @@ export function OrganogramMappingPage() {
             <header className="hrms-ref-panel-head">
               <h2 className="hrms-ref-panel-title">Hierarchy codes</h2>
               <p className="hrms-ref-panel-desc">
-                {ORG_MAPPING_ROWS.length} nodes — use IDs in employee form dropdowns
+                {mappingRows.length} nodes — use IDs in employee form dropdowns
               </p>
             </header>
             <div className="hrms-ref-panel-body hrms-ref-panel-body--flush">
@@ -155,7 +235,7 @@ export function OrganogramMappingPage() {
               <div className="hrms-ref-panel-body">
                 <ul className="hrms-org-mapping-legacy-list">
                   {Object.entries(LEGACY_SECTION_TO_ORG_SECTION).map(([label, nodeId]) => {
-                    const node = ORG_MAPPING_ROWS.find((r) => r.id === nodeId)
+                    const node = mappingRows.find((r) => r.id === nodeId)
                     return (
                       <li key={label}>
                         <span>{label}</span>
