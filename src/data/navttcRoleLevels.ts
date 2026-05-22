@@ -174,14 +174,10 @@ function hqOrganogramPostsForPlacement(
       designationTitleMatchesRoleLevel(n.name, 'role-4'),
     )
   }
-  if (roleId === 'role-6' && placement.orgSectionId) {
-    const posts: NavttcOrgNode[] = []
-    for (const dd of getOrgChildren(placement.orgSectionId, 'sub_section_1')) {
-      for (const ad of getOrgChildren(dd.id, 'sub_section_2')) {
-        if (designationTitleMatchesRoleLevel(ad.name, 'role-6')) posts.push(ad)
-      }
-    }
-    return posts
+  if (roleId === 'role-6' && placement.orgSubSection1Id) {
+    return getOrgChildren(placement.orgSubSection1Id, 'sub_section_2').filter((n) =>
+      designationTitleMatchesRoleLevel(n.name, 'role-6'),
+    )
   }
   return []
 }
@@ -213,7 +209,11 @@ function buildHqDesignationsFromOrganogram(
   const sectionNode = placement.orgSectionId
     ? getOrgNode(placement.orgSectionId)
     : undefined
+  const ddNode = placement.orgSubSection1Id
+    ? getOrgNode(placement.orgSubSection1Id)
+    : undefined
   const specialty =
+    organogramNodeSpecialty(ddNode ?? undefined) ??
     organogramNodeSpecialty(sectionNode ?? undefined) ??
     organogramNodeSpecialty(anchorNode ?? undefined)
 

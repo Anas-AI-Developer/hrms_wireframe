@@ -28,6 +28,7 @@ import {
   orgNodesAtLevel,
   placementFromOrgNode,
   ORG_LEVEL_LABELS,
+  ORG_LEVEL_SIDEBAR_LABELS,
   type EmployeeOrgPlacement,
   type NavttcOrgNode,
   type OrgLevel,
@@ -66,6 +67,29 @@ const PLACEHOLDER: Record<OrgLevel, string> = {
   section: 'Select Director (section)…',
   sub_section_1: 'Select Deputy Director (DD)…',
   sub_section_2: 'Select AD unit (post) under this DD…',
+}
+
+const SIDEBAR_PLACEHOLDER: Record<OrgLevel, string> = {
+  head: 'Select Head…',
+  wing: 'Select wing…',
+  section: 'Select section…',
+  sub_section_1: 'Select Section 1 (DD)…',
+  sub_section_2: 'Select Section 2 (AD)…',
+}
+
+/** Sidebar-aligned labels for Director / AD employee placement. */
+function formLevelLabel(level: OrgLevel, roleLevelId?: string): string {
+  if (roleLevelId === 'role-4' || roleLevelId === 'role-6') {
+    return ORG_LEVEL_SIDEBAR_LABELS[level]
+  }
+  return ORG_LEVEL_LABELS[level]
+}
+
+function formLevelPlaceholder(level: OrgLevel, roleLevelId?: string): string {
+  if (roleLevelId === 'role-4' || roleLevelId === 'role-6') {
+    return SIDEBAR_PLACEHOLDER[level]
+  }
+  return PLACEHOLDER[level]
 }
 
 function levelKey(level: OrgLevel): keyof EmployeeOrgPlacement {
@@ -165,6 +189,12 @@ export function EmployeeOrgPlacementFields({
   const roleCfg = roleOrgUiConfig(roleLevelId)
   const entryMode = orgPlacementEntryMode(roleLevelId)
   const anchorLevel = organogramTargetLevel(roleLevelId)
+
+  useEffect(() => {
+    if (!roleCfg?.requiredLevels.includes('head')) return
+    if (value.orgHeadId) return
+    onChange({ ...value, orgHeadId: DEFAULT_ORG_HEAD_ID })
+  }, [roleLevelId, roleCfg, value.orgHeadId])
 
   useEffect(() => {
     if (!onLegacyCentreChange || !value.orgWingId) return
@@ -319,7 +349,7 @@ export function EmployeeOrgPlacementFields({
 
     let hint: string | undefined
     if (!ready && level !== 'head') {
-      hint = `Select ${ORG_LEVEL_LABELS[PARENT_LEVEL[level]!]} first`
+      hint = `Select ${formLevelLabel(PARENT_LEVEL[level]!, roleLevelId)} first`
     } else if (ready && options.length === 0) {
       hint = 'No units defined in organogram for this branch yet'
     }
@@ -329,7 +359,7 @@ export function EmployeeOrgPlacementFields({
         key={level}
         label={
           <>
-            {ORG_LEVEL_LABELS[level]} {required ? <CompactFormRequired /> : null}
+            {formLevelLabel(level, roleLevelId)} {required ? <CompactFormRequired /> : null}
           </>
         }
         hint={hint}
@@ -341,7 +371,7 @@ export function EmployeeOrgPlacementFields({
             required={required}
             disabled={disabled}
           >
-            <option value="">{PLACEHOLDER[level]}</option>
+            <option value="">{formLevelPlaceholder(level, roleLevelId)}</option>
             {options.map((n) => (
               <option key={n.id} value={n.id}>
                 {formatOptionLabel(n)}
@@ -351,7 +381,7 @@ export function EmployeeOrgPlacementFields({
         </CompactFormInputWrap>
         {optional && ready && options.length === 0 ? (
           <span className="text-sm" style={{ color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
-            No {ORG_LEVEL_LABELS[level].toLowerCase()} listed — leave blank if not applicable.
+            No {formLevelLabel(level, roleLevelId).toLowerCase()} listed — leave blank if not applicable.
           </span>
         ) : null}
       </CompactFormField>
@@ -379,7 +409,7 @@ export function EmployeeOrgPlacementFields({
             full
             label={
               <>
-                {ORG_LEVEL_LABELS[anchorLevel]} <CompactFormRequired />
+                {formLevelLabel(anchorLevel, roleLevelId)} <CompactFormRequired />
               </>
             }
           >
@@ -389,7 +419,7 @@ export function EmployeeOrgPlacementFields({
                 onChange={(e) => setAnchorPost(e.target.value)}
                 required
               >
-                <option value="">{PLACEHOLDER[anchorLevel]}</option>
+                <option value="">{formLevelPlaceholder(anchorLevel, roleLevelId)}</option>
                 {anchorPostOptions.map((n) => (
                   <option key={n.id} value={n.id}>
                     {formatAnchorPostLabel(n)}
@@ -407,7 +437,7 @@ export function EmployeeOrgPlacementFields({
             full
             label={
               <>
-                {ORG_LEVEL_LABELS.section} <CompactFormRequired />
+                {formLevelLabel('section', roleLevelId)} <CompactFormRequired />
               </>
             }
           >
@@ -417,7 +447,7 @@ export function EmployeeOrgPlacementFields({
                 onChange={(e) => setDirectorSection(e.target.value)}
                 required
               >
-                <option value="">{PLACEHOLDER.section}</option>
+                <option value="">{formLevelPlaceholder('section', roleLevelId)}</option>
                 {directorSectionOptions.map((n) => (
                   <option key={n.id} value={n.id}>
                     {formatOptionLabel(n)}
@@ -430,7 +460,7 @@ export function EmployeeOrgPlacementFields({
             full
             label={
               <>
-                {ORG_LEVEL_LABELS.sub_section_1} <CompactFormRequired />
+                {formLevelLabel('sub_section_1', roleLevelId)} <CompactFormRequired />
               </>
             }
           >
@@ -443,8 +473,8 @@ export function EmployeeOrgPlacementFields({
               >
                 <option value="">
                   {value.orgSectionId
-                    ? PLACEHOLDER.sub_section_1
-                    : 'Select Director (section) first…'}
+                    ? formLevelPlaceholder('sub_section_1', roleLevelId)
+                    : 'Select section first…'}
                 </option>
                 {ddOptionsUnderSection.map((n) => (
                   <option key={n.id} value={n.id}>
@@ -468,7 +498,7 @@ export function EmployeeOrgPlacementFields({
               const node = getOrgNode(id)
               if (!node) return null
               return (
-                <CompactFormField key={level} label={ORG_LEVEL_LABELS[level]}>
+                <CompactFormField key={level} label={formLevelLabel(level, roleLevelId)}>
                   <CompactFormInputWrap icon={LEVEL_ICONS[level]}>
                     <input type="text" readOnly value={node.name} tabIndex={-1} />
                   </CompactFormInputWrap>

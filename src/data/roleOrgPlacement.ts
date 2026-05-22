@@ -95,9 +95,9 @@ const ROLE_ORG_CONFIG: Record<string, RoleOrgUiConfig> = {
   },
   'role-4': {
     forceHeadOffice: true,
-    visibleLevels: ['head', 'wing'],
+    visibleLevels: ['wing'],
     requiredLevels: ['head', 'wing'],
-    formHint: 'Director — select wing, then choose Director designation.',
+    formHint: 'Director — select wing (upper level), then choose Director designation.',
   },
   'role-5': {
     forceHeadOffice: true,
@@ -107,10 +107,10 @@ const ROLE_ORG_CONFIG: Record<string, RoleOrgUiConfig> = {
   },
   'role-6': {
     forceHeadOffice: true,
-    visibleLevels: ['head', 'wing', 'section'],
-    requiredLevels: ['head', 'wing', 'section'],
+    visibleLevels: ['wing', 'section', 'sub_section_1'],
+    requiredLevels: ['head', 'wing', 'section', 'sub_section_1'],
     formHint:
-      'Assistant Director — select wing and Director (section), then choose AD designation.',
+      'Assistant Director — Wing → Section → Section 1 (DD), then choose Assistant Director designation.',
   },
   'role-7': {
     forceHeadOffice: true,
@@ -184,7 +184,7 @@ export function organogramFormAnchorLevel(roleLevelId: string | undefined): OrgL
     case 'role-4':
       return 'wing'
     case 'role-6':
-      return 'section'
+      return 'sub_section_1'
     default:
       return organogramTargetLevel(roleLevelId)
   }
@@ -254,7 +254,9 @@ export function validateOrgPlacementForRole(
         : 'Select the section under that wing.'
     }
     if (level === 'sub_section_1' && !placement.orgSubSection1Id) {
-      return 'Select Section 1 (Deputy Director unit) under the section.'
+      return roleLevelId === 'role-6'
+        ? 'Select Section 1 (DD) under the section.'
+        : 'Select Section 1 (Deputy Director unit) under the section.'
     }
     if (level === 'sub_section_2' && !placement.orgSubSection2Id) {
       return 'Select Section 2 (Assistant Director unit) under Section 1.'
@@ -282,10 +284,11 @@ export function validateOrgPlacementForRole(
   if (placement.orgSubSection1Id) {
     const ss1 = getOrgNode(placement.orgSubSection1Id)
     if (!ss1 || ss1.parentId !== placement.orgSectionId) {
-      return 'Deputy Director (DD) must belong to the selected Director (Section).'
+      return 'Section 1 (DD) must belong to the selected section.'
     }
-    if (!organogramNodeMatchesRole(ss1, roleLevelId)) {
-      return 'Select a Deputy Director (DD) unit under this wing and section.'
+    const ddTierRole = roleLevelId === 'role-6' ? 'role-5' : roleLevelId
+    if (ddTierRole && !organogramNodeMatchesRole(ss1, ddTierRole)) {
+      return 'Select Section 1 (DD) under this wing and section.'
     }
   }
   if (placement.orgSubSection2Id) {
