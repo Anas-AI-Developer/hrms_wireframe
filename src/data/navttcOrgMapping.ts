@@ -381,6 +381,51 @@ export const NAVTTC_HQ_ORG_TREE: OrgMappingNode = {
   ],
 }
 
+/** NAVTTC HQs has exactly four wings (Organogram 2026). */
+export const NAVTTC_CANONICAL_WING_IDS = [
+  'org-wing-pd',
+  'org-wing-af',
+  'org-wing-ac',
+  'org-wing-sc',
+] as const
+
+const WING_ORDER: Record<(typeof NAVTTC_CANONICAL_WING_IDS)[number], number> = {
+  'org-wing-pd': 1,
+  'org-wing-af': 2,
+  'org-wing-ac': 3,
+  'org-wing-sc': 4,
+}
+
+export function isCanonicalWingId(id: string | undefined): boolean {
+  if (!id) return false
+  return (NAVTTC_CANONICAL_WING_IDS as readonly string[]).includes(id)
+}
+
+export function sortCanonicalWings<T extends { id: string }>(wings: T[]): T[] {
+  return [...wings].sort(
+    (a, b) =>
+      (WING_ORDER[a.id as keyof typeof WING_ORDER] ?? 99) -
+      (WING_ORDER[b.id as keyof typeof WING_ORDER] ?? 99),
+  )
+}
+
+/** Four DGs in PDF order — P&D, A&F, A&C, S&C. */
+export function getCanonicalWings(nodes: NavttcOrgNode[]): NavttcOrgNode[] {
+  const seedWings = treeToFlatNodes().filter((n) => n.level === 'wing')
+  const byId = new Map(nodes.filter((n) => n.level === 'wing').map((n) => [n.id, n]))
+  const ordered: NavttcOrgNode[] = []
+  for (const id of NAVTTC_CANONICAL_WING_IDS) {
+    const row = byId.get(id) ?? seedWings.find((n) => n.id === id)
+    if (row) ordered.push(row)
+  }
+  return ordered
+}
+
+export function organogramHasNonCanonicalWings(nodes: NavttcOrgNode[]): boolean {
+  const wings = nodes.filter((n) => n.level === 'wing')
+  return wings.length !== NAVTTC_CANONICAL_WING_IDS.length || wings.some((w) => !isCanonicalWingId(w.id))
+}
+
 /** Wireframe department id → default wing (for roster migration) */
 export const LEGACY_DEPARTMENT_TO_WING: Record<string, string> = {
   c1: 'org-wing-pd',

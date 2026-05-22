@@ -36,6 +36,7 @@ import {
 } from '../data/navttcOrgMapping'
 import {
   isOrganogramPlacementComplete,
+  organogramPlacementHint,
   orgPlacementForRoleChange,
   roleOrgUiConfig,
   validateOrgPlacementForRole,
@@ -196,11 +197,20 @@ export function EmployeeFormPage() {
   const organogramComplete =
     showHqOrganogram && isOrganogramPlacementComplete(orgPlacement, roleLevelId)
 
+  const organogramHint = useMemo(
+    () =>
+      showHqOrganogram && roleLevelId
+        ? organogramPlacementHint(orgPlacement, roleLevelId)
+        : null,
+    [showHqOrganogram, roleLevelId, orgPlacement],
+  )
+
   const designationOptions = useMemo(() => {
     if (showRegionalDesignations) {
       return regionalOfficeDesignations(designations)
     }
-    if (!roleLevelId || (showHqOrganogram && !organogramComplete)) return []
+    if (!roleLevelId) return []
+    if (showHqOrganogram && !organogramComplete) return []
     return designationsMatchingRoleLevel(roleLevelId, designations, {
       departmentId: resolvedDepartmentId || undefined,
       officeId: officePlacement.officeId,
@@ -273,6 +283,7 @@ export function EmployeeFormPage() {
   function onRoleLevelChange(nextRoleId: string) {
     setRoleLevelId(nextRoleId)
     setDesignationId('')
+    setLegacyCentreId('')
     if (!nextRoleId) {
       setOfficePlacement(EMPTY_OFFICE_PLACEMENT)
       setOrgPlacement({
@@ -292,12 +303,6 @@ export function EmployeeFormPage() {
     if (cfg) {
       setOrgPlacement(orgPlacementForRoleChange(nextRoleId, orgPlacement))
       setOrgError(null)
-      if (!orgPlacement.orgWingId && legacyCentreId) {
-        const wing = wingIdForLegacyDepartment(legacyCentreId)
-        if (wing) {
-          setOrgPlacement((p) => ({ ...p, orgWingId: wing }))
-        }
-      }
     }
   }
 
@@ -674,10 +679,8 @@ export function EmployeeFormPage() {
                   roleLevelId={roleLevelId}
                   legacyCentreId={legacyCentreId}
                   onLegacyCentreChange={onLegacyCentreChange}
-                  departments={departments}
                 />
-                {organogramComplete ? (
-                  <div style={{ marginTop: '1rem' }}>
+                <div className="hrms-org-placement__follow">
                   <CompactFormGrid>
                     <CompactFormField
                       full
@@ -686,17 +689,21 @@ export function EmployeeFormPage() {
                           Designation / post <CompactFormRequired />
                         </>
                       }
+                      hint={organogramHint ?? undefined}
                     >
                       <CompactFormInputWrap icon="ri-briefcase-line">
                         <select
                           value={designationId}
                           onChange={(e) => setDesignationId(e.target.value)}
-                          required={designationOptions.length > 0}
+                          required={organogramComplete && designationOptions.length > 0}
+                          disabled={!organogramComplete}
                         >
                           <option value="">
-                            {designationOptions.length > 0
-                              ? '— Select designation (from organogram branch) —'
-                              : `— No BPS ${selectedRole.bps} posts for this branch —`}
+                            {!organogramComplete
+                              ? 'Complete organization steps above…'
+                              : designationOptions.length > 0
+                                ? '— Select designation —'
+                                : `— No BPS ${selectedRole.bps} posts for this branch —`}
                           </option>
                           {designationOptions.map((g) => (
                             <option key={g.id} value={g.id}>
@@ -707,8 +714,7 @@ export function EmployeeFormPage() {
                       </CompactFormInputWrap>
                     </CompactFormField>
                   </CompactFormGrid>
-                  </div>
-                ) : null}
+                </div>
               </CompactFormSection>
             ) : null}
 

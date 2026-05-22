@@ -1,7 +1,8 @@
 import { ALL_LOGIN_DEMO_POSTS, LOGIN_DEMO_LEADERSHIP_POSTS } from '../auth/clientRoles'
 import type { Department } from '../types/hrms'
 import type { EmployeeOrgPlacement } from './navttcOrgMapping'
-import { getOrgNode } from './navttcHqOrganogram'
+import type { NavttcOrgNode } from './navttcOrgTypes'
+import { getOrgChildren, getOrgNode } from './navttcHqOrganogram'
 import {
   organogramAnchorNodeId,
   organogramNodeSpecialty,
@@ -127,6 +128,146 @@ function filterActiveAtRoleBps(
 }
 
 /**
+ * Strict title match so "Director" does not match "Director General" or "Assistant Director".
+ * (Mirrors organogram tier rules in roleOrgPlacement.)
+ */
+export function designationTitleMatchesRoleLevel(title: string, roleId: string): boolean {
+  const t = title.toLowerCase().trim()
+  switch (roleId) {
+    case 'role-1':
+      return /chairman/.test(t)
+    case 'role-2':
+      return /executive director/.test(t) && !/general|deputy|assistant/.test(t)
+    case 'role-3':
+      return (
+        (/director general|\bdg\b/.test(t) || t.startsWith('dg ')) &&
+        !/deputy|assistant|executive/.test(t)
+      )
+    case 'role-4':
+      return (
+        (/^director\b|\bdirector\s*\(/.test(t) || t === 'director') &&
+        !/general|deputy|assistant|executive/.test(t)
+      )
+    case 'role-5':
+      return /deputy director/.test(t) || (/\bdd\b/.test(t) && !/assistant/.test(t))
+    case 'role-6':
+      return /assistant director/.test(t) || /\bad\b/.test(t)
+    case 'role-7':
+      return (
+        (t === 'assistant' || /^assistant\b/.test(t)) &&
+        !/director|general|deputy|executive/.test(t)
+      )
+    case 'role-8':
+      return true
+    default:
+      return false
+  }
+}
+
+/** PDF organogram posts under the wing/section the user selected on the form. */
+function hqOrganogramPostsForPlacement(
+  roleId: string,
+  placement: EmployeeOrgPlacement,
+): NavttcOrgNode[] {
+  if (roleId === 'role-4' && placement.orgWingId) {
+    return getOrgChildren(placement.orgWingId, 'section').filter((n) =>
+      designationTitleMatchesRoleLevel(n.name, 'role-4'),
+    )
+  }
+  if (roleId === 'role-6' && placement.orgSectionId) {
+    const posts: NavttcOrgNode[] = []
+    for (const dd of getOrgChildren(placement.orgSectionId, 'sub_section_1')) {
+      for (const ad of getOrgChildren(dd.id, 'sub_section_2')) {
+        if (designationTitleMatchesRoleLevel(ad.name, 'role-6')) posts.push(ad)
+      }
+    }
+    return posts
+  }
+  return []
+}
+
+function applyOrganogramSpecialty(
+  rows: DesignationRow[],
+  specialty: string | null,
+): DesignationRow[] {
+  if (!specialty) return rows
+  const matched = rows.filter((d) => {
+    const t = d.title.toLowerCase()
+    return (
+      t.includes(specialty) ||
+      specialty.split(/\s+/).some((w) => w.length > 2 && t.includes(w))
+    )
+  })
+  return matched.length > 0 ? matched : rows
+}
+
+function buildHqDesignationsFromOrganogram(
+  role: NavttcRoleLevel,
+  roleId: string,
+  designations: DesignationRow[],
+  opts: DesignationMatchScope,
+): DesignationRow[] {
+  const placement = opts.orgPlacement!
+  const anchorId = organogramAnchorNodeId(placement, roleId)
+  const anchorNode = anchorId ? getOrgNode(anchorId) : undefined
+  const sectionNode = placement.orgSectionId
+    ? getOrgNode(placement.orgSectionId)
+    : undefined
+  const specialty =
+    organogramNodeSpecialty(sectionNode ?? undefined) ??
+    organogramNodeSpecialty(anchorNode ?? undefined)
+
+  const bpsPool = filterActiveAtRoleBps(role, designations)
+  let strictCatalog = bpsPool.filter((d) =>
+    designationTitleMatchesRoleLevel(d.title, roleId),
+  )
+
+  const rows: DesignationRow[] = []
+  const wingDept =
+    getOrgNode(placement.orgWingId ?? '')?.legacyDepartmentId ?? opts.departmentId ?? 'c1'
+
+  const pushOrgPost = (node: NavttcOrgNode) => {
+    if (rows.some((r) => r.id === `org-post-${node.id}`)) return
+    rows.push({
+      id: `org-post-${node.id}`,
+      title: node.name,
+      grade: `BPS ${role.bps}`,
+      departmentId: opts.departmentId ?? wingDept,
+      status: 'active',
+    })
+  }
+
+  for (const node of hqOrganogramPostsForPlacement(roleId, placement)) {
+    pushOrgPost(node)
+  }
+
+  if (
+    anchorNode &&
+    designationTitleMatchesRoleLevel(anchorNode.name, roleId)
+  ) {
+    pushOrgPost(anchorNode)
+  }
+
+  for (const d of strictCatalog) {
+    if (!rows.some((r) => r.title.toLowerCase() === d.title.toLowerCase())) {
+      rows.push(d)
+    }
+  }
+
+  let result = applyOrganogramSpecialty(rows, specialty)
+
+  if (result.length === 0 && strictCatalog.length > 0) {
+    result = strictCatalog
+  }
+
+  if (result.length === 0 && bpsPool.length > 0) {
+    result = bpsPool.filter((d) => designationTitleMatchesRoleLevel(d.title, roleId))
+  }
+
+  return result.length > 0 ? result : rows
+}
+
+/**
  * Sanctioned posts must match the role BPS exactly (never lower scales).
  * Prefer posts in the selected unit, then the same office, then all HQ catalog entries.
  */
@@ -141,39 +282,27 @@ export function designationsMatchingRoleLevel(
   const opts: DesignationMatchScope =
     typeof scope === 'string' ? { departmentId: scope } : (scope ?? {})
 
-  let pool = filterActiveAtRoleBps(role, designations)
+  let pool: DesignationRow[]
 
-  if (opts.orgPlacement) {
-    const anchorId = organogramAnchorNodeId(opts.orgPlacement, roleId)
-    const anchorNode = anchorId ? getOrgNode(anchorId) : undefined
-    const specialty = organogramNodeSpecialty(anchorNode ?? undefined)
-    const roleTitle = role.title.toLowerCase()
-
-    const treeMatched = pool.filter((d) => {
-      const t = d.title.toLowerCase()
-      if (!t.includes(roleTitle)) return false
-      if (!specialty) return true
-      return t.includes(specialty) || specialty.split(/\s+/).some((w) => w.length > 2 && t.includes(w))
-    })
-
-    if (treeMatched.length > 0) {
-      pool = treeMatched
-    } else if (anchorNode) {
-      pool = [
-        {
-          id: `org-post-${anchorId}`,
-          title: anchorNode.name,
-          grade: `BPS ${role.bps}`,
-          departmentId: opts.departmentId ?? 'c1',
-          status: 'active',
-        },
-        ...pool.filter((d) => d.title.toLowerCase().includes(roleTitle)),
-      ]
+  if (opts.orgPlacement && isHqHierarchyRole(roleId)) {
+    pool = buildHqDesignationsFromOrganogram(role, roleId, designations, opts)
+  } else {
+    pool = filterActiveAtRoleBps(role, designations)
+    if (isHqHierarchyRole(roleId)) {
+      pool = pool.filter(
+        (d) =>
+          d.id.startsWith('org-post-') || designationTitleMatchesRoleLevel(d.title, roleId),
+      )
     }
   }
 
   if (opts.departmentId) {
-    const inUnit = pool.filter((d) => d.departmentId === opts.departmentId)
+    const inUnit = pool.filter(
+      (d) =>
+        d.id.startsWith('org-post-') ||
+        !d.departmentId ||
+        d.departmentId === opts.departmentId,
+    )
     if (inUnit.length > 0) return sortDesignationOptions(inUnit, role, opts.departmentId)
   }
 
@@ -198,9 +327,12 @@ function sortDesignationOptions(
   preferredDepartmentId?: string,
 ): DesignationRow[] {
   return [...rows].sort((a, b) => {
-    const aTitle = a.title.toLowerCase() === role.title.toLowerCase() ? 0 : 1
-    const bTitle = b.title.toLowerCase() === role.title.toLowerCase() ? 0 : 1
-    if (aTitle !== bTitle) return aTitle - bTitle
+    const aExact = designationTitleMatchesRoleLevel(a.title, role.id) ? 0 : 1
+    const bExact = designationTitleMatchesRoleLevel(b.title, role.id) ? 0 : 1
+    if (aExact !== bExact) return aExact - bExact
+    const aOrg = a.id.startsWith('org-post-') ? 0 : 1
+    const bOrg = b.id.startsWith('org-post-') ? 0 : 1
+    if (aOrg !== bOrg) return aOrg - bOrg
     const aDept = a.departmentId === preferredDepartmentId ? 0 : 1
     const bDept = b.departmentId === preferredDepartmentId ? 0 : 1
     if (aDept !== bDept) return aDept - bDept
@@ -307,5 +439,11 @@ export function designationMatchesRoleLevel(
   }
   const role = getRoleLevelById(roleId)
   if (!role) return true
+  if (roleId && isHqHierarchyRole(roleId)) {
+    return (
+      parseBpsFromGrade(designation.grade) === role.bps &&
+      designationTitleMatchesRoleLevel(designation.title ?? '', roleId)
+    )
+  }
   return parseBpsFromGrade(designation.grade) === role.bps
 }

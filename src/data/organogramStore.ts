@@ -1,6 +1,13 @@
 import type { Employee } from '../types/hrms'
 import type { OrgMappingRow } from './navttcOrgMapping'
-import { NAVTTC_HQ_ORG_TREE, treeToFlatNodes } from './navttcOrgMapping'
+import {
+  NAVTTC_CANONICAL_WING_IDS,
+  NAVTTC_HQ_ORG_TREE,
+  getCanonicalWings,
+  isCanonicalWingId,
+  organogramHasNonCanonicalWings,
+  treeToFlatNodes,
+} from './navttcOrgMapping'
 import type { NavttcOrgNode, OrgLevel } from './navttcOrgTypes'
 import { ORG_LEVEL_LABELS } from './navttcOrgTypes'
 import { getWireframeStore } from './wireframeStore'
@@ -23,7 +30,8 @@ function orgParentPathForNode(node: NavttcOrgNode, all: NavttcOrgNode[]): string
 
 export { DEFAULT_ORG_HEAD_ID }
 
-const STORAGE_KEY = 'hrms-wireframe-organogram-v2'
+const STORAGE_KEY = 'hrms-wireframe-organogram-v3'
+const LEGACY_STORAGE_KEY = 'hrms-wireframe-organogram-v2'
 
 const PARENT_LEVEL: Record<OrgLevel, OrgLevel | null> = {
   head: null,
@@ -59,8 +67,57 @@ function parseStoredNodes(raw: string | null): NavttcOrgNode[] | null {
   }
 }
 
+function wingIdFromNodeId(nodeId: string): (typeof NAVTTC_CANONICAL_WING_IDS)[number] | undefined {
+  if (nodeId.includes('-pd-') || nodeId.startsWith('org-wing-pd')) return 'org-wing-pd'
+  if (nodeId.includes('-af-') || nodeId.startsWith('org-wing-af')) return 'org-wing-af'
+  if (nodeId.includes('-ac-') || nodeId.startsWith('org-wing-ac')) return 'org-wing-ac'
+  if (nodeId.includes('-sc-') || nodeId.startsWith('org-wing-sc')) return 'org-wing-sc'
+  return undefined
+}
+
+/** Drop extra wing nodes and fix children that pointed at removed wings. */
+function sanitizeOrganogramNodes(input: NavttcOrgNode[]): NavttcOrgNode[] {
+  if (!organogramHasNonCanonicalWings(input)) return input
+
+  const seed = defaultSeedNodes()
+  const canonicalWings = getCanonicalWings(seed)
+  const head =
+    input.find((n) => n.id === DEFAULT_ORG_HEAD_ID) ??
+    seed.find((n) => n.id === DEFAULT_ORG_HEAD_ID)!
+  const canonicalSet = new Set<string>(NAVTTC_CANONICAL_WING_IDS)
+
+  const repaired = input
+    .filter((n) => n.level !== 'wing' && n.level !== 'head')
+    .map((n) => {
+      if (!n.parentId || canonicalSet.has(n.parentId)) return n
+      const parent = input.find((p) => p.id === n.parentId)
+      if (parent?.level !== 'wing') return n
+      const wingId = wingIdFromNodeId(n.id) ?? wingIdFromNodeId(parent.id)
+      if (!wingId) return n
+      return { ...n, parentId: wingId }
+    })
+
+  return [head, ...canonicalWings, ...repaired]
+}
+
 function loadFromLocalStorage(): NavttcOrgNode[] | null {
-  return parseStoredNodes(localStorage.getItem(STORAGE_KEY))
+  const stored = parseStoredNodes(localStorage.getItem(STORAGE_KEY))
+  if (stored) {
+    if (organogramHasNonCanonicalWings(stored)) {
+      const clean = sanitizeOrganogramNodes(stored)
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(clean))
+      return clean
+    }
+    return stored
+  }
+  const legacy = parseStoredNodes(localStorage.getItem(LEGACY_STORAGE_KEY))
+  if (legacy) {
+    const clean = sanitizeOrganogramNodes(legacy)
+    localStorage.removeItem(LEGACY_STORAGE_KEY)
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(clean))
+    return clean
+  }
+  return null
 }
 
 let nodes: NavttcOrgNode[] = loadFromLocalStorage() ?? defaultSeedNodes()
@@ -152,12 +209,18 @@ export function getOrgNodeFromStore(id: string | undefined): NavttcOrgNode | und
 }
 
 export function getOrgChildrenFromStore(parentId: string | null, level: OrgLevel): NavttcOrgNode[] {
-  return nodes
-    .filter((n) => n.parentId === parentId && n.level === level)
-    .sort((a, b) => a.name.localeCompare(b.name))
+  if (level === 'wing' && (parentId === null || parentId === DEFAULT_ORG_HEAD_ID)) {
+    return getCanonicalWings(nodes)
+  }
+  const rows = nodes.filter((n) => n.parentId === parentId && n.level === level)
+  if (level === 'wing') {
+    return getCanonicalWings(rows.length > 0 ? rows : nodes)
+  }
+  return rows.sort((a, b) => a.name.localeCompare(b.name))
 }
 
 export function orgNodesAtLevelFromStore(level: OrgLevel): NavttcOrgNode[] {
+  if (level === 'wing') return getCanonicalWings(nodes)
   return nodes.filter((n) => n.level === level).sort((a, b) => a.name.localeCompare(b.name))
 }
 
@@ -235,6 +298,9 @@ export function validateOrgNodeInput(
 }
 
 export function addOrgNode(level: OrgLevel, input: OrgNodeInput): NavttcOrgNode | { error: string } {
+  if (level === 'wing') {
+    return { error: 'HQ has four fixed wings (P&D, A&F, A&C, S&C). Edit an existing wing instead.' }
+  }
   const err = validateOrgNodeInput(level, input)
   if (err) return { error: err }
   const row: NavttcOrgNode = {
@@ -243,7 +309,7 @@ export function addOrgNode(level: OrgLevel, input: OrgNodeInput): NavttcOrgNode 
     name: input.name.trim(),
     code: input.code.trim().toUpperCase(),
     parentId: level === 'head' ? null : input.parentId,
-    legacyDepartmentId: level === 'wing' ? input.legacyDepartmentId : undefined,
+    legacyDepartmentId: undefined,
   }
   commit([...nodes, row])
   return row
@@ -255,6 +321,9 @@ export function updateOrgNode(
 ): NavttcOrgNode | { error: string } | undefined {
   const existing = nodeIndex().get(id)
   if (!existing) return undefined
+  if (existing.level === 'wing' && !isCanonicalWingId(existing.id)) {
+    return { error: 'Only the four HQ wings (P&D, A&F, A&C, S&C) can be maintained.' }
+  }
   const err = validateOrgNodeInput(existing.level, input, id)
   if (err) return { error: err }
   if (existing.id === DEFAULT_ORG_HEAD_ID && input.parentId !== existing.parentId) {
@@ -288,6 +357,9 @@ function childCount(nodeId: string): number {
 
 export function deleteOrgNode(id: string): { ok: true } | { error: string } {
   if (id === DEFAULT_ORG_HEAD_ID) return { error: 'The Head (Executive Director) node cannot be deleted.' }
+  if (isCanonicalWingId(id)) {
+    return { error: 'HQ wings (P&D, A&F, A&C, S&C) cannot be deleted.' }
+  }
   const node = nodeIndex().get(id)
   if (!node) return { error: 'Unit not found.' }
   if (childCount(id) > 0) {
@@ -306,7 +378,7 @@ export function parentLevelFor(level: OrgLevel): OrgLevel | null {
 }
 
 export function canCreateAtLevel(level: OrgLevel): boolean {
-  return level !== 'head'
+  return level !== 'head' && level !== 'wing'
 }
 
 export function canDeleteNode(id: string): boolean {

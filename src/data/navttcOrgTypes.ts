@@ -17,7 +17,7 @@ export const ORG_LEVEL_LABELS: Record<OrgLevel, string> = {
   wing: 'Director General (Wing)',
   section: 'Director (Section)',
   sub_section_1: 'Deputy Director (DD)',
-  sub_section_2: 'Assistant Director (AD)',
+  sub_section_2: 'AD unit (post)',
 }
 
 export const ORG_LEVEL_SIDEBAR_LABELS: Record<OrgLevel, string> = {
@@ -42,7 +42,8 @@ export const ORG_STRUCTURE_ROUTES: Record<
   wings: {
     level: 'wing',
     title: 'Wings',
-    description: 'HQ wings under the Executive Director.',
+    description:
+      'Four Director General wings: P&D, A&F, A&C, and S&C (Organogram 2026).',
   },
   sections: {
     level: 'section',

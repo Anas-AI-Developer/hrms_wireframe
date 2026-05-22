@@ -35,12 +35,29 @@ export function orgPlacementEntryMode(roleLevelId: string | undefined): OrgPlace
     case 'role-5':
       return 'section_then_dd'
     case 'role-3':
-    case 'role-4':
-    case 'role-6':
       return 'anchor_post'
     default:
       return 'cascade'
   }
+}
+
+/** Filter dropdown at each tier (Director for section, DD for ss1, AD for ss2 — not the job role on every step). */
+export function organogramFilterRoleForLevel(
+  level: OrgLevel,
+  employeeRoleLevelId?: string,
+): string | undefined {
+  if (!employeeRoleLevelId) return undefined
+  if (organogramTargetLevel(employeeRoleLevelId) === level) {
+    return employeeRoleLevelId
+  }
+  const tierRole: Record<OrgLevel, string> = {
+    head: 'role-2',
+    wing: 'role-3',
+    section: 'role-4',
+    sub_section_1: 'role-5',
+    sub_section_2: 'role-6',
+  }
+  return tierRole[level]
 }
 
 /** HQ organogram roles (Chairman through Employee) use Head Office and organogram fields. */
@@ -78,9 +95,9 @@ const ROLE_ORG_CONFIG: Record<string, RoleOrgUiConfig> = {
   },
   'role-4': {
     forceHeadOffice: true,
-    visibleLevels: ['head', 'wing', 'section'],
-    requiredLevels: ['head', 'wing', 'section'],
-    formHint: 'Director — select wing, then the section under that wing.',
+    visibleLevels: ['head', 'wing'],
+    requiredLevels: ['head', 'wing'],
+    formHint: 'Director — select wing, then choose Director designation.',
   },
   'role-5': {
     forceHeadOffice: true,
@@ -90,9 +107,10 @@ const ROLE_ORG_CONFIG: Record<string, RoleOrgUiConfig> = {
   },
   'role-6': {
     forceHeadOffice: true,
-    visibleLevels: LEVEL_ORDER,
-    requiredLevels: ['head', 'wing', 'section', 'sub_section_1', 'sub_section_2'],
-    formHint: 'Assistant Director — Wing → Section → Section 1 (DD) → Section 2 (AD).',
+    visibleLevels: ['head', 'wing', 'section'],
+    requiredLevels: ['head', 'wing', 'section'],
+    formHint:
+      'Assistant Director — select wing and Director (section), then choose AD designation.',
   },
   'role-7': {
     forceHeadOffice: true,
@@ -113,44 +131,16 @@ export function roleOrgUiConfig(roleLevelId: string | undefined): RoleOrgUiConfi
   return ROLE_ORG_CONFIG[roleLevelId] ?? ROLE_ORG_CONFIG['role-7']!
 }
 
-function maxLevelIndex(levels: OrgLevel[]): number {
-  return Math.max(...levels.map((l) => LEVEL_ORDER.indexOf(l)), -1)
-}
-
-/** Reset organogram fields when role changes so depth matches the new role. */
+/** Clear organogram picks when role changes (avoids locking e.g. DG wing on Director role). */
 export function orgPlacementForRoleChange(
-  roleLevelId: string,
+  _roleLevelId: string,
   current: EmployeeOrgPlacement,
 ): EmployeeOrgPlacement {
-  const cfg = roleOrgUiConfig(roleLevelId)
-  const next: EmployeeOrgPlacement = {
+  return {
     orgHeadId: current.orgHeadId || DEFAULT_ORG_HEAD_ID,
     orgWingId: '',
     orgSectionId: '',
   }
-
-  if (!cfg) return next
-
-  const maxIdx = maxLevelIndex(cfg.visibleLevels)
-
-  if (maxIdx >= LEVEL_ORDER.indexOf('wing') && current.orgWingId) {
-    const wing = getOrgNode(current.orgWingId)
-    if (wing?.level === 'wing') next.orgWingId = current.orgWingId
-  }
-  if (maxIdx >= LEVEL_ORDER.indexOf('section') && current.orgSectionId && next.orgWingId) {
-    const section = getOrgNode(current.orgSectionId)
-    if (section?.parentId === next.orgWingId) next.orgSectionId = current.orgSectionId
-  }
-  if (maxIdx >= LEVEL_ORDER.indexOf('sub_section_1') && current.orgSubSection1Id && next.orgSectionId) {
-    const ss1 = getOrgNode(current.orgSubSection1Id)
-    if (ss1?.parentId === next.orgSectionId) next.orgSubSection1Id = current.orgSubSection1Id
-  }
-  if (maxIdx >= LEVEL_ORDER.indexOf('sub_section_2') && current.orgSubSection2Id && next.orgSubSection1Id) {
-    const ss2 = getOrgNode(current.orgSubSection2Id)
-    if (ss2?.parentId === next.orgSubSection1Id) next.orgSubSection2Id = current.orgSubSection2Id
-  }
-
-  return next
 }
 
 /** Only nodes that match the role tier (DG / Director / DD / AD) appear in dropdowns. */
@@ -188,11 +178,23 @@ export function filterOrganogramNodesForRole(
   return nodes.filter((n) => organogramNodeMatchesRole(n, roleLevelId))
 }
 
+/** Organogram picks required on the employee form (may be higher than the post tier). */
+export function organogramFormAnchorLevel(roleLevelId: string | undefined): OrgLevel | null {
+  switch (roleLevelId) {
+    case 'role-4':
+      return 'wing'
+    case 'role-6':
+      return 'section'
+    default:
+      return organogramTargetLevel(roleLevelId)
+  }
+}
+
 export function organogramAnchorNodeId(
   placement: EmployeeOrgPlacement,
   roleLevelId: string | undefined,
 ): string | undefined {
-  const target = organogramTargetLevel(roleLevelId)
+  const target = organogramFormAnchorLevel(roleLevelId)
   if (!target) return undefined
   switch (target) {
     case 'head':
@@ -217,6 +219,14 @@ export function isOrganogramPlacementComplete(
   return validateOrgPlacementForRole(placement, roleLevelId) === null
 }
 
+/** User-facing hint when designation is locked until organogram steps finish. */
+export function organogramPlacementHint(
+  placement: EmployeeOrgPlacement,
+  roleLevelId: string | undefined,
+): string | null {
+  return validateOrgPlacementForRole(placement, roleLevelId)
+}
+
 /** Keywords from organogram node e.g. "Assistant Director (Finance)" → finance */
 export function organogramNodeSpecialty(node: NavttcOrgNode | undefined): string | null {
   if (!node) return null
@@ -239,7 +249,9 @@ export function validateOrgPlacementForRole(
       return 'Select a wing.'
     }
     if (level === 'section' && !placement.orgSectionId) {
-      return 'Select the section under that wing.'
+      return roleLevelId === 'role-6'
+        ? 'Select a Director (section) under that wing.'
+        : 'Select the section under that wing.'
     }
     if (level === 'sub_section_1' && !placement.orgSubSection1Id) {
       return 'Select Section 1 (Deputy Director unit) under the section.'
@@ -252,7 +264,7 @@ export function validateOrgPlacementForRole(
   if (placement.orgWingId) {
     if (!getOrgNode(placement.orgWingId)) return 'Invalid wing selection.'
     const wing = getOrgNode(placement.orgWingId)
-    if (wing && !organogramNodeMatchesRole(wing, roleLevelId)) {
+    if (wing && !organogramNodeMatchesRole(wing, 'role-3')) {
       return 'Select a Director General (Wing) from the organogram.'
     }
   }
@@ -261,6 +273,10 @@ export function validateOrgPlacementForRole(
     const parentWing = getOrgNode(placement.orgSectionId)?.parentId
     if (parentWing !== placement.orgWingId) {
       return 'Section must belong to the selected wing.'
+    }
+    const section = getOrgNode(placement.orgSectionId)
+    if (section && !organogramNodeMatchesRole(section, 'role-4')) {
+      return 'Select a Director (section) under this wing.'
     }
   }
   if (placement.orgSubSection1Id) {
@@ -285,7 +301,10 @@ export function validateOrgPlacementForRole(
   const anchorId = organogramAnchorNodeId(placement, roleLevelId)
   if (anchorId) {
     const anchor = getOrgNode(anchorId)
-    if (anchor && !organogramNodeMatchesRole(anchor, roleLevelId)) {
+    const filterRole = anchor
+      ? organogramFilterRoleForLevel(anchor.level, roleLevelId)
+      : undefined
+    if (anchor && filterRole && !organogramNodeMatchesRole(anchor, filterRole)) {
       const role = getRoleLevelById(roleLevelId)
       return `Selected organogram unit must match ${role?.title ?? 'the role'} level.`
     }
