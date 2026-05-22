@@ -74,6 +74,39 @@ export function getOrgAncestorAtLevel(
   return undefined
 }
 
+/** Fill Head → Wing → Section → DD → AD from any node on the branch (bottom-up shortcut). */
+export function placementFromOrgNode(nodeId: string): EmployeeOrgPlacement {
+  const node = getOrgNodeFromStore(nodeId)
+  const empty: EmployeeOrgPlacement = {
+    orgHeadId: DEFAULT_ORG_HEAD_ID,
+    orgWingId: '',
+    orgSectionId: '',
+  }
+  if (!node) return empty
+
+  const byLevel: Partial<Record<OrgLevel, string>> = { [node.level]: node.id }
+  let walk: NavttcOrgNode | undefined = node
+  while (walk?.parentId) {
+    const parent = getOrgNodeFromStore(walk.parentId)
+    if (!parent) break
+    byLevel[parent.level] = parent.id
+    walk = parent
+  }
+
+  const placement: EmployeeOrgPlacement = {
+    orgHeadId: byLevel.head ?? DEFAULT_ORG_HEAD_ID,
+    orgWingId: byLevel.wing ?? '',
+    orgSectionId: byLevel.section ?? '',
+  }
+  if (byLevel.sub_section_1) placement.orgSubSection1Id = byLevel.sub_section_1
+  if (byLevel.sub_section_2) placement.orgSubSection2Id = byLevel.sub_section_2
+  return placement
+}
+
+export function nodeIsUnderWing(node: NavttcOrgNode, wingId: string): boolean {
+  return getOrgAncestorAtLevel(node, 'wing')?.id === wingId
+}
+
 export function orgMappingSearchText(node: NavttcOrgNode, columns: OrgMappingColumn[]): string {
   const bits = [node.name, node.code ?? '', orgParentPath(node)]
   for (const col of columns) {

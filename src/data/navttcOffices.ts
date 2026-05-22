@@ -36,6 +36,19 @@ export function getDepartmentsForOffice(
   )
 }
 
+/** Wireframe default when regional hire has no centre/unit mapping. */
+export function defaultDepartmentIdForOffice(
+  officeId: string | undefined,
+  departments: Department[],
+): string {
+  if (officeId) {
+    const inOffice = getDepartmentsForOffice(officeId, departments)
+    if (inOffice[0]?.id) return inOffice[0].id
+  }
+  const fallback = departments.find((d) => d.status === 'active')
+  return fallback?.id ?? 'c1'
+}
+
 export function getOfficeById(officeId: string): NavttcOffice | undefined {
   return navttcOffices.find((o) => o.id === officeId)
 }

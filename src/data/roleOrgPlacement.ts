@@ -1,7 +1,47 @@
 import type { EmployeeOrgPlacement, OrgLevel } from './navttcHqOrganogram'
 import { DEFAULT_ORG_HEAD_ID, getOrgNode } from './navttcHqOrganogram'
+import type { NavttcOrgNode } from './navttcOrgTypes'
+import { getRoleLevelById } from './navttcRoleLevels'
 
 const LEVEL_ORDER: OrgLevel[] = ['head', 'wing', 'section', 'sub_section_1', 'sub_section_2']
+
+/** Deepest organogram level the selected NAVTTC role posts at (Organogram 2026). */
+const ROLE_TARGET_LEVEL: Record<string, OrgLevel> = {
+  'role-1': 'head',
+  'role-2': 'head',
+  'role-3': 'wing',
+  'role-4': 'section',
+  'role-5': 'sub_section_1',
+  'role-6': 'sub_section_2',
+  'role-7': 'section',
+  'role-8': 'section',
+}
+
+export function organogramTargetLevel(roleLevelId: string | undefined): OrgLevel | null {
+  if (!roleLevelId) return null
+  return ROLE_TARGET_LEVEL[roleLevelId] ?? null
+}
+
+/** How the employee form walks the organogram (fewer picks for DD / AD). */
+export type OrgPlacementEntryMode =
+  | 'cascade'
+  /** Pick Director (section) → auto Wing & Head → pick DD under that section. */
+  | 'section_then_dd'
+  /** Pick the role’s anchor post (AD, DD, Director, DG) → auto-fill all parents. */
+  | 'anchor_post'
+
+export function orgPlacementEntryMode(roleLevelId: string | undefined): OrgPlacementEntryMode {
+  switch (roleLevelId) {
+    case 'role-5':
+      return 'section_then_dd'
+    case 'role-3':
+    case 'role-4':
+    case 'role-6':
+      return 'anchor_post'
+    default:
+      return 'cascade'
+  }
+}
 
 /** HQ organogram roles (Chairman through Employee) use Head Office and organogram fields. */
 export function roleRequiresHeadOffice(roleLevelId: string | undefined): boolean {
@@ -113,6 +153,78 @@ export function orgPlacementForRoleChange(
   return next
 }
 
+/** Only nodes that match the role tier (DG / Director / DD / AD) appear in dropdowns. */
+export function organogramNodeMatchesRole(node: NavttcOrgNode, roleLevelId: string | undefined): boolean {
+  if (!roleLevelId) return true
+  const name = node.name.toLowerCase()
+  switch (roleLevelId) {
+    case 'role-1':
+    case 'role-2':
+      return node.level === 'head'
+    case 'role-3':
+      return node.level === 'wing' && /director general|dg\b/.test(name)
+    case 'role-4':
+      return (
+        node.level === 'section' &&
+        /director/.test(name) &&
+        !/deputy|assistant/.test(name)
+      )
+    case 'role-5':
+      return node.level === 'sub_section_1' && /deputy director|\bdd\b/.test(name)
+    case 'role-6':
+      return node.level === 'sub_section_2' && /assistant director|\bad\b/.test(name)
+    case 'role-7':
+    case 'role-8':
+      return true
+    default:
+      return true
+  }
+}
+
+export function filterOrganogramNodesForRole(
+  nodes: NavttcOrgNode[],
+  roleLevelId: string | undefined,
+): NavttcOrgNode[] {
+  return nodes.filter((n) => organogramNodeMatchesRole(n, roleLevelId))
+}
+
+export function organogramAnchorNodeId(
+  placement: EmployeeOrgPlacement,
+  roleLevelId: string | undefined,
+): string | undefined {
+  const target = organogramTargetLevel(roleLevelId)
+  if (!target) return undefined
+  switch (target) {
+    case 'head':
+      return placement.orgHeadId || DEFAULT_ORG_HEAD_ID
+    case 'wing':
+      return placement.orgWingId || undefined
+    case 'section':
+      return placement.orgSectionId || undefined
+    case 'sub_section_1':
+      return placement.orgSubSection1Id || undefined
+    case 'sub_section_2':
+      return placement.orgSubSection2Id || undefined
+    default:
+      return undefined
+  }
+}
+
+export function isOrganogramPlacementComplete(
+  placement: EmployeeOrgPlacement,
+  roleLevelId: string | undefined,
+): boolean {
+  return validateOrgPlacementForRole(placement, roleLevelId) === null
+}
+
+/** Keywords from organogram node e.g. "Assistant Director (Finance)" → finance */
+export function organogramNodeSpecialty(node: NavttcOrgNode | undefined): string | null {
+  if (!node) return null
+  const paren = node.name.match(/\(([^)]+)\)/)
+  if (paren?.[1]) return paren[1].trim().toLowerCase()
+  return null
+}
+
 export function validateOrgPlacementForRole(
   placement: EmployeeOrgPlacement,
   roleLevelId: string | undefined,
@@ -137,8 +249,12 @@ export function validateOrgPlacementForRole(
     }
   }
 
-  if (placement.orgWingId && !getOrgNode(placement.orgWingId)) {
-    return 'Invalid wing selection.'
+  if (placement.orgWingId) {
+    if (!getOrgNode(placement.orgWingId)) return 'Invalid wing selection.'
+    const wing = getOrgNode(placement.orgWingId)
+    if (wing && !organogramNodeMatchesRole(wing, roleLevelId)) {
+      return 'Select a Director General (Wing) from the organogram.'
+    }
   }
   if (placement.orgSectionId) {
     if (!getOrgNode(placement.orgSectionId)) return 'Invalid section selection.'
@@ -150,13 +266,28 @@ export function validateOrgPlacementForRole(
   if (placement.orgSubSection1Id) {
     const ss1 = getOrgNode(placement.orgSubSection1Id)
     if (!ss1 || ss1.parentId !== placement.orgSectionId) {
-      return 'Section 1 (DD) must belong to the selected Section.'
+      return 'Deputy Director (DD) must belong to the selected Director (Section).'
+    }
+    if (!organogramNodeMatchesRole(ss1, roleLevelId)) {
+      return 'Select a Deputy Director (DD) unit under this wing and section.'
     }
   }
   if (placement.orgSubSection2Id) {
     const ss2 = getOrgNode(placement.orgSubSection2Id)
     if (!ss2 || ss2.parentId !== placement.orgSubSection1Id) {
-      return 'Section 2 (AD) must belong to the selected Section 1 (DD).'
+      return 'Assistant Director (AD) must belong to the selected Deputy Director (DD).'
+    }
+    if (!organogramNodeMatchesRole(ss2, roleLevelId)) {
+      return 'Select an Assistant Director (AD) unit from the organogram tree.'
+    }
+  }
+
+  const anchorId = organogramAnchorNodeId(placement, roleLevelId)
+  if (anchorId) {
+    const anchor = getOrgNode(anchorId)
+    if (anchor && !organogramNodeMatchesRole(anchor, roleLevelId)) {
+      const role = getRoleLevelById(roleLevelId)
+      return `Selected organogram unit must match ${role?.title ?? 'the role'} level.`
     }
   }
 

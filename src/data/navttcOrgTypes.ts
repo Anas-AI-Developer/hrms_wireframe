@@ -11,12 +11,13 @@ export type NavttcOrgNode = {
   code?: string
 }
 
+/** Labels aligned with Organogram_NAVTTC HQs_2026.pdf hierarchy. */
 export const ORG_LEVEL_LABELS: Record<OrgLevel, string> = {
-  head: 'Head',
-  wing: 'Wing',
-  section: 'Section',
-  sub_section_1: 'Section 1 (DD)',
-  sub_section_2: 'Section 2 (AD)',
+  head: 'Head (Executive Director)',
+  wing: 'Director General (Wing)',
+  section: 'Director (Section)',
+  sub_section_1: 'Deputy Director (DD)',
+  sub_section_2: 'Assistant Director (AD)',
 }
 
 export const ORG_LEVEL_SIDEBAR_LABELS: Record<OrgLevel, string> = {

@@ -1,4 +1,11 @@
+import { ROLE_LABELS } from './roleLabels'
 import type { RoleId } from './types'
+
+/** One row from the login page “Demo login credentials” table (role + designation). */
+export type LoginDemoPost = {
+  slug: string
+  title: string
+}
 
 /** Shared demo password for all wireframe accounts. */
 export const DEMO_PASSWORD = '11223344'
@@ -75,4 +82,16 @@ export const LEADERSHIP_ACCOUNTS: {
     displayName: 'Demo — AAO (Finance)',
     description: 'Finance view — registers, master data, read-only HR lists.',
   },
+]
+
+/** Leadership rows (designation “—” on login; post title = role label). */
+export const LOGIN_DEMO_LEADERSHIP_POSTS: LoginDemoPost[] = LEADERSHIP_ACCOUNTS.map((a) => ({
+  slug: a.username.replace(/\./g, '-'),
+  title: ROLE_LABELS[a.role],
+}))
+
+/** Full login cred table: leadership posts + employee designations. */
+export const ALL_LOGIN_DEMO_POSTS: LoginDemoPost[] = [
+  ...LOGIN_DEMO_LEADERSHIP_POSTS,
+  ...EMPLOYEE_DESIGNATIONS.map((d) => ({ slug: d.slug, title: d.title })),
 ]

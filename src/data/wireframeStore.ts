@@ -17,6 +17,7 @@ import {
 } from './benefitsData'
 import { assignManagers } from './hierarchy'
 import {
+  DEFAULT_ORG_HEAD_ID,
   formatOrgPlacementPath,
   getOrgNode,
   legacyDepartmentIdForPlacement,
@@ -31,7 +32,9 @@ import {
   designationsMatchingRoleLevel,
   getRoleLevelById,
   inferRoleLevelId,
+  loginDesignationTitleForId,
   parseBpsFromGrade,
+  regionalLoginDesignations,
 } from './navttcRoleLevels'
 import {
   expectedEndDateFromMonths,
@@ -416,23 +419,77 @@ function orgFieldsFromInput(input: EmployeeInput) {
 
 function resolveDesignationIdForInput(input: EmployeeInput): string {
   const role = getRoleLevelById(input.roleLevelId)
-  if (input.designationId?.trim()) {
-    const picked = state.designations.find((d) => d.id === input.designationId.trim())
+  const orgPlacement =
+    input.orgHeadId || input.orgWingId
+      ? {
+          orgHeadId: input.orgHeadId ?? DEFAULT_ORG_HEAD_ID,
+          orgWingId: input.orgWingId ?? '',
+          orgSectionId: input.orgSectionId ?? '',
+          orgSubSection1Id: input.orgSubSection1Id,
+          orgSubSection2Id: input.orgSubSection2Id,
+        }
+      : undefined
+
+  const matchScope = {
+    departmentId: input.departmentId || undefined,
+    officeId: input.officeId,
+    departments: state.departments,
+    orgPlacement,
+  }
+
+  const rawId = input.designationId?.trim() ?? ''
+  if (rawId.startsWith('org-post-')) {
+    const catalog = designationsMatchingRoleLevel(input.roleLevelId ?? '', state.designations, matchScope)
+    const generic = catalog.find((d) => !d.id.startsWith('org-post-'))
+    return generic?.id ?? catalog[0]?.id ?? ''
+  }
+  if (rawId.startsWith('login-post-')) {
+    const loginTitle = loginDesignationTitleForId(rawId)
+    if (loginTitle) {
+      const catalog = state.designations.find(
+        (d) => d.status === 'active' && d.title.toLowerCase() === loginTitle.toLowerCase(),
+      )
+      if (catalog) return catalog.id
+    }
+    const regional = regionalLoginDesignations(state.designations, matchScope)
+    const row = regional.find((d) => d.id === rawId)
+    const catalog = row && !row.id.startsWith('login-post-')
+      ? state.designations.find((d) => d.id === row.id)
+      : state.designations.find(
+          (d) =>
+            d.status === 'active' &&
+            loginTitle &&
+            d.title.toLowerCase().includes(loginTitle.toLowerCase().split('/')[0]!.trim()),
+        )
+    return catalog?.id ?? rawId
+  }
+
+  if (rawId) {
+    const picked = state.designations.find((d) => d.id === rawId)
     if (picked && role && parseBpsFromGrade(picked.grade) === role.bps) {
       return picked.id
     }
     if (picked && !role) return picked.id
   }
-  if (!role) return input.designationId?.trim() ?? ''
-  const matched = designationsMatchingRoleLevel(role.id, state.designations, {
-    departmentId: input.departmentId || undefined,
-    officeId: input.officeId,
-    departments: state.departments,
-  })
+  if (!role) return rawId
+  const matched = designationsMatchingRoleLevel(role.id, state.designations, matchScope)
   const titleMatch = matched.find(
-    (d) => d.title.toLowerCase() === role.title.toLowerCase(),
+    (d) => !d.id.startsWith('org-post-') && d.title.toLowerCase() === role.title.toLowerCase(),
   )
-  return titleMatch?.id ?? matched[0]?.id ?? ''
+  const catalog = matched.find((d) => !d.id.startsWith('org-post-'))
+  return titleMatch?.id ?? catalog?.id ?? matched[0]?.id ?? ''
+}
+
+function sanctionedPostFromInput(input: EmployeeInput): string | undefined {
+  const raw = input.designationId?.trim()
+  if (raw?.startsWith('org-post-')) {
+    const node = getOrgNode(raw.replace('org-post-', ''))
+    if (node) return node.name
+  }
+  if (raw?.startsWith('login-post-')) {
+    return loginDesignationTitleForId(raw) ?? input.sanctionedPost?.trim()
+  }
+  return input.sanctionedPost?.trim()
 }
 
 function resolveDurationForInput(input: EmployeeInput): {
@@ -457,7 +514,8 @@ export function addEmployee(input: EmployeeInput): Employee {
   const designationId = resolveDesignationIdForInput(input)
   const desig = state.designations.find((g) => g.id === designationId)
   const roleLevel = getRoleLevelById(input.roleLevelId)
-  const post = input.sanctionedPost?.trim() || roleLevel?.title || desig?.title || 'Staff'
+  const post =
+    sanctionedPostFromInput(input) || roleLevel?.title || desig?.title || 'Staff'
   const org = orgFieldsFromInput(input)
   const duration = resolveDurationForInput(input)
 
@@ -540,7 +598,7 @@ export function updateEmployee(id: string, input: EmployeeInput): Employee | und
   const designationId = resolveDesignationIdForInput(input)
   const desig = state.designations.find((g) => g.id === designationId)
   const roleLevel = getRoleLevelById(input.roleLevelId)
-  const post = input.sanctionedPost?.trim() || roleLevel?.title || desig?.title
+  const post = sanctionedPostFromInput(input) || roleLevel?.title || desig?.title
   const org = orgFieldsFromInput(input)
   const duration = resolveDurationForInput(input)
   const centre = state.departments.find((d) => d.id === org.departmentId)

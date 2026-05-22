@@ -12,19 +12,28 @@ import {
   placementFromLegacyDepartment,
   type LegacyCentreWingOption,
 } from '../../data/navttcOrgMapping'
-import { roleOrgUiConfig, validateOrgPlacementForRole } from '../../data/roleOrgPlacement'
+import {
+  filterOrganogramNodesForRole,
+  orgPlacementEntryMode,
+  organogramTargetLevel,
+  roleOrgUiConfig,
+  validateOrgPlacementForRole,
+} from '../../data/roleOrgPlacement'
 import {
   DEFAULT_ORG_HEAD_ID,
   formatOrgPlacementPath,
   getOrgAncestorAtLevel,
   getOrgChildren,
   getOrgNode,
+  nodeIsUnderWing,
   orgNodesAtLevel,
+  placementFromOrgNode,
   ORG_LEVEL_LABELS,
   type EmployeeOrgPlacement,
   type NavttcOrgNode,
   type OrgLevel,
 } from '../../data/navttcHqOrganogram'
+import { wingIdForLegacyDepartment } from '../../data/navttcOrgMapping'
 import type { Department } from '../../types/hrms'
 
 type Props = {
@@ -56,11 +65,11 @@ const PARENT_LEVEL: Partial<Record<OrgLevel, OrgLevel>> = {
 }
 
 const PLACEHOLDER: Record<OrgLevel, string> = {
-  head: 'Select head…',
-  wing: 'Select wing…',
-  section: 'Select section…',
-  sub_section_1: 'Select Section 1 (DD)…',
-  sub_section_2: 'Select Section 2 (AD)…',
+  head: 'Select Executive Director…',
+  wing: 'Select Director General…',
+  section: 'Select Director (section)…',
+  sub_section_1: 'Select Deputy Director (DD)…',
+  sub_section_2: 'Select Assistant Director (AD)…',
 }
 
 function levelKey(level: OrgLevel): keyof EmployeeOrgPlacement {
@@ -105,6 +114,26 @@ function formatOptionLabel(node: NavttcOrgNode): string {
   return node.code ? `${node.name} (${node.code})` : node.name
 }
 
+function formatAnchorPostLabel(node: NavttcOrgNode): string {
+  const path = [
+    getOrgAncestorAtLevel(node, 'wing')?.name,
+    getOrgAncestorAtLevel(node, 'section')?.name,
+    node.level === 'sub_section_2' ? getOrgNode(node.parentId ?? '')?.name : undefined,
+  ]
+    .filter(Boolean)
+    .join(' › ')
+  return path ? `${node.name} · ${path}` : formatOptionLabel(node)
+}
+
+function filterNodesByMappedWing(
+  nodes: NavttcOrgNode[],
+  legacyCentreId: string,
+): NavttcOrgNode[] {
+  const wingId = wingIdForLegacyDepartment(legacyCentreId)
+  if (!wingId) return nodes
+  return nodes.filter((n) => nodeIsUnderWing(n, wingId))
+}
+
 function parentIdForLevel(placement: EmployeeOrgPlacement, level: OrgLevel): string | null {
   const parentLevel = PARENT_LEVEL[level]
   if (!parentLevel) return null
@@ -112,11 +141,17 @@ function parentIdForLevel(placement: EmployeeOrgPlacement, level: OrgLevel): str
   return id || null
 }
 
-function optionsForLevel(placement: EmployeeOrgPlacement, level: OrgLevel): NavttcOrgNode[] {
-  if (level === 'head') return getOrgChildren(null, 'head')
+function optionsForLevel(
+  placement: EmployeeOrgPlacement,
+  level: OrgLevel,
+  roleLevelId?: string,
+): NavttcOrgNode[] {
+  if (level === 'head') {
+    return filterOrganogramNodesForRole(getOrgChildren(null, 'head'), roleLevelId)
+  }
   const parentId = parentIdForLevel(placement, level)
   if (!parentId) return []
-  return getOrgChildren(parentId, level)
+  return filterOrganogramNodesForRole(getOrgChildren(parentId, level), roleLevelId)
 }
 
 function parentReady(placement: EmployeeOrgPlacement, level: OrgLevel): boolean {
@@ -143,6 +178,8 @@ export function EmployeeOrgPlacementFields({
     [departments, wings],
   )
   const showCentreMapping = Boolean(onLegacyCentreChange) && centreWingRows.length > 0
+  const entryMode = orgPlacementEntryMode(roleLevelId)
+  const anchorLevel = organogramTargetLevel(roleLevelId)
 
   const showLevel = (level: OrgLevel) =>
     roleCfg ? roleCfg.visibleLevels.includes(level) : true
@@ -176,12 +213,102 @@ export function EmployeeOrgPlacementFields({
     onChange(next)
   }
 
+  function applyPlacement(next: EmployeeOrgPlacement) {
+    if (next.orgWingId && onLegacyCentreChange) {
+      const mappedDept = legacyDepartmentIdForWingId(next.orgWingId)
+      if (mappedDept) onLegacyCentreChange(mappedDept)
+    }
+    onChange(next)
+  }
+
+  function setAnchorPost(nodeId: string) {
+    if (!nodeId) {
+      onChange({
+        orgHeadId: value.orgHeadId || DEFAULT_ORG_HEAD_ID,
+        orgWingId: '',
+        orgSectionId: '',
+      })
+      return
+    }
+    applyPlacement(placementFromOrgNode(nodeId))
+  }
+
+  function setDirectorSection(sectionId: string) {
+    if (!sectionId) {
+      onChange({
+        orgHeadId: value.orgHeadId || DEFAULT_ORG_HEAD_ID,
+        orgWingId: '',
+        orgSectionId: '',
+      })
+      return
+    }
+    const next = placementFromOrgNode(sectionId)
+    const dds = filterOrganogramNodesForRole(
+      getOrgChildren(sectionId, 'sub_section_1'),
+      roleLevelId,
+    )
+    if (dds.length === 1) next.orgSubSection1Id = dds[0]!.id
+    applyPlacement(next)
+  }
+
+  function setDdPost(ddId: string) {
+    if (!ddId) {
+      const next = { ...value }
+      delete next.orgSubSection1Id
+      onChange(next)
+      return
+    }
+    applyPlacement(placementFromOrgNode(ddId))
+  }
+
+  const anchorPostOptions = useMemo(() => {
+    if (!anchorLevel) return []
+    const all = filterOrganogramNodesForRole(orgNodesAtLevel(anchorLevel), roleLevelId)
+    return filterNodesByMappedWing(all, legacyCentreId)
+  }, [nodes, roleLevelId, anchorLevel, legacyCentreId])
+
+  const directorSectionOptions = useMemo(() => {
+    const sections = filterOrganogramNodesForRole(
+      orgNodesAtLevel('section').filter((n) => {
+        const name = n.name.toLowerCase()
+        return /director/.test(name) && !/deputy|assistant/.test(name)
+      }),
+      'role-4',
+    )
+    return filterNodesByMappedWing(sections, legacyCentreId)
+  }, [nodes, legacyCentreId])
+
+  const ddOptionsUnderSection = useMemo(() => {
+    if (!value.orgSectionId) return []
+    return filterOrganogramNodesForRole(
+      getOrgChildren(value.orgSectionId, 'sub_section_1'),
+      roleLevelId,
+    )
+  }, [value.orgSectionId, nodes, roleLevelId])
+
+  const anchorPostValue = anchorLevel ? levelValue(value, anchorLevel) : ''
+
+  const autoFilledLevels = useMemo(() => {
+    if (entryMode === 'cascade') return []
+    const targetIdx = anchorLevel ? LEVEL_ORDER.indexOf(anchorLevel) : -1
+    return LEVEL_ORDER.filter((level) => {
+      if (level === anchorLevel) return false
+      if (entryMode === 'section_then_dd' && level === 'sub_section_1') return false
+      const idx = LEVEL_ORDER.indexOf(level)
+      if (entryMode === 'anchor_post' && targetIdx >= 0 && idx >= targetIdx) return false
+      if (entryMode === 'section_then_dd') {
+        return level !== 'section' && idx < LEVEL_ORDER.indexOf('section')
+      }
+      return idx < targetIdx
+    }).filter((level) => Boolean(levelValue(value, level)))
+  }, [value, entryMode, anchorLevel, nodes])
+
   const optionsByLevel = useMemo(
     () =>
       Object.fromEntries(
-        LEVEL_ORDER.map((level) => [level, optionsForLevel(value, level)]),
+        LEVEL_ORDER.map((level) => [level, optionsForLevel(value, level, roleLevelId)]),
       ) as Record<OrgLevel, NavttcOrgNode[]>,
-    [value, nodes],
+    [value, nodes, roleLevelId],
   )
 
   function renderLevelField(level: OrgLevel) {
@@ -277,7 +404,115 @@ export function EmployeeOrgPlacementFields({
         </p>
       ) : null}
 
-      <CompactFormGrid>{LEVEL_ORDER.map((level) => renderLevelField(level))}</CompactFormGrid>
+      {entryMode === 'anchor_post' && anchorLevel ? (
+        <CompactFormGrid>
+          <CompactFormField
+            full
+            label={
+              <>
+                {ORG_LEVEL_LABELS[anchorLevel]} <CompactFormRequired />
+              </>
+            }
+          >
+            <CompactFormInputWrap icon={LEVEL_ICONS[anchorLevel]}>
+              <select
+                value={anchorPostValue}
+                onChange={(e) => setAnchorPost(e.target.value)}
+                required
+              >
+                <option value="">{PLACEHOLDER[anchorLevel]}</option>
+                {anchorPostOptions.map((n) => (
+                  <option key={n.id} value={n.id}>
+                    {formatAnchorPostLabel(n)}
+                  </option>
+                ))}
+              </select>
+            </CompactFormInputWrap>
+          </CompactFormField>
+        </CompactFormGrid>
+      ) : null}
+
+      {entryMode === 'section_then_dd' ? (
+        <CompactFormGrid>
+          <CompactFormField
+            full
+            label={
+              <>
+                {ORG_LEVEL_LABELS.section} <CompactFormRequired />
+              </>
+            }
+          >
+            <CompactFormInputWrap icon={LEVEL_ICONS.section}>
+              <select
+                value={value.orgSectionId}
+                onChange={(e) => setDirectorSection(e.target.value)}
+                required
+              >
+                <option value="">{PLACEHOLDER.section}</option>
+                {directorSectionOptions.map((n) => (
+                  <option key={n.id} value={n.id}>
+                    {formatOptionLabel(n)}
+                  </option>
+                ))}
+              </select>
+            </CompactFormInputWrap>
+          </CompactFormField>
+          <CompactFormField
+            full
+            label={
+              <>
+                {ORG_LEVEL_LABELS.sub_section_1} <CompactFormRequired />
+              </>
+            }
+          >
+            <CompactFormInputWrap icon={LEVEL_ICONS.sub_section_1}>
+              <select
+                value={value.orgSubSection1Id ?? ''}
+                onChange={(e) => setDdPost(e.target.value)}
+                required
+                disabled={!value.orgSectionId}
+              >
+                <option value="">
+                  {value.orgSectionId
+                    ? PLACEHOLDER.sub_section_1
+                    : 'Select Director (section) first…'}
+                </option>
+                {ddOptionsUnderSection.map((n) => (
+                  <option key={n.id} value={n.id}>
+                    {formatOptionLabel(n)}
+                  </option>
+                ))}
+              </select>
+            </CompactFormInputWrap>
+          </CompactFormField>
+        </CompactFormGrid>
+      ) : null}
+
+      {autoFilledLevels.length > 0 ? (
+        <div className="hrms-org-placement__auto" style={{ marginTop: '0.75rem' }}>
+          <p className="text-sm" style={{ color: '#64748b', marginBottom: '0.5rem' }}>
+            <i className="ri-lock-line" aria-hidden /> Auto-filled from your selection
+          </p>
+          <CompactFormGrid>
+            {autoFilledLevels.map((level) => {
+              const id = levelValue(value, level)
+              const node = getOrgNode(id)
+              if (!node) return null
+              return (
+                <CompactFormField key={level} label={ORG_LEVEL_LABELS[level]}>
+                  <CompactFormInputWrap icon={LEVEL_ICONS[level]}>
+                    <input type="text" readOnly value={node.name} tabIndex={-1} />
+                  </CompactFormInputWrap>
+                </CompactFormField>
+              )
+            })}
+          </CompactFormGrid>
+        </div>
+      ) : null}
+
+      {entryMode === 'cascade' ? (
+        <CompactFormGrid>{LEVEL_ORDER.map((level) => renderLevelField(level))}</CompactFormGrid>
+      ) : null}
     </div>
   )
 }

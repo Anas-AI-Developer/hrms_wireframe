@@ -1,4 +1,11 @@
+import { ALL_LOGIN_DEMO_POSTS, LOGIN_DEMO_LEADERSHIP_POSTS } from '../auth/clientRoles'
 import type { Department } from '../types/hrms'
+import type { EmployeeOrgPlacement } from './navttcOrgMapping'
+import { getOrgNode } from './navttcHqOrganogram'
+import {
+  organogramAnchorNodeId,
+  organogramNodeSpecialty,
+} from './roleOrgPlacement'
 import { resolveDepartmentOfficeId } from './navttcOffices'
 
 /**
@@ -12,6 +19,24 @@ export type NavttcRoleLevel = {
   title: string
   bps: number
   levelCategory: string
+}
+
+/** Chairman through Assistant — Head Office organogram (ED → DG → D → DD → AD). */
+export const HQ_HIERARCHY_ROLE_IDS = [
+  'role-1',
+  'role-2',
+  'role-3',
+  'role-4',
+  'role-5',
+  'role-6',
+  'role-7',
+] as const
+
+export const REGIONAL_STAFF_ROLE_ID = 'role-8'
+
+export function isHqHierarchyRole(roleId: string | undefined): boolean {
+  if (!roleId) return false
+  return (HQ_HIERARCHY_ROLE_IDS as readonly string[]).includes(roleId)
 }
 
 export const NAVTTC_ROLE_LEVELS: NavttcRoleLevel[] = [
@@ -88,6 +113,8 @@ export type DesignationMatchScope = {
   departmentId?: string
   officeId?: string
   departments?: Department[]
+  /** Full HQ organogram path — designations follow the selected tree branch. */
+  orgPlacement?: EmployeeOrgPlacement
 }
 
 function filterActiveAtRoleBps(
@@ -114,11 +141,39 @@ export function designationsMatchingRoleLevel(
   const opts: DesignationMatchScope =
     typeof scope === 'string' ? { departmentId: scope } : (scope ?? {})
 
+  let pool = filterActiveAtRoleBps(role, designations)
+
+  if (opts.orgPlacement) {
+    const anchorId = organogramAnchorNodeId(opts.orgPlacement, roleId)
+    const anchorNode = anchorId ? getOrgNode(anchorId) : undefined
+    const specialty = organogramNodeSpecialty(anchorNode ?? undefined)
+    const roleTitle = role.title.toLowerCase()
+
+    const treeMatched = pool.filter((d) => {
+      const t = d.title.toLowerCase()
+      if (!t.includes(roleTitle)) return false
+      if (!specialty) return true
+      return t.includes(specialty) || specialty.split(/\s+/).some((w) => w.length > 2 && t.includes(w))
+    })
+
+    if (treeMatched.length > 0) {
+      pool = treeMatched
+    } else if (anchorNode) {
+      pool = [
+        {
+          id: `org-post-${anchorId}`,
+          title: anchorNode.name,
+          grade: `BPS ${role.bps}`,
+          departmentId: opts.departmentId ?? 'c1',
+          status: 'active',
+        },
+        ...pool.filter((d) => d.title.toLowerCase().includes(roleTitle)),
+      ]
+    }
+  }
+
   if (opts.departmentId) {
-    const inUnit = filterActiveAtRoleBps(
-      role,
-      designations.filter((d) => d.departmentId === opts.departmentId),
-    )
+    const inUnit = pool.filter((d) => d.departmentId === opts.departmentId)
     if (inUnit.length > 0) return sortDesignationOptions(inUnit, role, opts.departmentId)
   }
 
@@ -130,14 +185,11 @@ export function designationsMatchingRoleLevel(
         )
         .map((d) => d.id),
     )
-    const inOffice = filterActiveAtRoleBps(
-      role,
-      designations.filter((d) => deptIds.has(d.departmentId)),
-    )
+    const inOffice = pool.filter((d) => deptIds.has(d.departmentId))
     if (inOffice.length > 0) return sortDesignationOptions(inOffice, role, opts.departmentId)
   }
 
-  return sortDesignationOptions(filterActiveAtRoleBps(role, designations), role, opts.departmentId)
+  return sortDesignationOptions(pool, role, opts.departmentId)
 }
 
 function sortDesignationOptions(
@@ -156,11 +208,103 @@ function sortDesignationOptions(
   })
 }
 
+function catalogTitleMatchesLoginTitle(catalogTitle: string, loginTitle: string): boolean {
+  const c = catalogTitle.toLowerCase().trim()
+  const l = loginTitle.toLowerCase().trim()
+  if (c === l) return true
+  const loginBase = l.split('/')[0]!.trim()
+  if (c === loginBase || loginBase.startsWith(c) || c.startsWith(loginBase)) return true
+  if (c.replace(/s$/, '') === l.replace(/s$/, '')) return true
+  return false
+}
+
+/**
+ * Posts shown on the login page (ESS demo accounts) — used for regional office hires.
+ */
+export function loginDesignationTitleForId(designationId: string): string | undefined {
+  if (!designationId.startsWith('login-post-')) return undefined
+  const slug = designationId.slice('login-post-'.length)
+  return ALL_LOGIN_DEMO_POSTS.find((d) => d.slug === slug)?.title
+}
+
+const LEADERSHIP_TITLE_TO_ROLE_LEVEL: Record<string, string> = {
+  'Executive Director': 'role-2',
+  'Director General': 'role-3',
+  Director: 'role-4',
+  'Deputy Director': 'role-5',
+  'Assistant Director': 'role-6',
+  'Assistant Accounts Officer (Accounts)': 'role-7',
+  'Assistant Accounts Officer (Finance)': 'role-7',
+}
+
+/** Map login demo post title → NAVTTC role level (employee form). */
+export function roleLevelIdFromLoginDemoTitle(title: string): string | undefined {
+  const leadership = LOGIN_DEMO_LEADERSHIP_POSTS.find((p) =>
+    catalogTitleMatchesLoginTitle(title, p.title),
+  )
+  if (leadership) {
+    return LEADERSHIP_TITLE_TO_ROLE_LEVEL[leadership.title] ?? 'role-7'
+  }
+  if (ALL_LOGIN_DEMO_POSTS.some((p) => catalogTitleMatchesLoginTitle(title, p.title))) {
+    return REGIONAL_STAFF_ROLE_ID
+  }
+  return undefined
+}
+
+/**
+ * Full login credentials table (Executive Director → Sanitary Workers).
+ * Regional office uses the complete list — not filtered by centre or office.
+ */
+export function loginDemoDesignations(
+  designations: DesignationRow[],
+  _scope?: DesignationMatchScope,
+): DesignationRow[] {
+  const active = designations.filter((d) => d.status === 'active')
+  const rows: DesignationRow[] = []
+
+  for (const login of ALL_LOGIN_DEMO_POSTS) {
+    const catalog = active.find((d) => catalogTitleMatchesLoginTitle(d.title, login.title))
+    if (catalog) {
+      rows.push(catalog)
+    } else {
+      rows.push({
+        id: `login-post-${login.slug}`,
+        title: login.title,
+        grade: '—',
+        departmentId: '',
+        status: 'active',
+      })
+    }
+  }
+
+  return rows
+}
+
+/** Regional office: full login table + any other active catalog posts (no centre mapping). */
+export function regionalOfficeDesignations(designations: DesignationRow[]): DesignationRow[] {
+  const loginRows = loginDemoDesignations(designations)
+  const seenTitles = new Set(loginRows.map((r) => r.title.toLowerCase().trim()))
+  const extra = designations
+    .filter((d) => d.status === 'active' && !seenTitles.has(d.title.toLowerCase().trim()))
+    .sort((a, b) => a.title.localeCompare(b.title))
+  return [...loginRows, ...extra]
+}
+
+/** @deprecated Use loginDemoDesignations */
+export const regionalLoginDesignations = loginDemoDesignations
+
 export function designationMatchesRoleLevel(
-  designation: { grade: string } | undefined,
+  designation: { id?: string; grade: string; title?: string } | undefined,
   roleId: string | undefined,
+  options?: { regionalStaff?: boolean },
 ): boolean {
   if (!designation || !roleId) return true
+  if (designation.id?.startsWith('org-post-') || designation.id?.startsWith('login-post-')) {
+    return true
+  }
+  if (options?.regionalStaff) {
+    return true
+  }
   const role = getRoleLevelById(roleId)
   if (!role) return true
   return parseBpsFromGrade(designation.grade) === role.bps
