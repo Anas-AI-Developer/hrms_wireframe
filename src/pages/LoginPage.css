@@ -130,6 +130,16 @@
   color: var(--nvqf-login-amber);
 }
 
+/* No light “pill” on dark panel — keeps sessionStorage readable */
+.nvqf-brand-info .nvqf-inline-code {
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.9em;
+}
+
 .nvqf-panel-form {
   background: var(--nvqf-login-surface);
   padding: 32px 28px 28px;

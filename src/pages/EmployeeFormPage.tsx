@@ -30,6 +30,11 @@ import {
   legacyDepartmentIdForPlacement,
 } from '../data/navttcHqOrganogram'
 import {
+  legacyDepartmentIdForWingId,
+  placementFromLegacyDepartment,
+  wingIdForLegacyDepartment,
+} from '../data/navttcOrgMapping'
+import {
   orgPlacementForRoleChange,
   roleOrgUiConfig,
   validateOrgPlacementForRole,
@@ -117,14 +122,36 @@ export function EmployeeFormPage() {
   const [durationMonths, setDurationMonths] = useState(() =>
     existing ? initialDurationMonthsValue(existing) : '',
   )
+  const [address, setAddress] = useState(existing?.address ?? '')
+  const [city, setCity] = useState(existing?.city ?? '')
+  const [domicile, setDomicile] = useState(existing?.domicile ?? '')
+  const [gender, setGender] = useState(existing?.gender ?? '')
+  const [qualification, setQualification] = useState(existing?.qualification ?? '')
+  const [specialization, setSpecialization] = useState(existing?.specialization ?? '')
+  const [modeOfAppointment, setModeOfAppointment] = useState(
+    existing?.modeOfAppointment ?? 'Regular',
+  )
+  const [emergencyContactName, setEmergencyContactName] = useState(
+    existing?.emergencyContactName ?? '',
+  )
+  const [emergencyContactPhone, setEmergencyContactPhone] = useState(
+    existing?.emergencyContactPhone ?? '',
+  )
   const [error, setError] = useState<string | null>(null)
+  const [legacyCentreId, setLegacyCentreId] = useState(() => {
+    if (!existing) return ''
+    if (wingIdForLegacyDepartment(existing.departmentId)) return existing.departmentId
+    if (existing.orgWingId) {
+      return legacyDepartmentIdForWingId(existing.orgWingId) ?? ''
+    }
+    return ''
+  })
   const [orgError, setOrgError] = useState<string | null>(null)
   const [officeError, setOfficeError] = useState<string | null>(null)
 
   const isHeadOffice =
     officePlacement.category === 'head_office' && officePlacement.officeId === NAVTTC_HEAD_OFFICE_ID
   const roleOrgCfg = useMemo(() => roleOrgUiConfig(roleLevelId), [roleLevelId])
-  const lockHeadOffice = Boolean(roleOrgCfg?.forceHeadOffice)
   const showHqOrganogram = Boolean(roleOrgCfg)
 
   const resolvedDurationMonths = useMemo(() => {
@@ -142,13 +169,16 @@ export function EmployeeFormPage() {
 
   const resolvedDepartmentId = useMemo(() => {
     if (!isHeadOffice) return regionalCentreId
+    if (legacyCentreId && wingIdForLegacyDepartment(legacyCentreId)) {
+      return legacyCentreId
+    }
     if (!orgPlacement.orgWingId) return 'c1'
     return legacyDepartmentIdForPlacement({
       orgHeadId: orgPlacement.orgHeadId,
       orgWingId: orgPlacement.orgWingId,
       orgSectionId: orgPlacement.orgSectionId,
     })
-  }, [isHeadOffice, regionalCentreId, orgPlacement])
+  }, [isHeadOffice, regionalCentreId, orgPlacement, legacyCentreId])
 
   const selectedRole = getRoleLevelById(roleLevelId)
 
@@ -171,6 +201,18 @@ export function EmployeeFormPage() {
 
   function onOrgPlacementChange(next: typeof orgPlacement) {
     setOrgPlacement(next)
+    setOrgError(null)
+    setDesignationId('')
+    if (next.orgWingId && next.orgWingId !== orgPlacement.orgWingId) {
+      const mapped = legacyDepartmentIdForWingId(next.orgWingId)
+      if (mapped) setLegacyCentreId(mapped)
+    }
+  }
+
+  function onLegacyCentreChange(departmentId: string) {
+    setLegacyCentreId(departmentId)
+    if (!departmentId) return
+    setOrgPlacement(placementFromLegacyDepartment(departmentId))
     setOrgError(null)
     setDesignationId('')
   }
@@ -199,11 +241,16 @@ export function EmployeeFormPage() {
     if (cfg) {
       setOrgPlacement(orgPlacementForRoleChange(nextRoleId, orgPlacement))
       setOrgError(null)
+      if (!orgPlacement.orgWingId && legacyCentreId) {
+        const wing = wingIdForLegacyDepartment(legacyCentreId)
+        if (wing) {
+          setOrgPlacement((p) => ({ ...p, orgWingId: wing }))
+        }
+      }
     }
   }
 
   function onOfficePlacementChange(next: typeof officePlacement) {
-    if (lockHeadOffice) return
     setOfficePlacement(next)
     setOfficeError(null)
     if (next.category === 'head_office') {
@@ -295,6 +342,15 @@ export function EmployeeFormPage() {
       status: existing?.status ?? 'active',
       joinDate: joinDate || '—',
       serviceDurationMonths: resolvedDurationMonths,
+      address,
+      city,
+      domicile,
+      gender,
+      qualification,
+      specialization,
+      modeOfAppointment,
+      emergencyContactName,
+      emergencyContactPhone,
     }
     if (isEdit && id) {
       updateEmployee(id, input)
@@ -435,7 +491,6 @@ export function EmployeeFormPage() {
                       Role <CompactFormRequired />
                     </>
                   }
-                  hint="Choose first — Head Office and organogram steps depend on this role"
                 >
                   <CompactFormInputWrap icon="ri-vip-crown-line">
                     <select
@@ -454,14 +509,6 @@ export function EmployeeFormPage() {
                     </select>
                   </CompactFormInputWrap>
                 </CompactFormField>
-
-                {selectedRole ? (
-                  <CompactFormField full label="BPS scale">
-                    <CompactFormInputWrap icon="ri-bar-chart-horizontal-line">
-                      <input readOnly value={`BPS ${selectedRole.bps}`} aria-readonly="true" />
-                    </CompactFormInputWrap>
-                  </CompactFormField>
-                ) : null}
               </CompactFormGrid>
             </CompactFormSection>
 
@@ -470,18 +517,8 @@ export function EmployeeFormPage() {
                 value={officePlacement}
                 onChange={onOfficePlacementChange}
                 error={officeError}
-                lockHeadOffice={lockHeadOffice}
-                disabledUntilRole={!isEdit}
+                disabledUntilRole={!roleLevelId && !isEdit}
               />
-              {lockHeadOffice ? (
-                <p className="wf-note" style={{ marginTop: '0.5rem' }}>
-                  Head Office is set automatically for the selected HQ role (Organogram 2026).
-                </p>
-              ) : !roleLevelId ? (
-                <p className="wf-note" style={{ marginTop: '0.5rem' }}>
-                  Select a role above first — headquarters roles will set Head Office automatically.
-                </p>
-              ) : null}
               {!isHeadOffice && officePlacement.category === 'regional_office' && officePlacement.officeId ? (
                 <CompactFormGrid>
                   <CompactFormField
@@ -523,14 +560,117 @@ export function EmployeeFormPage() {
                   onChange={onOrgPlacementChange}
                   error={orgError}
                   roleLevelId={roleLevelId}
+                  legacyCentreId={legacyCentreId}
+                  onLegacyCentreChange={onLegacyCentreChange}
+                  departments={departments}
                 />
               </CompactFormSection>
-            ) : roleLevelId ? (
-              <p className="wf-note">
-                Select a headquarters role to place this employee on the NAVTTC organogram, or use a
-                regional office without HQ placement.
-              </p>
             ) : null}
+
+            <CompactFormSection legend="Contact & address">
+              <CompactFormGrid>
+                <CompactFormField full label="Residential address">
+                  <CompactFormInputWrap icon="ri-home-4-line">
+                    <input
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      placeholder="House / street, sector, town"
+                    />
+                  </CompactFormInputWrap>
+                </CompactFormField>
+                <CompactFormGrid split>
+                  <CompactFormField label="City">
+                    <CompactFormInputWrap icon="ri-map-pin-line">
+                      <input
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                        placeholder="e.g. Islamabad"
+                      />
+                    </CompactFormInputWrap>
+                  </CompactFormField>
+                  <CompactFormField label="Domicile">
+                    <CompactFormInputWrap icon="ri-flag-line">
+                      <select value={domicile} onChange={(e) => setDomicile(e.target.value)}>
+                        <option value="">— Select —</option>
+                        <option value="Punjab">Punjab</option>
+                        <option value="Sindh">Sindh</option>
+                        <option value="KPK">KPK</option>
+                        <option value="Balochistan">Balochistan</option>
+                        <option value="ICT">ICT</option>
+                        <option value="AJK">AJK</option>
+                        <option value="GB">Gilgit-Baltistan</option>
+                      </select>
+                    </CompactFormInputWrap>
+                  </CompactFormField>
+                </CompactFormGrid>
+                <CompactFormGrid split>
+                  <CompactFormField label="Gender">
+                    <CompactFormInputWrap icon="ri-user-line">
+                      <select value={gender} onChange={(e) => setGender(e.target.value)}>
+                        <option value="">— Select —</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </CompactFormInputWrap>
+                  </CompactFormField>
+                  <CompactFormField label="Mode of appointment">
+                    <CompactFormInputWrap icon="ri-file-shield-line">
+                      <select
+                        value={modeOfAppointment}
+                        onChange={(e) => setModeOfAppointment(e.target.value)}
+                      >
+                        <option value="Regular">Regular</option>
+                        <option value="Deputation">Deputation</option>
+                        <option value="Contract">Contract</option>
+                        <option value="Ad hoc">Ad hoc</option>
+                      </select>
+                    </CompactFormInputWrap>
+                  </CompactFormField>
+                </CompactFormGrid>
+                <CompactFormGrid split>
+                  <CompactFormField label="Qualification">
+                    <CompactFormInputWrap icon="ri-graduation-cap-line">
+                      <input
+                        value={qualification}
+                        onChange={(e) => setQualification(e.target.value)}
+                        placeholder="e.g. Masters, Bachelors"
+                      />
+                    </CompactFormInputWrap>
+                  </CompactFormField>
+                  <CompactFormField label="Specialization">
+                    <CompactFormInputWrap icon="ri-book-open-line">
+                      <input
+                        value={specialization}
+                        onChange={(e) => setSpecialization(e.target.value)}
+                        placeholder="e.g. HR, Engineering"
+                      />
+                    </CompactFormInputWrap>
+                  </CompactFormField>
+                </CompactFormGrid>
+                <CompactFormGrid split>
+                  <CompactFormField label="Emergency contact name">
+                    <CompactFormInputWrap icon="ri-contacts-line">
+                      <input
+                        value={emergencyContactName}
+                        onChange={(e) => setEmergencyContactName(e.target.value)}
+                        placeholder="Next of kin"
+                      />
+                    </CompactFormInputWrap>
+                  </CompactFormField>
+                  <CompactFormField label="Emergency contact phone">
+                    <CompactFormInputWrap icon="ri-phone-line">
+                      <input
+                        type="tel"
+                        value={emergencyContactPhone}
+                        onChange={(e) => setEmergencyContactPhone(e.target.value)}
+                        placeholder="03xx-xxxxxxx"
+                      />
+                    </CompactFormInputWrap>
+                  </CompactFormField>
+                </CompactFormGrid>
+              </CompactFormGrid>
+            </CompactFormSection>
 
             <CompactFormSection legend="Post & appointment">
               <CompactFormGrid>
@@ -559,11 +699,6 @@ export function EmployeeFormPage() {
                       <>
                         Designation / post <CompactFormRequired />
                       </>
-                    }
-                    hint={
-                      selectedRole
-                        ? `BPS ${selectedRole.bps} — filtered by wing/section you selected above`
-                        : undefined
                     }
                   >
                     <CompactFormInputWrap icon="ri-briefcase-line">

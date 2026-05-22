@@ -393,6 +393,66 @@ export const LEGACY_DEPARTMENT_TO_WING: Record<string, string> = {
   c8: 'org-wing-pd',
 }
 
+const DEFAULT_ORG_HEAD_ID = 'org-head'
+
+export function wingIdForLegacyDepartment(departmentId: string): string | undefined {
+  return LEGACY_DEPARTMENT_TO_WING[departmentId]
+}
+
+/** Primary roster centre id linked on a wing node (seed or store). */
+export function legacyDepartmentIdForWingId(wingId: string): string | undefined {
+  const fromEntries = Object.entries(LEGACY_DEPARTMENT_TO_WING).find(([, w]) => w === wingId)?.[0]
+  const fromSeed = treeToFlatNodes().find((n) => n.id === wingId && n.level === 'wing')
+    ?.legacyDepartmentId
+  return fromSeed ?? fromEntries
+}
+
+/** Apply organogram mapping when user picks a legacy roster centre at HQ. */
+export function placementFromLegacyDepartment(departmentId: string): EmployeeOrgPlacement {
+  const wingId = wingIdForLegacyDepartment(departmentId) ?? ''
+  return {
+    orgHeadId: DEFAULT_ORG_HEAD_ID,
+    orgWingId: wingId,
+    orgSectionId: '',
+    orgSubSection1Id: undefined,
+    orgSubSection2Id: undefined,
+  }
+}
+
+export type LegacyCentreWingOption = {
+  departmentId: string
+  departmentName: string
+  departmentCode: string
+  wingId: string
+  wingName: string
+  wingCode: string
+}
+
+/** HQ roster centres that map to an organogram wing (for employee form). */
+export function hqLegacyCentreWingOptions(
+  departments: { id: string; name: string; code: string; officeId?: string }[],
+  wings: { id: string; name: string; code?: string }[],
+): LegacyCentreWingOption[] {
+  const wingById = new Map(wings.map((w) => [w.id, w]))
+  return departments
+    .map((d) => {
+      const wingId = wingIdForLegacyDepartment(d.id)
+      if (!wingId) return null
+      const wing = wingById.get(wingId)
+      if (!wing) return null
+      return {
+        departmentId: d.id,
+        departmentName: d.name,
+        departmentCode: d.code,
+        wingId,
+        wingName: wing.name,
+        wingCode: wing.code ?? '',
+      }
+    })
+    .filter((row): row is LegacyCentreWingOption => row != null)
+    .sort((a, b) => a.departmentName.localeCompare(b.departmentName))
+}
+
 /** Demo section label (MasterList) → organogram section node id */
 export const LEGACY_SECTION_TO_ORG_SECTION: Record<string, string> = {
   Executive: 'org-sec-pd-plan',

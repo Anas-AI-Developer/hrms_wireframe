@@ -88,11 +88,15 @@ export function officePlacementFromEmployee(
   }
 }
 
+export function formatOfficeOptionLabel(row: OfficeMappingRow): string {
+  return `${row.name} (${row.code}) — ${row.city}`
+}
+
 export function formatOfficePlacement(placement: EmployeeOfficePlacement): string {
-  if (!placement.category || !placement.officeId) return ''
-  const office = getOfficeById(placement.officeId)
-  if (!office) return ''
-  return `${OFFICE_CATEGORY_LABELS[placement.category]} · ${office.name} (${office.code})`
+  if (!placement.officeId) return ''
+  const row = OFFICE_MAPPING_ROWS.find((r) => r.officeId === placement.officeId)
+  if (!row) return ''
+  return formatOfficeOptionLabel(row)
 }
 
 export function validateOfficePlacement(placement: EmployeeOfficePlacement): string | null {

@@ -102,4 +102,10 @@ export type Employee = {
   parentDepartment?: string
   tenureInNavttc?: string
   domicile?: string
+  /** Residential street / house (wireframe). */
+  address?: string
+  city?: string
+  gender?: string
+  emergencyContactName?: string
+  emergencyContactPhone?: string
 }

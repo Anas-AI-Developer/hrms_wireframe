@@ -6,6 +6,12 @@ import {
   CompactFormInputWrap,
   CompactFormRequired,
 } from '../hrms/HrmsCompactForm'
+import {
+  hqLegacyCentreWingOptions,
+  legacyDepartmentIdForWingId,
+  placementFromLegacyDepartment,
+  type LegacyCentreWingOption,
+} from '../../data/navttcOrgMapping'
 import { roleOrgUiConfig, validateOrgPlacementForRole } from '../../data/roleOrgPlacement'
 import {
   DEFAULT_ORG_HEAD_ID,
@@ -13,17 +19,23 @@ import {
   getOrgAncestorAtLevel,
   getOrgChildren,
   getOrgNode,
+  orgNodesAtLevel,
   ORG_LEVEL_LABELS,
   type EmployeeOrgPlacement,
   type NavttcOrgNode,
   type OrgLevel,
 } from '../../data/navttcHqOrganogram'
+import type { Department } from '../../types/hrms'
 
 type Props = {
   value: EmployeeOrgPlacement
   onChange: (next: EmployeeOrgPlacement) => void
   error?: string | null
   roleLevelId?: string
+  /** HQ roster centre id (legacy department) — syncs with wing via mapping table. */
+  legacyCentreId?: string
+  onLegacyCentreChange?: (departmentId: string) => void
+  departments?: Department[]
 }
 
 const LEVEL_ORDER: OrgLevel[] = ['head', 'wing', 'section', 'sub_section_1', 'sub_section_2']
@@ -70,6 +82,15 @@ function levelValue(placement: EmployeeOrgPlacement, level: OrgLevel): string {
   return (placement[key] as string) ?? ''
 }
 
+function formatWingOptionLabel(node: NavttcOrgNode, centreRows: LegacyCentreWingOption[]): string {
+  const base = node.code ? `${node.name} (${node.code})` : node.name
+  const centres = centreRows.filter((r) => r.wingId === node.id).map((r) => r.departmentName)
+  if (centres.length > 0) return `${base} · ${centres.join(', ')}`
+  const legacyId = node.legacyDepartmentId ?? legacyDepartmentIdForWingId(node.id)
+  if (legacyId) return `${base} · roster ${legacyId}`
+  return base
+}
+
 function formatOptionLabel(node: NavttcOrgNode): string {
   const wing = getOrgAncestorAtLevel(node, 'wing')
   if (node.level === 'section' && wing) return `${node.name} · ${wing.name}`
@@ -104,10 +125,24 @@ function parentReady(placement: EmployeeOrgPlacement, level: OrgLevel): boolean 
   return Boolean(levelValue(placement, parentLevel))
 }
 
-export function EmployeeOrgPlacementFields({ value, onChange, error, roleLevelId }: Props) {
+export function EmployeeOrgPlacementFields({
+  value,
+  onChange,
+  error,
+  roleLevelId,
+  legacyCentreId = '',
+  onLegacyCentreChange,
+  departments = [],
+}: Props) {
   const nodes = useOrganogramNodes()
   const pathPreview = useMemo(() => formatOrgPlacementPath(value), [value, nodes])
   const roleCfg = roleOrgUiConfig(roleLevelId)
+  const wings = useMemo(() => orgNodesAtLevel('wing'), [nodes])
+  const centreWingRows = useMemo(
+    () => hqLegacyCentreWingOptions(departments, wings),
+    [departments, wings],
+  )
+  const showCentreMapping = Boolean(onLegacyCentreChange) && centreWingRows.length > 0
 
   const showLevel = (level: OrgLevel) =>
     roleCfg ? roleCfg.visibleLevels.includes(level) : true
@@ -120,8 +155,13 @@ export function EmployeeOrgPlacementFields({ value, onChange, error, roleLevelId
     const next: EmployeeOrgPlacement = { ...value }
     const key = levelKey(level)
     if (key === 'orgHeadId') next.orgHeadId = id || DEFAULT_ORG_HEAD_ID
-    else if (key === 'orgWingId') next.orgWingId = id
-    else if (key === 'orgSectionId') next.orgSectionId = id
+    else if (key === 'orgWingId') {
+      next.orgWingId = id
+      if (id && onLegacyCentreChange) {
+        const mappedDept = legacyDepartmentIdForWingId(id)
+        if (mappedDept) onLegacyCentreChange(mappedDept)
+      }
+    } else if (key === 'orgSectionId') next.orgSectionId = id
     else if (key === 'orgSubSection1Id') next.orgSubSection1Id = id || undefined
     else if (key === 'orgSubSection2Id') next.orgSubSection2Id = id || undefined
 
@@ -154,13 +194,7 @@ export function EmployeeOrgPlacementFields({ value, onChange, error, roleLevelId
     const current = levelValue(value, level)
     const disabled = level !== 'head' && !ready
 
-    let hint = ''
-    if (level === 'wing') hint = 'HQ wing under Head Office'
-    else if (level === 'section') hint = 'Sections under the selected wing'
-    else if (level === 'sub_section_1') hint = 'Deputy Director (DD) units'
-    else if (level === 'sub_section_2') hint = 'Assistant Director (AD) units under Section 1'
-    else hint = 'NAVTTC Headquarters'
-
+    let hint: string | undefined
     if (!ready && level !== 'head') {
       hint = `Select ${ORG_LEVEL_LABELS[PARENT_LEVEL[level]!]} first`
     } else if (ready && options.length === 0) {
@@ -187,7 +221,7 @@ export function EmployeeOrgPlacementFields({ value, onChange, error, roleLevelId
             <option value="">{PLACEHOLDER[level]}</option>
             {options.map((n) => (
               <option key={n.id} value={n.id}>
-                {formatOptionLabel(n)}
+                {level === 'wing' ? formatWingOptionLabel(n, centreWingRows) : formatOptionLabel(n)}
               </option>
             ))}
           </select>
@@ -203,10 +237,31 @@ export function EmployeeOrgPlacementFields({ value, onChange, error, roleLevelId
 
   return (
     <div className="hrms-org-placement">
-      {roleCfg?.formHint ? (
-        <p className="wf-note" style={{ marginBottom: '0.75rem' }}>
-          {roleCfg.formHint}
-        </p>
+      {showCentreMapping ? (
+        <div style={{ marginBottom: '0.75rem' }}>
+          <CompactFormGrid>
+          <CompactFormField full label="Roster centre (maps to wing)">
+            <CompactFormInputWrap icon="ri-links-line">
+              <select
+                value={legacyCentreId}
+                onChange={(e) => {
+                  const deptId = e.target.value
+                  onLegacyCentreChange?.(deptId)
+                  if (deptId) onChange(placementFromLegacyDepartment(deptId))
+                }}
+              >
+                <option value="">Select centre (optional shortcut)…</option>
+                {centreWingRows.map((row) => (
+                  <option key={row.departmentId} value={row.departmentId}>
+                    {row.departmentName} ({row.departmentCode}) → {row.wingName}
+                    {row.wingCode ? ` (${row.wingCode})` : ''}
+                  </option>
+                ))}
+              </select>
+            </CompactFormInputWrap>
+          </CompactFormField>
+          </CompactFormGrid>
+        </div>
       ) : null}
 
       {pathPreview ? (

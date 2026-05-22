@@ -350,6 +350,15 @@ export type EmployeeInput = {
   sanctionedPost?: string
   workingAs?: string
   benefitIds?: string[]
+  qualification?: string
+  specialization?: string
+  modeOfAppointment?: string
+  domicile?: string
+  address?: string
+  city?: string
+  gender?: string
+  emergencyContactName?: string
+  emergencyContactPhone?: string
 }
 
 function replaceEmployeeBenefits(
@@ -478,18 +487,30 @@ export function addEmployee(input: EmployeeInput): Employee {
       duration.months != null ? Math.floor(duration.months / 12) || undefined : undefined,
     endDate: duration.endDate,
     officeId: input.officeId ?? NAVTTC_HEAD_OFFICE_ID,
-    location: input.officeId
-      ? locationLabelForOfficeId(input.officeId)
-      : input.orgWingId
-        ? locationLabelForOfficeId(NAVTTC_HEAD_OFFICE_ID)
-        : '—',
+    location:
+      [input.city?.trim(), input.officeId ? locationLabelForOfficeId(input.officeId) : '']
+        .filter(Boolean)
+        .join(' · ') ||
+      (input.officeId
+        ? locationLabelForOfficeId(input.officeId)
+        : input.orgWingId
+          ? locationLabelForOfficeId(NAVTTC_HEAD_OFFICE_ID)
+          : '—'),
     masterSerial: maxSerial,
     section: org.sectionLabel,
     sanctionedPost: post,
     workingAs: input.workingAs?.trim() || post,
     actualPost: post,
     bps: roleLevel ? String(roleLevel.bps) : desig?.grade.replace(/[^\d]/g, '') || '—',
-    modeOfAppointment: 'Regular',
+    modeOfAppointment: input.modeOfAppointment?.trim() || 'Regular',
+    qualification: input.qualification?.trim() || undefined,
+    specialization: input.specialization?.trim() || undefined,
+    domicile: input.domicile?.trim() || undefined,
+    address: input.address?.trim() || undefined,
+    city: input.city?.trim() || undefined,
+    gender: input.gender?.trim() || undefined,
+    emergencyContactName: input.emergencyContactName?.trim() || undefined,
+    emergencyContactPhone: input.emergencyContactPhone?.trim() || undefined,
     parentDepartment: org.wingName ?? dept?.name ?? 'NAVTTC',
   }
 
@@ -556,11 +577,6 @@ export function updateEmployee(id: string, input: EmployeeInput): Employee | und
           : e.serviceDurationYears,
       endDate: duration.endDate !== '—' ? duration.endDate : e.endDate,
       officeId: input.officeId ?? e.officeId,
-      location: input.officeId
-        ? locationLabelForOfficeId(input.officeId)
-        : input.orgWingId
-          ? locationLabelForOfficeId(NAVTTC_HEAD_OFFICE_ID)
-          : e.location,
       section: input.orgWingId ? org.sectionLabel || e.section : (centre?.name ?? e.section),
       parentDepartment: input.orgWingId
         ? (org.wingName ?? e.parentDepartment)
@@ -573,6 +589,24 @@ export function updateEmployee(id: string, input: EmployeeInput): Employee | und
       bps: roleLevel
         ? String(roleLevel.bps)
         : desig?.grade.replace(/[^\d]/g, '') || e.bps,
+      modeOfAppointment: input.modeOfAppointment?.trim() || e.modeOfAppointment,
+      qualification: input.qualification?.trim() || e.qualification,
+      specialization: input.specialization?.trim() || e.specialization,
+      domicile: input.domicile?.trim() || e.domicile,
+      address: input.address?.trim() || e.address,
+      city: input.city?.trim() || e.city,
+      gender: input.gender?.trim() || e.gender,
+      emergencyContactName: input.emergencyContactName?.trim() || e.emergencyContactName,
+      emergencyContactPhone: input.emergencyContactPhone?.trim() || e.emergencyContactPhone,
+      location:
+        [input.city?.trim(), input.officeId ? locationLabelForOfficeId(input.officeId) : '']
+          .filter(Boolean)
+          .join(' · ') ||
+        (input.officeId
+          ? locationLabelForOfficeId(input.officeId)
+          : input.orgWingId
+            ? locationLabelForOfficeId(NAVTTC_HEAD_OFFICE_ID)
+            : e.location),
     }
   })
 
