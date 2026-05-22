@@ -37,7 +37,7 @@ const LABELS: Partial<Record<Permission, string>> = {
   'employee.view_all': 'View all employees',
   'employee.view_team': 'View team / reports',
   'employee.view_self': 'View own record only',
-  'leave.request': 'Submit leave requests',
+  'leave.request': 'Submit leave requests (deprecated)',
   'performance.appraise': 'Manager appraisal / rating',
   'performance.self_review': 'Self-assessment',
   'training.enroll': 'Enroll in training',

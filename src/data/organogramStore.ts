@@ -3,6 +3,8 @@ import type { OrgMappingRow } from './navttcOrgMapping'
 import {
   NAVTTC_CANONICAL_WING_IDS,
   NAVTTC_HQ_ORG_TREE,
+  NAVTTC_WING_DIRECTORATES_LABEL,
+  applyCanonicalWingDisplayNames,
   getCanonicalWings,
   isCanonicalWingId,
   organogramHasNonCanonicalWings,
@@ -52,7 +54,7 @@ type Listener = () => void
 const listeners = new Set<Listener>()
 
 function defaultSeedNodes(): NavttcOrgNode[] {
-  return treeToFlatNodes(structuredClone(NAVTTC_HQ_ORG_TREE))
+  return applyCanonicalWingDisplayNames(treeToFlatNodes(structuredClone(NAVTTC_HQ_ORG_TREE)))
 }
 
 function parseStoredNodes(raw: string | null): NavttcOrgNode[] | null {
@@ -104,15 +106,15 @@ function loadFromLocalStorage(): NavttcOrgNode[] | null {
   const stored = parseStoredNodes(localStorage.getItem(STORAGE_KEY))
   if (stored) {
     if (organogramHasNonCanonicalWings(stored)) {
-      const clean = sanitizeOrganogramNodes(stored)
+      const clean = applyCanonicalWingDisplayNames(sanitizeOrganogramNodes(stored))
       localStorage.setItem(STORAGE_KEY, JSON.stringify(clean))
       return clean
     }
-    return stored
+    return applyCanonicalWingDisplayNames(stored)
   }
   const legacy = parseStoredNodes(localStorage.getItem(LEGACY_STORAGE_KEY))
   if (legacy) {
-    const clean = sanitizeOrganogramNodes(legacy)
+    const clean = applyCanonicalWingDisplayNames(sanitizeOrganogramNodes(legacy))
     localStorage.removeItem(LEGACY_STORAGE_KEY)
     localStorage.setItem(STORAGE_KEY, JSON.stringify(clean))
     return clean
@@ -127,7 +129,7 @@ function persist() {
 }
 
 function commit(next: NavttcOrgNode[]) {
-  nodes = next
+  nodes = applyCanonicalWingDisplayNames(next)
   persist()
   listeners.forEach((fn) => fn())
 }
@@ -299,7 +301,9 @@ export function validateOrgNodeInput(
 
 export function addOrgNode(level: OrgLevel, input: OrgNodeInput): NavttcOrgNode | { error: string } {
   if (level === 'wing') {
-    return { error: 'HQ has four fixed wings (P&D, A&F, A&C, S&C). Edit an existing wing instead.' }
+    return {
+      error: `HQ has four fixed directorate wings (${NAVTTC_WING_DIRECTORATES_LABEL}). Edit an existing wing instead.`,
+    }
   }
   const err = validateOrgNodeInput(level, input)
   if (err) return { error: err }
@@ -322,7 +326,7 @@ export function updateOrgNode(
   const existing = nodeIndex().get(id)
   if (!existing) return undefined
   if (existing.level === 'wing' && !isCanonicalWingId(existing.id)) {
-    return { error: 'Only the four HQ wings (P&D, A&F, A&C, S&C) can be maintained.' }
+    return { error: `Only the four HQ directorate wings can be maintained.` }
   }
   const err = validateOrgNodeInput(existing.level, input, id)
   if (err) return { error: err }
@@ -358,7 +362,7 @@ function childCount(nodeId: string): number {
 export function deleteOrgNode(id: string): { ok: true } | { error: string } {
   if (id === DEFAULT_ORG_HEAD_ID) return { error: 'The Head (Executive Director) node cannot be deleted.' }
   if (isCanonicalWingId(id)) {
-    return { error: 'HQ wings (P&D, A&F, A&C, S&C) cannot be deleted.' }
+    return { error: 'HQ directorate wings cannot be deleted.' }
   }
   const node = nodeIndex().get(id)
   if (!node) return { error: 'Unit not found.' }

@@ -24,6 +24,8 @@ type Props = {
   onPageSizeChange: (n: number) => void
   onPageChange: (p: number) => void
   toolbarExtra?: ReactNode
+  /** Primary action aligned with the panel title (e.g. Add leave). */
+  headerAction?: ReactNode
 }
 
 export function DataListPanel({
@@ -48,11 +50,15 @@ export function DataListPanel({
   onPageSizeChange,
   onPageChange,
   toolbarExtra,
+  headerAction,
 }: Props) {
   return (
     <article className="hrms-ref-panel">
       <header className="hrms-ref-panel-head hrms-ref-panel-head--toolbar">
-        <h2 className="hrms-ref-panel-title">{title}</h2>
+        <div className="hrms-ref-panel-head__row">
+          <h2 className="hrms-ref-panel-title">{title}</h2>
+          {headerAction}
+        </div>
         <div className="hrms-ref-panel-toolbar">
           <div className="hrms-ref-panel-toolbar__left">
             {extraFilters}

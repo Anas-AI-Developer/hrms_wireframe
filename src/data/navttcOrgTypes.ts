@@ -37,13 +37,13 @@ export const ORG_STRUCTURE_ROUTES: Record<
   head: {
     level: 'head',
     title: 'Head',
-    description: 'NAVTTC Headquarters — Executive Director (Organogram 2026).',
+    description: 'NAVTTC Headquarters — office of the Executive Director.',
   },
   wings: {
     level: 'wing',
     title: 'Wings',
     description:
-      'Four Director General wings: P&D, A&F, A&C, and S&C (Organogram 2026).',
+      'Four Director General directorates at Headquarters — each wing leads its sections and posts.',
   },
   sections: {
     level: 'section',

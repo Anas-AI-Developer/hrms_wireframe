@@ -6,6 +6,8 @@ export type LeaveTypeId = 'casual' | 'sick' | 'annual' | 'emergency'
 
 export type LeaveRequestStatus = 'pending' | 'approved' | 'rejected' | 'cancelled'
 
+export type LeaveEntrySource = 'seed' | 'manual'
+
 export type LeaveRequest = {
   id: string
   employeeId: string
@@ -17,6 +19,12 @@ export type LeaveRequest = {
   status: LeaveRequestStatus
   approverNote?: string
   submittedAt: string
+  /** When HR recorded the leave (manual entry). */
+  recordedAt?: string
+  recordedBy?: string
+  entrySource?: LeaveEntrySource
+  /** Wireframe: uploaded file name only (e.g. medical certificate). */
+  attachmentFileName?: string
 }
 
 export const LEAVE_TYPE_LABELS: Record<LeaveTypeId, string> = {
@@ -29,13 +37,11 @@ export const LEAVE_TYPE_LABELS: Record<LeaveTypeId, string> = {
 const roster = getEmployees().filter((e) => e.status === 'active' && e.employmentType !== 'vacant_post')
 
 function pickStatus(i: number): LeaveRequestStatus {
-  if (i % 7 === 0) return 'pending'
-  if (i % 11 === 0) return 'rejected'
-  if (i % 13 === 0) return 'cancelled'
+  if (i % 17 === 0) return 'cancelled'
   return 'approved'
 }
 
-function buildLeaveRequests(): LeaveRequest[] {
+export function buildLeaveSeedRequests(): LeaveRequest[] {
   const types: LeaveTypeId[] = ['casual', 'sick', 'annual', 'emergency']
   const list: LeaveRequest[] = []
 
@@ -55,40 +61,23 @@ function buildLeaveRequests(): LeaveRequest[] {
       fromDate,
       toDate,
       days,
-      reason:
-        status === 'pending'
-          ? `Pending ${LEAVE_TYPE_LABELS[type]} — awaiting HR/manager (demo)`
-          : `${LEAVE_TYPE_LABELS[type]} — ${e.sanctionedPost ?? 'staff'} (demo)`,
+      reason: `${LEAVE_TYPE_LABELS[type]} — ${e.sanctionedPost ?? 'staff'} (recorded by HR, demo)`,
       status,
       submittedAt,
-      ...(status === 'rejected' ? { approverNote: 'Insufficient balance or peak staffing (demo)' } : {}),
-      ...(status === 'approved' && i % 5 === 0
-        ? { approverNote: 'Approved by Assistant Director (demo)' }
+      recordedAt: submittedAt,
+      recordedBy: 'HR Admin (demo)',
+      entrySource: 'seed',
+      ...(type === 'sick' && i % 4 === 0
+        ? { attachmentFileName: 'medical-certificate.pdf' }
         : {}),
-    })
-  })
-
-  // Extra pending queue for HR wireframe
-  roster.slice(0, 8).forEach((e, i) => {
-    const fromDate = addDaysIso(WIREFRAME_TODAY, 3 + i)
-    const toDate = addDaysIso(fromDate, 1)
-    list.push({
-      id: `lr-pending-${e.id}`,
-      employeeId: e.id,
-      leaveType: types[i % types.length]!,
-      fromDate,
-      toDate,
-      days: 2,
-      reason: 'Upcoming leave — requires directorate approval',
-      status: 'pending',
-      submittedAt: WIREFRAME_TODAY,
     })
   })
 
   return list.sort((a, b) => b.submittedAt.localeCompare(a.submittedAt))
 }
 
-export const leaveRequests: LeaveRequest[] = buildLeaveRequests()
+/** @deprecated Use getLeaveRequestsSnapshot() from leaveStore */
+export const leaveRequests: LeaveRequest[] = buildLeaveSeedRequests()
 
 export type LeaveBalance = {
   employeeId: string
@@ -110,15 +99,7 @@ export function getLeaveBalance(employeeId: string) {
   return leaveBalances.find((b) => b.employeeId === employeeId)
 }
 
-export function getLeaveRequestsForEmployee(employeeId: string) {
-  return leaveRequests.filter((r) => r.employeeId === employeeId)
-}
-
 export function getPendingLeaveForApprover(managerId: string, roster: Employee[]) {
   const teamIds = new Set(roster.filter((e) => e.managerId === managerId).map((e) => e.id))
   return leaveRequests.filter((r) => r.status === 'pending' && teamIds.has(r.employeeId))
-}
-
-export function getScopedLeaveRequests(scopedEmployeeIds: Set<string>) {
-  return leaveRequests.filter((r) => scopedEmployeeIds.has(r.employeeId))
 }

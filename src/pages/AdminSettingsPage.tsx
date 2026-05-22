@@ -138,10 +138,6 @@ export function AdminSettingsPage() {
             <i className="ri-briefcase-line" aria-hidden />
             Job postings
           </Link>
-          <Link to="/organogram/mapping" className="hrms-admin-settings__quick-link">
-            <i className="ri-node-tree" aria-hidden />
-            Organogram mapping
-          </Link>
         </div>
       </div>
     </HrmsListShell>

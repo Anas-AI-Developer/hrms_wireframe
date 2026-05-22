@@ -16,13 +16,15 @@ import {
   getEssOpenCycle,
   getEssTraining,
 } from '../data/essSeed'
-import type { LeaveRequest, LeaveTypeId } from '../data/leaveMock'
+import type { LeaveRequest } from '../data/leaveMock'
+import { subscribeLeaveStore } from '../data/leaveStore'
 import type { TrainingCourse, TrainingEnrollment } from '../data/trainingMock'
 import { trainingCatalog } from '../data/trainingMock'
+import { isLeaveActiveOnDate } from '../utils/leaveStats'
 
 export type EssDashboardMetrics = {
-  pendingLeave: number
-  approvedLeave: number
+  leaveRecords: number
+  onLeaveToday: number
   presentDays: number
   lateDays: number
   trainingTotal: number
@@ -33,14 +35,6 @@ export type EssDashboardMetrics = {
   appraisalCycle: string
 }
 
-type NewLeaveInput = {
-  leaveType: LeaveTypeId
-  fromDate: string
-  toDate: string
-  days: number
-  reason: string
-}
-
 type EssSessionValue = {
   employeeId: string
   leaveRequests: LeaveRequest[]
@@ -48,7 +42,6 @@ type EssSessionValue = {
   catalog: TrainingCourse[]
   leaveBalance: ReturnType<typeof getEssLeaveBalance> | undefined
   metrics: EssDashboardMetrics
-  addLeaveRequest: (input: NewLeaveInput) => void
   nominateTraining: (course: TrainingCourse) => { ok: true } | { ok: false; message: string }
   cancelTrainingNomination: (enrollmentId: string) => void
 }
@@ -69,9 +62,10 @@ function buildMetrics(
   const cycle = getEssOpenCycle()
   const activeEnrollments = enrollments.filter((e) => e.status !== 'cancelled')
 
+  const today = new Date().toISOString().slice(0, 10)
   return {
-    pendingLeave: leaveRequests.filter((r) => r.status === 'pending').length,
-    approvedLeave: leaveRequests.filter((r) => r.status === 'approved').length,
+    leaveRecords: leaveRequests.filter((r) => r.status === 'approved').length,
+    onLeaveToday: leaveRequests.filter((r) => isLeaveActiveOnDate(r, today)).length,
     presentDays: attendance.filter((a) => a.status === 'present').length,
     lateDays: attendance.filter((a) => a.status === 'late').length,
     trainingTotal: activeEnrollments.length,
@@ -99,9 +93,14 @@ export function EssSessionProvider({ children }: { children: ReactNode }) {
       setCatalog([...trainingCatalog])
       return
     }
-    setLeaveRequests(getEssLeaveRequests(employeeId))
+    const syncLeave = () => setLeaveRequests(getEssLeaveRequests(employeeId))
+    syncLeave()
+    const unsubLeave = subscribeLeaveStore(syncLeave)
     setEnrollments(getEssTraining(employeeId))
     setCatalog([...trainingCatalog])
+    return () => {
+      unsubLeave()
+    }
   }, [employeeId])
 
   const leaveBalance = employeeId ? getEssLeaveBalance(employeeId) : undefined
@@ -109,25 +108,6 @@ export function EssSessionProvider({ children }: { children: ReactNode }) {
   const metrics = useMemo(
     () => buildMetrics(employeeId, leaveRequests, enrollments),
     [employeeId, leaveRequests, enrollments],
-  )
-
-  const addLeaveRequest = useCallback(
-    (input: NewLeaveInput) => {
-      if (!employeeId) return
-      const entry: LeaveRequest = {
-        id: `lr-local-${Date.now()}`,
-        employeeId,
-        leaveType: input.leaveType,
-        fromDate: input.fromDate,
-        toDate: input.toDate,
-        days: input.days,
-        reason: input.reason,
-        status: 'pending',
-        submittedAt: todayIso(),
-      }
-      setLeaveRequests((prev) => [entry, ...prev])
-    },
-    [employeeId],
   )
 
   const nominateTraining = useCallback(
@@ -179,7 +159,6 @@ export function EssSessionProvider({ children }: { children: ReactNode }) {
       catalog,
       leaveBalance,
       metrics,
-      addLeaveRequest,
       nominateTraining,
       cancelTrainingNomination,
     }),
@@ -190,7 +169,6 @@ export function EssSessionProvider({ children }: { children: ReactNode }) {
       catalog,
       leaveBalance,
       metrics,
-      addLeaveRequest,
       nominateTraining,
       cancelTrainingNomination,
     ],

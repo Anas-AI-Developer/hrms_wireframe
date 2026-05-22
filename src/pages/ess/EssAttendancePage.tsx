@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react'
 import { useAuth } from '../../auth/AuthContext'
 import { AttendanceStatusBadge } from '../../components/hrms/AttendanceStatusBadge'
 import { DataListPanel } from '../../components/hrms/DataListPanel'
-import { HrmsModal } from '../../components/hrms/HrmsModal'
 import { ATTENDANCE_POLICY, type AttendanceStatus, WIREFRAME_TODAY } from '../../data/attendanceMock'
 import { getEssAttendance } from '../../data/essSeed'
 import { useListControls } from '../../hooks/useListControls'
@@ -50,17 +49,15 @@ const STAT_CARDS = [
   },
 ]
 
-function resolveDateBounds(from: string, to: string, todayOnly: boolean) {
-  if (todayOnly) return { from: WIREFRAME_TODAY, to: WIREFRAME_TODAY }
+function resolveDateBounds(from: string, to: string) {
   if (from && !to) return { from, to: from }
   if (!from && to) return { from: to, to }
   return { from, to }
 }
 
-function attendanceFilterLabel(from: string, to: string, todayOnly: boolean): string | null {
-  if (todayOnly) return `Today (${WIREFRAME_TODAY})`
+function attendanceFilterLabel(from: string, to: string): string | null {
   if (!from && !to) return null
-  const bounds = resolveDateBounds(from, to, false)
+  const bounds = resolveDateBounds(from, to)
   if (bounds.from === bounds.to) return bounds.from
   return `${bounds.from} – ${bounds.to}`
 }
@@ -72,13 +69,9 @@ export function EssAttendancePage() {
     [actorEmployeeId],
   )
 
-  const [dateFrom, setDateFrom] = useState(WIREFRAME_TODAY)
-  const [dateTo, setDateTo] = useState(WIREFRAME_TODAY)
-  const [todayOnly, setTodayOnly] = useState(true)
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
   const [attendanceStatus, setAttendanceStatus] = useState<AttendanceStatusFilter>('all')
-  const [markModalOpen, setMarkModalOpen] = useState(false)
-  const [toast, setToast] = useState<string | null>(null)
-
   const todayLogs = useMemo(
     () => allLogs.filter((l) => l.date === WIREFRAME_TODAY),
     [allLogs],
@@ -92,17 +85,17 @@ export function EssAttendancePage() {
   const attended30 = last30Logs.filter((l) => isAttended(l.status)).length
 
   const dateFiltered = useMemo(() => {
-    if (!todayOnly && !dateFrom && !dateTo) return allLogs
-    const { from, to } = resolveDateBounds(dateFrom, dateTo, todayOnly)
+    if (!dateFrom && !dateTo) return allLogs
+    const { from, to } = resolveDateBounds(dateFrom, dateTo)
     return allLogs.filter((l) => isDateInRange(l.date, from, to))
-  }, [allLogs, todayOnly, dateFrom, dateTo])
+  }, [allLogs, dateFrom, dateTo])
 
   const statusFiltered = useMemo(() => {
     if (attendanceStatus === 'all') return dateFiltered
     return dateFiltered.filter((l) => l.status === attendanceStatus)
   }, [dateFiltered, attendanceStatus])
 
-  const hasDateFilter = todayOnly || Boolean(dateFrom || dateTo)
+  const hasDateFilter = Boolean(dateFrom || dateTo)
 
   const list = useListControls(statusFiltered, {
     searchFn: (l, q) =>
@@ -123,26 +116,17 @@ export function EssAttendancePage() {
   const hasActiveFilters =
     list.hasActiveFilters || attendanceStatus !== 'all' || hasDateFilter
 
-  const dateFilterLabel = attendanceFilterLabel(dateFrom, dateTo, todayOnly)
+  const dateFilterLabel = attendanceFilterLabel(dateFrom, dateTo)
   const logsPanelTitle = dateFilterLabel
     ? `Attendance log · ${dateFilterLabel}`
     : 'Attendance log'
 
-  function applyTodayFilter() {
-    setTodayOnly(true)
-    setDateFrom(WIREFRAME_TODAY)
-    setDateTo(WIREFRAME_TODAY)
-    list.setPage(1)
-  }
-
   function onDateFromChange(value: string) {
-    setTodayOnly(false)
     setDateFrom(value)
     list.setPage(1)
   }
 
   function onDateToChange(value: string) {
-    setTodayOnly(false)
     setDateTo(value)
     list.setPage(1)
   }
@@ -152,9 +136,6 @@ export function EssAttendancePage() {
     setAttendanceStatus('all')
     setDateFrom('')
     setDateTo('')
-    setTodayOnly(true)
-    setDateFrom(WIREFRAME_TODAY)
-    setDateTo(WIREFRAME_TODAY)
   }
 
   function statValue(key: string): string {
@@ -172,11 +153,6 @@ export function EssAttendancePage() {
     return `${attended30} of ${last30Logs.length} days attended`
   }
 
-  function confirmMarkToday() {
-    setToast('Wireframe: today marked present (09:00–17:00).')
-    setMarkModalOpen(false)
-  }
-
   return (
     <div className="ess-page ess-attendance-page">
       <header className="ess-attendance-page__head">
@@ -184,23 +160,14 @@ export function EssAttendancePage() {
           <h2 className="wf-h2" style={{ marginBottom: '0.35rem' }}>
             My attendance
           </h2>
-          <p className="wf-lead">View punches, filter by date, and track attendance rate.</p>
+          <p className="wf-lead">Your check-in history and attendance summary.</p>
           <p className="ess-attendance-policy">
             <i className="ri-time-line" aria-hidden />
             Standard day {ATTENDANCE_POLICY.standardHours}h ({ATTENDANCE_POLICY.coreStart}–
             {ATTENDANCE_POLICY.coreEnd}) · demo {WIREFRAME_TODAY}
           </p>
         </div>
-        <button type="button" className="hrms-btn-primary" onClick={() => setMarkModalOpen(true)}>
-          <i className="ri-edit-circle-line" aria-hidden /> Mark today
-        </button>
       </header>
-
-      {toast ? (
-        <p className="ess-leave-toast" role="status">
-          {toast}
-        </p>
-      ) : null}
 
       <section className="ess-attendance-stats" aria-label="Attendance summary">
         {STAT_CARDS.map(({ key, label, icon, tone }) => (
@@ -227,14 +194,6 @@ export function EssAttendancePage() {
         onResetFilters={resetAll}
         extraFilters={
           <div className="hrms-attendance-date-filters">
-            <button
-              type="button"
-              className={`hrms-ref-btn-today${todayOnly ? ' hrms-ref-btn-today--active' : ''}`}
-              onClick={applyTodayFilter}
-              aria-pressed={todayOnly}
-            >
-              <i className="ri-calendar-todo-line" aria-hidden /> Today
-            </button>
             <label className="hrms-ref-date-field">
               <span className="hrms-ref-date-field__label">From</span>
               <input
@@ -340,30 +299,6 @@ export function EssAttendancePage() {
           .
         </p>
       </DataListPanel>
-
-      <HrmsModal
-        open={markModalOpen}
-        onClose={() => setMarkModalOpen(false)}
-        title="Mark attendance today"
-        description={`Record a punch for ${WIREFRAME_TODAY} (wireframe mock).`}
-        footer={
-          <>
-            <button type="button" className="hrms-ref-btn-secondary" onClick={() => setMarkModalOpen(false)}>
-              Cancel
-            </button>
-            <button type="button" className="hrms-btn-primary" onClick={confirmMarkToday}>
-              <i className="ri-check-line" aria-hidden /> Confirm
-            </button>
-          </>
-        }
-      >
-        <div className="hrms-modal-form">
-          <p className="hrms-modal-form__hint" style={{ margin: 0 }}>
-            Core hours: {ATTENDANCE_POLICY.coreStart}–{ATTENDANCE_POLICY.coreEnd}. This demo does not persist
-            changes to the table.
-          </p>
-        </div>
-      </HrmsModal>
     </div>
   )
 }

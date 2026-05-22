@@ -33,8 +33,6 @@ import { LeaveHubProvider } from './leave/LeaveHubContext'
 import { LoginPage } from './pages/LoginPage'
 import { OnboardingListPage } from './pages/OnboardingListPage'
 import { OnboardingPage } from './pages/OnboardingPage'
-import { OrganogramMappingPage } from './pages/OrganogramMappingPage'
-import { OrganogramPage } from './pages/OrganogramPage'
 import { PerformancePage } from './pages/PerformancePage'
 import { RbacMatrixPage } from './pages/RbacMatrixPage'
 import { RecruitmentPage } from './pages/RecruitmentPage'
@@ -117,22 +115,6 @@ export default function App() {
               element={
                 <RequirePermission permission="page:rbac">
                   <RbacMatrixPage />
-                </RequirePermission>
-              }
-            />
-            <Route
-              path="organogram"
-              element={
-                <RequirePermission permission="page:organogram">
-                  <OrganogramPage />
-                </RequirePermission>
-              }
-            />
-            <Route
-              path="organogram/mapping"
-              element={
-                <RequirePermission permission="page:organogram">
-                  <OrganogramMappingPage />
                 </RequirePermission>
               }
             />

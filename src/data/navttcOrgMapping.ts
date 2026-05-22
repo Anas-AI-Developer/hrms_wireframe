@@ -37,7 +37,7 @@ export const NAVTTC_HQ_ORG_TREE: OrgMappingNode = {
     {
       id: 'org-wing-pd',
       code: 'WING-PD',
-      name: 'Director General (P&D)',
+      name: 'Director General (Planning & Development)',
       level: 'wing',
       legacyDepartmentId: 'c1',
       children: [
@@ -134,7 +134,7 @@ export const NAVTTC_HQ_ORG_TREE: OrgMappingNode = {
     {
       id: 'org-wing-af',
       code: 'WING-AF',
-      name: 'Director General (A&F)',
+      name: 'Director General (Administration & Finance)',
       level: 'wing',
       legacyDepartmentId: 'c2',
       children: [
@@ -231,7 +231,7 @@ export const NAVTTC_HQ_ORG_TREE: OrgMappingNode = {
     {
       id: 'org-wing-ac',
       code: 'WING-AC',
-      name: 'Director General (A&C)',
+      name: 'Director General (Accreditation & Certification)',
       level: 'wing',
       legacyDepartmentId: 'c1',
       children: [
@@ -306,7 +306,7 @@ export const NAVTTC_HQ_ORG_TREE: OrgMappingNode = {
     {
       id: 'org-wing-sc',
       code: 'WING-SC',
-      name: 'Director General (S&C)',
+      name: 'Director General (Sector Coordination)',
       level: 'wing',
       legacyDepartmentId: 'c3',
       children: [
@@ -381,13 +381,35 @@ export const NAVTTC_HQ_ORG_TREE: OrgMappingNode = {
   ],
 }
 
-/** NAVTTC HQs has exactly four wings (Organogram 2026). */
+/** NAVTTC HQs has exactly four directorate wings under the Executive Director. */
 export const NAVTTC_CANONICAL_WING_IDS = [
   'org-wing-pd',
   'org-wing-af',
   'org-wing-ac',
   'org-wing-sc',
 ] as const
+
+/** Full titles for HQ wings (replaces P&D / A&F / A&C / S&C abbreviations). */
+export const NAVTTC_WING_DISPLAY_NAMES: Record<
+  (typeof NAVTTC_CANONICAL_WING_IDS)[number],
+  string
+> = {
+  'org-wing-pd': 'Director General (Planning & Development)',
+  'org-wing-af': 'Director General (Administration & Finance)',
+  'org-wing-ac': 'Director General (Accreditation & Certification)',
+  'org-wing-sc': 'Director General (Sector Coordination)',
+}
+
+export const NAVTTC_WING_DIRECTORATES_LABEL =
+  'Planning & Development, Administration & Finance, Accreditation & Certification, and Sector Coordination'
+
+export function applyCanonicalWingDisplayNames(nodes: NavttcOrgNode[]): NavttcOrgNode[] {
+  return nodes.map((n) => {
+    if (n.level !== 'wing' || !isCanonicalWingId(n.id)) return n
+    const title = NAVTTC_WING_DISPLAY_NAMES[n.id as keyof typeof NAVTTC_WING_DISPLAY_NAMES]
+    return title ? { ...n, name: title } : n
+  })
+}
 
 const WING_ORDER: Record<(typeof NAVTTC_CANONICAL_WING_IDS)[number], number> = {
   'org-wing-pd': 1,
@@ -409,7 +431,7 @@ export function sortCanonicalWings<T extends { id: string }>(wings: T[]): T[] {
   )
 }
 
-/** Four DGs in PDF order — P&D, A&F, A&C, S&C. */
+/** Four directorate wings in HQ order. */
 export function getCanonicalWings(nodes: NavttcOrgNode[]): NavttcOrgNode[] {
   const seedWings = treeToFlatNodes().filter((n) => n.level === 'wing')
   const byId = new Map(nodes.filter((n) => n.level === 'wing').map((n) => [n.id, n]))

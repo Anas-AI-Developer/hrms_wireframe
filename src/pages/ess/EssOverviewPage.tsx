@@ -16,7 +16,7 @@ export function EssOverviewPage() {
   const employeeId = actorEmployeeId ?? ''
   const profile = employeeId ? getEmployee(employeeId) : undefined
   const leaves = employeeId ? getEssLeaveRequests(employeeId) : []
-  const pendingLeave = leaves.filter((r) => r.status === 'pending').length
+  const leaveRecords = leaves.filter((r) => r.status === 'approved').length
   const attendance = employeeId ? getEssAttendance(employeeId) : []
   const present = attendance.filter((a) => a.status === 'present' || a.status === 'late').length
   const training = employeeId ? getEssTraining(employeeId) : []
@@ -39,7 +39,7 @@ export function EssOverviewPage() {
         <header className="hrms-portal-panel__header">
           <h2 className="hrms-portal-panel__title">Welcome back</h2>
           <p className="hrms-portal-panel__subtitle">
-            Use the sidebar to open leave, attendance, training, and performance.
+            Use the sidebar to open leave, attendance, and training.
           </p>
         </header>
         <div className="hrms-portal-panel__body">
@@ -47,9 +47,9 @@ export function EssOverviewPage() {
             {can('page:leave') ? (
               <article className="wf-card wf-card--flat">
                 <div className="wf-card-kicker">Leave</div>
-                <div className="wf-card-stat">{pendingLeave}</div>
+                <div className="wf-card-stat">{leaveRecords}</div>
                 <Link className="wf-card-link" to="/ess/leave">
-                  My leave →
+                  My leave records →
                 </Link>
               </article>
             ) : null}

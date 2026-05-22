@@ -106,12 +106,6 @@ export const HR_NAV_GROUPS: NavGroupDef[] = [
         icon: <IconCalendar />,
       },
       {
-        to: '/performance',
-        label: 'Performance management',
-        permission: 'page:performance:manage',
-        icon: <IconChart />,
-      },
-      {
         to: '/jobs',
         label: 'Job postings',
         permission: 'page:recruitment',
@@ -155,18 +149,6 @@ export const CONFIG_NAV_GROUP: NavGroupDef = {
       permission: 'page:rbac',
       icon: <IconUsers />,
     },
-    {
-      to: '/organogram',
-      label: 'Organogram (PDF)',
-      permission: 'page:organogram',
-      icon: <IconChart />,
-    },
-    {
-      to: '/organogram/mapping',
-      label: 'Organogram mapping',
-      permission: 'page:organogram',
-      icon: <IconChart />,
-    },
   ],
 }
 
@@ -183,12 +165,6 @@ export const SELF_SERVICE_NAV: NavItemDef[] = [
     label: 'Attendance',
     permission: 'page:attendance',
     icon: <IconAttendance />,
-  },
-  {
-    to: '/ess/performance',
-    label: 'Performance',
-    permission: 'page:performance',
-    icon: <IconChart />,
   },
   {
     to: '/ess/training',

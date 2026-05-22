@@ -45,7 +45,7 @@ export const DASHBOARD_QUICK_HR: QuickAccessItem[] = [
     to: '/leave',
     permission: 'page:leave',
     icon: <IconCalendar className={iconCls} />,
-    description: 'Leave requests',
+    description: 'Manual leave records',
   },
   {
     label: 'Job postings',

@@ -45,8 +45,7 @@ export function EssDashboardPage() {
               Welcome, <strong>
                 {profile.firstName} {profile.lastName}
               </strong>{' '}
-              — {user ? userRoleLabel(user.role, user.designation) : 'Employee'}. Cards update live when you submit
-              leave or training nominations.
+              — {user ? userRoleLabel(user.role, user.designation) : 'Employee'}.               View leave recorded by HR, attendance, and training nominations.
             </p>
           </div>
           <time className="hrms-dash-welcome__date" dateTime={new Date().toISOString().slice(0, 10)}>
@@ -60,11 +59,15 @@ export function EssDashboardPage() {
           {can('page:leave') ? (
             <DashboardKpiCard
               static
-              label="Pending leave"
-              value={metrics.pendingLeave}
-              subtext={`${metrics.approvedLeave} approved`}
+              label="Leave records"
+              value={metrics.leaveRecords}
+              subtext={
+                metrics.onLeaveToday > 0
+                  ? `${metrics.onLeaveToday} on leave today`
+                  : 'Recorded by HR'
+              }
               icon={<i className="ri-calendar-check-line" />}
-              tone="warning"
+              tone="info"
             />
           ) : null}
           {can('page:attendance') ? (
@@ -112,7 +115,7 @@ export function EssDashboardPage() {
                       <th>Type</th>
                       <th>Dates</th>
                       <th>Days</th>
-                      <th>Status</th>
+                      <th>Recorded</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -123,8 +126,8 @@ export function EssDashboardPage() {
                           {r.fromDate} → {r.toDate}
                         </td>
                         <td>{r.days}</td>
-                        <td>
-                          <span className="wf-pill">{r.status}</span>
+                        <td className="text-sm" style={{ color: '#64748b' }}>
+                          {r.recordedAt ?? r.submittedAt}
                         </td>
                       </tr>
                     ))}

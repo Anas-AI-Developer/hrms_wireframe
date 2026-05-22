@@ -9,19 +9,19 @@ export function isLeaveActiveOnDate(request: LeaveRequest, date: string): boolea
 }
 
 export function summarizeLeaveForScope(requests: LeaveRequest[], headcount: number) {
-  const pending = requests.filter((r) => r.status === 'pending')
   const last30From = addDaysIso(WIREFRAME_TODAY, -29)
-  const last30 = requests.filter((r) => isDateInRange(r.submittedAt, last30From, WIREFRAME_TODAY))
-  const approved30 = last30.filter((r) => r.status === 'approved').length
-  const rejected30 = last30.filter((r) => r.status === 'rejected').length
+  const last30 = requests.filter((r) => {
+    const recorded = r.recordedAt ?? r.submittedAt
+    return isDateInRange(recorded, last30From, WIREFRAME_TODAY)
+  })
   const onLeaveToday = requests.filter((r) => isLeaveActiveOnDate(r, WIREFRAME_TODAY)).length
+  const manual30 = last30.filter((r) => r.entrySource === 'manual').length
 
   return {
-    pendingCount: pending.length,
-    approved30,
-    rejected30,
+    recorded30: last30.length,
+    manual30,
     onLeaveToday,
-    total30: last30.length,
+    approved30: last30.filter((r) => r.status === 'approved').length,
     headcount,
   }
 }

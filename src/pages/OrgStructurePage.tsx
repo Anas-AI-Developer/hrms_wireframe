@@ -108,14 +108,6 @@ export function OrgStructurePage() {
           <h1 className="wf-h1">{config.title}</h1>
           <p className="wf-lead">{config.description}</p>
         </div>
-        <div className="wf-actions" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-          <Link to="/organogram" className="hrms-ref-btn-secondary">
-            Organogram (PDF)
-          </Link>
-          <Link to="/organogram/mapping" className="hrms-ref-btn-secondary">
-            Full mapping
-          </Link>
-        </div>
       </header>
 
       {deleteError ? (
